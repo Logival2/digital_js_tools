@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Anneau de cartes piloté à la main</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&display=swap" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Panneau latéral (paramètres) -->
+<aside id="panel">
+  <!-- 4 lignes de texte (multi-lignes possible), empilées et décalées sur la grille -->
+  <div id="textFields">
+    <textarea class="posterLine" placeholder="Ligne 1" rows="2" maxlength="200">Musée des Arts et
+Métiers de Paris</textarea>
+    <textarea class="posterLine" placeholder="Ligne 2" rows="2" maxlength="200">Exposition du
+08 au 20 octobre 2025</textarea>
+    <textarea class="posterLine" placeholder="Ligne 3" rows="2" maxlength="200">Madeleine et
+Valentin</textarea>
+    <textarea class="posterLine" placeholder="Ligne 4" rows="2" maxlength="200">18h-
+20h</textarea>
+  </div>
+
+  <!-- Taille de la typo du titre -->
+  <div id="fontSizeControl">
+    <label for="fontSizeSlider">Font size</label>
+    <input id="fontSizeSlider" type="range" min="12" max="320" step="1" value="36" />
+  </div>
+
+  <!-- Interlignage -->
+  <div id="lineHeightControl">
+    <label for="lineHeightSlider">Line height</label>
+    <input id="lineHeightSlider" type="range" min="0.1" max="8" step="0.05" value="1.6" />
+  </div>
+
+  <!-- Nombre de lignes de la grille -->
+  <div id="rowsControl">
+    <label for="rowsSlider">Rows</label>
+    <input id="rowsSlider" type="range" min="2" max="20" step="1" value="10" />
+  </div>
+
+  <!-- Afficher / masquer la grille -->
+  <div id="gridControl">
+    <label for="gridToggle">
+      <input id="gridToggle" type="checkbox" checked />
+      Grille
+    </label>
+  </div>
+
+  <!-- Défilement vertical des colonnes de texte -->
+  <div id="scrollControl">
+    <label for="scrollToggle">
+      <input id="scrollToggle" type="checkbox" />
+      Scroll
+    </label>
+  </div>
+
+  <!-- Vitesse du défilement -->
+  <div id="scrollSpeedControl">
+    <label for="scrollSpeedSlider">Scroll speed</label>
+    <input id="scrollSpeedSlider" type="range" min="0.1" max="5" step="0.1" value="1" />
+  </div>
+
+  <!-- Aléatoire de vitesse entre les colonnes -->
+  <div id="scrollRandomControl">
+    <label for="scrollRandomSlider">Speed random</label>
+    <input id="scrollRandomSlider" type="range" min="0" max="1" step="0.05" value="0" />
+  </div>
+
+  <!-- Réglages de l'anneau (sans la caméra), juste au-dessus de la vue caméra -->
+  <div id="cardSettings">
+    <!-- Images affichées à la place des cartes noires -->
+    <div id="imageControl">
+      <button id="importBtn" type="button">Importer des images</button>
+      <input id="imageInput" type="file" accept="image/*" multiple hidden />
+      <ul id="imageList"></ul>
+    </div>
+
+    <!-- Nombre de cartes -->
+    <div id="cardCountControl">
+      <label for="cardCountSlider">Cards</label>
+      <input id="cardCountSlider" type="range" min="4" max="30" step="1" value="12" />
+    </div>
+
+    <!-- Rayon de l'anneau -->
+    <div id="radiusControl">
+      <label for="radiusSlider">Radius</label>
+      <input id="radiusSlider" type="range" min="30" max="420" step="1" value="220" />
+    </div>
+  </div>
+
+  <!-- Barre de contrôle, juste au-dessus de la fenêtre caméra -->
+  <div id="bar">
+    <button id="startBtn" disabled>Démarrer la caméra</button>
+    <button id="stopBtn" type="button" hidden>Stop cam</button>
+    <span id="readout"><span class="status" id="status">En attente…</span></span>
+  </div>
+
+  <!-- Recopie de la caméra, pleine largeur du panneau -->
+  <div id="preview">
+    <video id="cam" playsinline muted></video>
+    <canvas id="previewCanvas"></canvas>
+  </div>
+
+  <!-- Réinitialise tous les réglages -->
+  <button id="resetBtn" type="button">Réinitialiser</button>
+</aside>
+
+<!-- Zone principale : scène au format DIN portrait (1 : √2), fond blanc, cartes noires -->
+<div id="main">
+  <canvas id="scene"></canvas>
+</div>
+
+<script type="module">
+import {
+  HandLandmarker,
+  FilesetResolver,
+} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+
+const video       = document.getElementById("cam");
+const mainEl      = document.getElementById("main");
+const scene       = document.getElementById("scene");
+const sctx        = scene.getContext("2d");
+const pcv         = document.getElementById("previewCanvas");
+const pctx        = pcv.getContext("2d");
+const startBtn    = document.getElementById("startBtn");
+const stopBtn     = document.getElementById("stopBtn");
+const statusEl    = document.getElementById("status");
+const readout     = document.getElementById("readout");
+const textInputs  = Array.from(document.querySelectorAll(".posterLine"));
+const fontSizeSlider = document.getElementById("fontSizeSlider");
+const lineHeightSlider = document.getElementById("lineHeightSlider");
+const cardCountSlider = document.getElementById("cardCountSlider");
+const radiusSlider = document.getElementById("radiusSlider");
+const rowsSlider  = document.getElementById("rowsSlider");
+const gridToggle  = document.getElementById("gridToggle");
+const scrollToggle = document.getElementById("scrollToggle");
+const scrollSpeedSlider = document.getElementById("scrollSpeedSlider");
+const scrollRandomSlider = document.getElementById("scrollRandomSlider");
+const resetBtn    = document.getElementById("resetBtn");
+const importBtn   = document.getElementById("importBtn");
+const imageInput  = document.getElementById("imageInput");
+const imageList   = document.getElementById("imageList");
+
+const DEFAULT_FONT_SIZE = Number(fontSizeSlider.value);
+const DEFAULT_LINE_HEIGHT = Number(lineHeightSlider.value);
+const DEFAULT_CARD_COUNT = Number(cardCountSlider.value);
+const DEFAULT_RADIUS = Number(radiusSlider.value);
+const DEFAULT_ROWS = Number(rowsSlider.value);
+const DEFAULT_SCROLL_SPEED = Number(scrollSpeedSlider.value);
+const DEFAULT_SCROLL_RANDOM = Number(scrollRandomSlider.value);
+const DEFAULT_TEXTS = textInputs.map((input) => input.value);
+
+// Indices des 21 points de la main (modèle MediaPipe)
+const WRIST = 0;      // poignet
+const THUMB_TIP = 4;  // bout du pouce
+const INDEX_TIP = 8;  // bout de l'index
+const MIDDLE_MCP = 9; // base du majeur (référence d'échelle)
+const PINKY_TIP = 20; // bout de l'auriculaire (petit doigt)
+
+let handLandmarker = null;
+let running = false;
+let lastVideoTime = -1;
+
+// 4 lignes de texte, empilées et décalées vers la droite sur la grille
+let posterLines = [...DEFAULT_TEXTS];
+let posterFontSize = DEFAULT_FONT_SIZE;      // taille du texte, réglée par le slider
+let lineHeightMul = DEFAULT_LINE_HEIGHT;     // interlignage (× la taille de police)
+let showGrid = gridToggle.checked;           // afficher / masquer la grille
+let scrollEnabled = scrollToggle.checked;    // défilement vertical des colonnes
+let scrollStartTime = performance.now();     // référence de temps, remise à zéro à l'activation
+let scrollSpeedMul = DEFAULT_SCROLL_SPEED;   // multiplicateur de vitesse, réglé par le slider
+let scrollRandomAmount = DEFAULT_SCROLL_RANDOM; // 0 = toutes les colonnes à la même vitesse, 1 = max d'écart
+const SCROLL_PERIOD_MS = 2000;               // une nouvelle couche de texte apparaît toutes les ~2s
+
+// Facteur de vitesse propre à chaque colonne (-1..1), fixé une fois pour
+// toutes pour que l'aléatoire reste stable d'une frame à l'autre.
+const columnSpeedFactor = textInputs.map(() => Math.random() * 2 - 1);
+
+// Grille de mise en page de l'affiche : 5 colonnes × n lignes, marge + gouttière de 10px
+const GRID_MARGIN = 10;
+const GRID_GUTTER = 10;
+const GRID_COLS = 5;
+let gridRows = DEFAULT_ROWS; // nombre de lignes, réglé par le slider
+
+// Position (x) du bord gauche de la colonne i (0-indexée)
+function columnX(i) {
+  const colW = (sceneW - GRID_MARGIN * 2 - GRID_GUTTER * (GRID_COLS - 1)) / GRID_COLS;
+  return GRID_MARGIN + i * (colW + GRID_GUTTER);
+}
+
+// Hauteur d'une ligne de la grille
+function rowHeight() {
+  return (sceneH - GRID_MARGIN * 2 - GRID_GUTTER * (gridRows - 1)) / gridRows;
+}
+
+// Position (y) du bord haut de la ligne i (0-indexée)
+function rowY(i) {
+  return GRID_MARGIN + i * (rowHeight() + GRID_GUTTER);
+}
+
+// Police "maison" chargée depuis /font, utilisée uniquement pour le titre sur l'affiche
+const posterFace = new FontFace(
+  "Happy Times IKOB",
+  "url('font/happy-times-at-the-ikob.ttf')"
+);
+posterFace.load().then((loaded) => {
+  document.fonts.add(loaded); // la boucle d'animation redessinera au prochain tick
+}).catch((err) => {
+  console.error("Impossible de charger la police Happy Times IKOB :", err);
+});
+
+// Rayon (lissé) du cercle sur lequel sont disposées les cartes
+let radius = DEFAULT_RADIUS;
+const RADIUS_MIN = 30;
+const RADIUS_MAX = 420;
+
+// Anneau de cartes noires VERTICALES qui tourne lentement
+const CARD_W = 120;        // largeur d'une carte (px) — +200 %
+const CARD_H = 192;        // hauteur d'une carte (px) — +200 %
+const CARD_AREA = CARD_W * CARD_H; // surface conservée quand une carte prend le ratio d'une image
+const SPIN_SPEED = 0.36;   // vitesse de rotation (rad / s), = 0.006 rad/image à 60 fps
+let spin = 0;              // angle de rotation courant
+
+// Nombre de cartes (lissé), piloté par l'écart pouce ↔ petit doigt
+let cardCount = DEFAULT_CARD_COUNT;
+const CARD_MIN = 4;
+const CARD_MAX = 30;
+
+// Valeurs manuelles (sliders « Cards » / « Radius »), utilisées comme cible
+// quand aucune main n'est détectée — le geste prend le dessus dès qu'il y en a une.
+let manualCardCount = DEFAULT_CARD_COUNT;
+let manualRadius = DEFAULT_RADIUS;
+
+// Images importées : { name, bitmap }. Remplacent les cartes noires, en
+// boucle dans l'ordre si les cartes sont plus nombreuses que les images.
+let cardImages = [];
+
+function dist(a, b) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  const dz = (a.z ?? 0) - (b.z ?? 0);
+  return Math.hypot(dx, dy, dz);
+}
+
+// Ratio de pincement pouce ↔ index -> rayon de l'anneau
+function pinchToRadius(ratio) {
+  // ratio observé ≈ 0.15 (doigts collés) → ≈ 1.1 (doigts écartés)
+  const t = (ratio - 0.15) / (1.1 - 0.15);
+  const clamped = Math.min(1, Math.max(0, t));
+  return RADIUS_MIN + clamped * (RADIUS_MAX - RADIUS_MIN);
+}
+
+// Écart pouce ↔ petit doigt -> nombre de cartes (4 à 30)
+function spreadToCount(ratio) {
+  // ratio observé ≈ 0.35 (main fermée) → ≈ 1.7 (main grande ouverte)
+  const t = (ratio - 0.35) / (1.7 - 0.35);
+  const clamped = Math.min(1, Math.max(0, t));
+  return CARD_MIN + clamped * (CARD_MAX - CARD_MIN);
+}
+
+// Format DIN / ISO 216 (A4, A3…) en portrait : largeur / hauteur = 1 / √2
+const DIN_RATIO = 1 / Math.SQRT2;
+const SCENE_MARGIN = 40; // marge autour de la page, en px CSS
+
+// Résolution interne FIXE de la page (le système de coordonnées dans lequel
+// tout est dessiné : marges, gouttières, cartes, texte…). Elle ne change
+// JAMAIS avec la taille de fenêtre ni le zoom navigateur, donc tous les
+// rapports de proportions (ex. une marge de 10px) restent constants ; seule
+// la taille d'AFFICHAGE (CSS) de la page s'adapte à l'espace disponible.
+const sceneW = 800;
+const sceneH = Math.round(sceneW / DIN_RATIO);
+
+function resizeScene() {
+  const maxW = mainEl.clientWidth - SCENE_MARGIN * 2;
+  const maxH = mainEl.clientHeight - SCENE_MARGIN * 2;
+
+  let displayW = maxW;
+  let displayH = displayW / DIN_RATIO;
+  if (displayH > maxH) {
+    displayH = maxH;
+    displayW = displayH * DIN_RATIO;
+  }
+
+  // taille affichée (CSS), variable selon la fenêtre/le zoom
+  scene.style.width = displayW + "px";
+  scene.style.height = displayH + "px";
+
+  // résolution du buffer du canvas : toujours sceneW × sceneH (× dpr pour la netteté)
+  const dpr = window.devicePixelRatio || 1;
+  scene.width = Math.round(sceneW * dpr);
+  scene.height = Math.round(sceneH * dpr);
+  sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener("resize", resizeScene);
+resizeScene();
+requestAnimationFrame(loop); // démarre la boucle d'animation (rotation incluse) dès le chargement
+
+async function init() {
+  statusEl.textContent = "Chargement du modèle…";
+  const vision = await FilesetResolver.forVisionTasks(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+  );
+  handLandmarker = await HandLandmarker.createFromOptions(vision, {
+    baseOptions: {
+      modelAssetPath:
+        "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+      delegate: "GPU",
+    },
+    runningMode: "VIDEO",
+    numHands: 1,
+  });
+  statusEl.textContent = "Modèle prêt. Clique sur « Démarrer la caméra ».";
+  startBtn.disabled = false;
+}
+
+async function startCamera() {
+  startBtn.disabled = true;
+  statusEl.textContent = "Ouverture de la caméra…";
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 960 } },
+    audio: false,
+  });
+  video.srcObject = stream;
+  await video.play();
+
+  // le canvas de preview suit la résolution réelle de la vidéo
+  pcv.width = video.videoWidth;
+  pcv.height = video.videoHeight;
+
+  running = true;
+  startBtn.hidden = true;
+  stopBtn.hidden = false;
+  readout.textContent = "";
+}
+
+function stopCamera() {
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach((track) => track.stop());
+    video.srcObject = null;
+  }
+  running = false;
+  lastVideoTime = -1;
+  lastLandmarks = null;
+  lastHandTime = -Infinity; // repasse tout de suite sur les sliders
+  pctx.clearRect(0, 0, pcv.width, pcv.height);
+
+  startBtn.hidden = false;
+  startBtn.disabled = false;
+  stopBtn.hidden = true;
+  readout.textContent = "Caméra coupée.";
+}
+
+// Boucle d'animation permanente : tourne dès le chargement de la page (cartes
+// par défaut, rotation incluse), que la caméra soit démarrée ou non. Quand
+// la caméra tourne, elle vient en plus détecter la main à chaque frame.
+// La caméra livre ~30 images/s alors que la boucle tourne à ~60 : on garde
+// donc la dernière main détectée entre deux images vidéo (sinon la cible
+// alterne main / sliders une frame sur deux et l'anneau saccade).
+let lastLandmarks = null;
+let lastHandTime = -Infinity;
+let handRadius = DEFAULT_RADIUS;
+let handCount = DEFAULT_CARD_COUNT;
+const HAND_HOLD_MS = 300;    // tolère une détection ratée sans repasser sur les sliders
+
+// Temps de réponse du lissage (s) : plus c'est grand, plus c'est doux
+const RADIUS_SMOOTH_S = 0.18;
+const COUNT_SMOOTH_S = 0.45;
+
+let lastFrameTime = performance.now();
+
+function loop(now) {
+  const dt = Math.min(0.1, Math.max(0, (now - lastFrameTime) / 1000));
+  lastFrameTime = now;
+
+  if (running && video.currentTime !== lastVideoTime) {
+    lastVideoTime = video.currentTime;
+    const result = handLandmarker.detectForVideo(video, now);
+    if (result.landmarks && result.landmarks.length > 0) {
+      lastLandmarks = result.landmarks[0]; // coords normalisées 0..1
+      lastHandTime = now;
+      updateHandTargets(lastLandmarks);
+    } else {
+      lastLandmarks = null;
+    }
+  }
+
+  render(dt, now - lastHandTime < HAND_HOLD_MS);
+  requestAnimationFrame(loop);
+}
+
+function updateHandTargets(landmarks) {
+  const handSize = dist(landmarks[WRIST], landmarks[MIDDLE_MCP]);
+
+  // pouce ↔ index -> rayon
+  const pinchRatio = dist(landmarks[THUMB_TIP], landmarks[INDEX_TIP]) / handSize;
+  handRadius = pinchToRadius(pinchRatio);
+
+  // pouce ↔ petit doigt -> nombre de cartes
+  const spreadRatio = dist(landmarks[THUMB_TIP], landmarks[PINKY_TIP]) / handSize;
+  handCount = spreadToCount(spreadRatio);
+}
+
+function render(dt, handActive) {
+  // une main présente prend le dessus sur les sliders « Cards » / « Radius »
+  const targetRadius = handActive ? handRadius : manualRadius;
+  const targetCount = handActive ? handCount : manualCardCount;
+
+  // lissage exponentiel indépendant du framerate
+  radius += (targetRadius - radius) * (1 - Math.exp(-dt / RADIUS_SMOOTH_S));
+  cardCount += (targetCount - cardCount) * (1 - Math.exp(-dt / COUNT_SMOOTH_S));
+  // rotation continue et lente de l'anneau
+  spin += SPIN_SPEED * dt;
+
+  drawScene();
+  if (running) drawPreview(lastLandmarks);
+}
+
+function drawScene() {
+  sctx.fillStyle = "#ffffff";
+  sctx.fillRect(0, 0, sceneW, sceneH);
+
+  const cx = sceneW / 2;
+  const cy = sceneH / 2;
+
+  // Nombre de cartes fractionnaire : l'espacement suit cardCount en continu,
+  // et la carte « en cours d'arrivée » sort de sous la première carte en
+  // glissant dans l'espace qui s'ouvre, au lieu que toutes les cartes sautent
+  // d'un coup.
+  const fullCards = Math.floor(cardCount);
+  const partial = cardCount - fullCards;
+  const total = partial > 0.01 ? fullCards + 1 : fullCards;
+  const step = (Math.PI * 2) / cardCount;
+
+  for (let i = 0; i < total; i++) {
+    // la carte se déplace le long de l'anneau...
+    const a = spin + i * step;
+    const x = cx + Math.cos(a) * radius;
+    const y = cy + Math.sin(a) * radius;
+    // ...mais reste TOUJOURS verticale (pas de rotation de la carte)
+    const image = cardImages.length ? cardImages[i % cardImages.length].bitmap : null;
+    if (image) {
+      // la carte prend le ratio de l'image, à surface égale à une carte noire
+      const ratio = image.width / image.height;
+      const w = Math.sqrt(CARD_AREA * ratio);
+      const h = Math.sqrt(CARD_AREA / ratio);
+      sctx.drawImage(image, x - w / 2, y - h / 2, w, h);
+    } else {
+      sctx.fillStyle = "#000000";
+      sctx.fillRect(x - CARD_W / 2, y - CARD_H / 2, CARD_W, CARD_H);
+    }
+  }
+
+  drawPosterLines();
+  if (showGrid) drawGrid();
+}
+
+// Chaque champ démarre sur sa propre colonne ET sa propre ligne de la grille
+// (champ 0 -> colonne 0 / ligne 0, champ 1 -> colonne 1 / ligne 1, etc.).
+// Un champ peut contenir plusieurs lignes (Entrée) : elles descendent depuis
+// ce point de départ.
+function drawPosterLines() {
+  sctx.fillStyle = "#000000";
+  sctx.textAlign = "left";
+  sctx.textBaseline = "top";
+  sctx.font = `${posterFontSize}px "Happy Times IKOB", serif`;
+
+  const lineHeight = posterFontSize * lineHeightMul;
+
+  posterLines.forEach((text, i) => {
+    if (!text) return;
+    const x = columnX(i);
+    const baseY = rowY(i);
+    const lines = text.split("\n");
+
+    if (!scrollEnabled) {
+      lines.forEach((line, j) => sctx.fillText(line, x, baseY + j * lineHeight));
+      return;
+    }
+
+    // Défilement infini : une nouvelle couche de texte apparaît toutes les
+    // SCROLL_PERIOD_MS (~2s) à la position de départ du champ, et descend en
+    // continu jusqu'à sortir du bas de la page. Plusieurs couches coexistent
+    // donc à l'écran, chacune à un stade différent de sa descente. La vitesse
+    // (slider « Scroll speed ») et l'écart aléatoire entre colonnes (slider
+    // « Speed random ») s'appliquent ici.
+    const rh = rowHeight();
+    const baseSpeed = rh / SCROLL_PERIOD_MS; // px par ms, à vitesse ×1
+    const speed = baseSpeed * scrollSpeedMul * (1 + columnSpeedFactor[i] * scrollRandomAmount);
+    const elapsed = performance.now() - scrollStartTime;
+    const latestLayer = Math.floor(elapsed / SCROLL_PERIOD_MS);
+
+    for (let k = latestLayer; k >= 0; k--) {
+      const layerElapsed = elapsed - k * SCROLL_PERIOD_MS; // âge de cette couche
+      const offset = layerElapsed * speed;
+      if (baseY + offset > sceneH) break; // cette couche et les plus anciennes sont sorties
+
+      lines.forEach((line, j) => sctx.fillText(line, x, baseY + offset + j * lineHeight));
+    }
+  });
+}
+
+// Grille de mise en page : marge 10px, 5 colonnes × n lignes, gouttière 10px
+function drawGrid() {
+  const colW = (sceneW - GRID_MARGIN * 2 - GRID_GUTTER * (GRID_COLS - 1)) / GRID_COLS;
+  const rowH = rowHeight();
+
+  sctx.strokeStyle = "rgba(0, 0, 0, 0.25)";
+  sctx.lineWidth = 1;
+
+  // cadre de marge
+  sctx.strokeRect(
+    GRID_MARGIN + 0.5,
+    GRID_MARGIN + 0.5,
+    sceneW - GRID_MARGIN * 2 - 1,
+    sceneH - GRID_MARGIN * 2 - 1
+  );
+
+  // bords gauche/droit de chaque colonne
+  for (let i = 0; i < GRID_COLS; i++) {
+    const left = Math.round(columnX(i)) + 0.5;
+    const right = Math.round(columnX(i) + colW) + 0.5;
+    sctx.beginPath();
+    sctx.moveTo(left, GRID_MARGIN);
+    sctx.lineTo(left, sceneH - GRID_MARGIN);
+    sctx.stroke();
+    sctx.beginPath();
+    sctx.moveTo(right, GRID_MARGIN);
+    sctx.lineTo(right, sceneH - GRID_MARGIN);
+    sctx.stroke();
+  }
+
+  // bords haut/bas de chaque ligne
+  for (let i = 0; i < gridRows; i++) {
+    const top = Math.round(rowY(i)) + 0.5;
+    const bottom = Math.round(rowY(i) + rowH) + 0.5;
+    sctx.beginPath();
+    sctx.moveTo(GRID_MARGIN, top);
+    sctx.lineTo(sceneW - GRID_MARGIN, top);
+    sctx.stroke();
+    sctx.beginPath();
+    sctx.moveTo(GRID_MARGIN, bottom);
+    sctx.lineTo(sceneW - GRID_MARGIN, bottom);
+    sctx.stroke();
+  }
+}
+
+function drawPreview(landmarks) {
+  if (!video.videoWidth) return;
+  pctx.drawImage(video, 0, 0, pcv.width, pcv.height);
+
+  if (!landmarks) return;
+  const px = (p) => [p.x * pcv.width, p.y * pcv.height];
+
+  pctx.fillStyle = "#00e0a4";
+  for (const p of landmarks) {
+    const [x, y] = px(p);
+    pctx.beginPath();
+    pctx.arc(x, y, 4, 0, Math.PI * 2);
+    pctx.fill();
+  }
+
+  const [tx, ty] = px(landmarks[THUMB_TIP]);
+  const [ix, iy] = px(landmarks[INDEX_TIP]);
+  pctx.beginPath();
+  pctx.moveTo(tx, ty);
+  pctx.lineTo(ix, iy);
+  pctx.lineWidth = 3;
+  pctx.strokeStyle = "#ffcf6b";
+  pctx.stroke();
+}
+
+startBtn.addEventListener("click", () => startCamera().catch(err => {
+  statusEl.textContent = "Erreur caméra : " + err.message;
+  startBtn.disabled = false;
+}));
+
+stopBtn.addEventListener("click", stopCamera);
+
+importBtn.addEventListener("click", () => imageInput.click());
+
+imageInput.addEventListener("change", () => {
+  for (const file of imageInput.files) {
+    const entry = { name: file.name, bitmap: null };
+    cardImages.push(entry);
+    loadThumbnail(file).then((bitmap) => { entry.bitmap = bitmap; });
+  }
+  imageInput.value = ""; // permet de réimporter le même fichier
+  renderImageList();
+});
+
+// Les photos importées font souvent plusieurs milliers de px : les réduire à
+// chaque frame, pour chaque carte, saccade dès que MediaPipe occupe aussi le
+// GPU. On les réduit donc une seule fois ici, à une taille suffisante pour une carte.
+const IMAGE_MAX_SIDE = 512;
+
+async function loadThumbnail(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const scale = Math.min(1, IMAGE_MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+    const thumb = document.createElement("canvas");
+    thumb.width = Math.round(img.naturalWidth * scale);
+    thumb.height = Math.round(img.naturalHeight * scale);
+    const tctx = thumb.getContext("2d");
+    tctx.imageSmoothingQuality = "high";
+    tctx.drawImage(img, 0, 0, thumb.width, thumb.height);
+    return thumb;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+function renderImageList() {
+  imageList.replaceChildren(...cardImages.map((entry, i) => {
+    const li = document.createElement("li");
+    const name = document.createElement("span");
+    name.textContent = entry.name;
+    name.title = entry.name;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", `Supprimer ${entry.name}`);
+    remove.addEventListener("click", () => removeImage(i));
+    li.append(name, remove);
+    return li;
+  }));
+  imageList.hidden = cardImages.length === 0;
+}
+
+function removeImage(i) {
+  cardImages.splice(i, 1);
+  renderImageList();
+}
+
+renderImageList();
+
+textInputs.forEach((input, i) => {
+  input.addEventListener("input", () => {
+    posterLines[i] = input.value;
+  });
+});
+
+fontSizeSlider.addEventListener("input", () => {
+  posterFontSize = Number(fontSizeSlider.value);
+});
+
+lineHeightSlider.addEventListener("input", () => {
+  lineHeightMul = Number(lineHeightSlider.value);
+});
+
+cardCountSlider.addEventListener("input", () => {
+  manualCardCount = Number(cardCountSlider.value);
+});
+
+radiusSlider.addEventListener("input", () => {
+  manualRadius = Number(radiusSlider.value);
+});
+
+rowsSlider.addEventListener("input", () => {
+  gridRows = Number(rowsSlider.value);
+});
+
+gridToggle.addEventListener("change", () => {
+  showGrid = gridToggle.checked;
+});
+
+scrollToggle.addEventListener("change", () => {
+  scrollEnabled = scrollToggle.checked;
+  if (scrollEnabled) scrollStartTime = performance.now(); // repart d'une couche neuve
+});
+
+scrollSpeedSlider.addEventListener("input", () => {
+  scrollSpeedMul = Number(scrollSpeedSlider.value);
+});
+
+scrollRandomSlider.addEventListener("input", () => {
+  scrollRandomAmount = Number(scrollRandomSlider.value);
+});
+
+resetBtn.addEventListener("click", () => {
+  posterLines = [...DEFAULT_TEXTS];
+  textInputs.forEach((input, i) => { input.value = DEFAULT_TEXTS[i]; });
+
+  posterFontSize = DEFAULT_FONT_SIZE;
+  fontSizeSlider.value = DEFAULT_FONT_SIZE;
+
+  lineHeightMul = DEFAULT_LINE_HEIGHT;
+  lineHeightSlider.value = DEFAULT_LINE_HEIGHT;
+
+  manualCardCount = DEFAULT_CARD_COUNT;
+  cardCountSlider.value = DEFAULT_CARD_COUNT;
+
+  manualRadius = DEFAULT_RADIUS;
+  radiusSlider.value = DEFAULT_RADIUS;
+
+  gridRows = DEFAULT_ROWS;
+  rowsSlider.value = DEFAULT_ROWS;
+
+  showGrid = true;
+  gridToggle.checked = true;
+
+  scrollEnabled = false;
+  scrollToggle.checked = false;
+
+  scrollSpeedMul = DEFAULT_SCROLL_SPEED;
+  scrollSpeedSlider.value = DEFAULT_SCROLL_SPEED;
+
+  scrollRandomAmount = DEFAULT_SCROLL_RANDOM;
+  scrollRandomSlider.value = DEFAULT_SCROLL_RANDOM;
+});
+
+init().catch(err => {
+  statusEl.textContent = "Erreur d'initialisation : " + err.message;
+});
+</script>
+</body>
+</html>
