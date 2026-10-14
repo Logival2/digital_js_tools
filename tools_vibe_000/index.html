@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Typo organique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&display=swap" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Panneau latéral (paramètres) -->
+<aside id="panel">
+
+  <!-- Texte : sert de graine à la croissance -->
+  <div class="section">
+    <h2>Texte (graine)</h2>
+    <textarea id="textInput" class="posterLine" rows="3" maxlength="200">NORDWAY</textarea>
+    <div class="row">
+      <label for="fontSelect">Police</label>
+      <select id="fontSelect">
+        <option value="Replica Mono">Replica Mono</option>
+        <option value="MingLiU-01">MingLiU</option>
+        <option value="Roboto Mono">Roboto Mono</option>
+      </select>
+    </div>
+    <div class="row"><label for="fontSizeSlider">Font size</label><input id="fontSizeSlider" type="range" min="20" max="600" step="1" value="190" /></div>
+    <div class="row"><label for="lineHeightSlider">Line height</label><input id="lineHeightSlider" type="range" min="0.5" max="2" step="0.01" value="0.9" /></div>
+    <div class="row"><label for="letterSpacingSlider">Letter spacing</label><input id="letterSpacingSlider" type="range" min="-0.2" max="1" step="0.01" value="-0.04" /></div>
+    <div class="row">
+      <label for="sourceSelect">Source</label>
+      <select id="sourceSelect">
+        <option value="text">Texte</option>
+        <option value="image">Image</option>
+        <option value="both">Texte + image</option>
+      </select>
+    </div>
+    <div class="btnRow">
+      <button id="importBtn" type="button">Importer une image</button>
+      <input id="imageInput" type="file" accept="image/*" hidden />
+    </div>
+    <div class="row"><label for="imageThresholdSlider">Seuil image</label><input id="imageThresholdSlider" type="range" min="0.05" max="0.95" step="0.01" value="0.45" /></div>
+    <p id="imageName" class="hint">Aucune image</p>
+  </div>
+
+  <!-- Croissance : réaction-diffusion de Gray-Scott -->
+  <div class="section">
+    <h2>Croissance</h2>
+    <div class="row">
+      <label for="presetSelect">Matière</label>
+      <select id="presetSelect">
+        <option value="coral">Corail</option>
+        <option value="mitosis">Mitose</option>
+        <option value="maze">Labyrinthe</option>
+        <option value="spots">Taches</option>
+        <option value="worms">Vers</option>
+        <option value="holes">Bulles</option>
+        <option value="chaos">Chaos</option>
+      </select>
+    </div>
+    <div class="row"><label for="feedSlider">Feed</label><input id="feedSlider" type="range" min="0.01" max="0.1" step="0.0005" value="0.0545" /></div>
+    <div class="row"><label for="killSlider">Kill</label><input id="killSlider" type="range" min="0.045" max="0.07" step="0.0001" value="0.062" /></div>
+    <div class="row"><label for="variationSlider" title="Fait varier la matière du haut vers le bas de l'affiche">Variation</label><input id="variationSlider" type="range" min="-1" max="1" step="0.01" value="0" /></div>
+    <div class="row"><label for="speedSlider">Vitesse</label><input id="speedSlider" type="range" min="1" max="40" step="1" value="20" /></div>
+    <div class="row"><label for="scaleSlider" title="Nombre de cellules sur le petit côté : plus c'est grand, plus le motif est fin">Finesse</label><input id="scaleSlider" type="range" min="200" max="800" step="10" value="420" /></div>
+    <div class="row"><label for="sporesSlider" title="Graines aléatoires semées hors du texte">Spores</label><input id="sporesSlider" type="range" min="0" max="1" step="0.01" value="0" /></div>
+    <div class="row"><label for="holdSlider" title="Le texte continue d'alimenter la matière : il reste lisible">Tenue texte</label><input id="holdSlider" type="range" min="0" max="1" step="0.01" value="0.7" /></div>
+    <div class="btnRow">
+      <button id="growBtn" type="button" title="Avance la croissance de 1500 pas d'un coup">Faire pousser</button>
+      <button id="reseedBtn" type="button" title="Repart du texte">Recommencer</button>
+    </div>
+    <div class="btnRow">
+      <button id="newSeedBtn" type="button" title="Nouveau tirage du bruit et des spores">Nouvelle graine</button>
+    </div>
+  </div>
+
+  <!-- Flux : oriente la croissance -->
+  <div class="section">
+    <h2>Flux</h2>
+    <div class="row">
+      <label for="flowSelect">Direction</label>
+      <select id="flowSelect">
+        <option value="0">Aucun</option>
+        <option value="1">Radial</option>
+        <option value="2">Tourbillon</option>
+        <option value="3">Vortex</option>
+        <option value="4">Vertical</option>
+        <option value="5">Horizontal</option>
+        <option value="6">Ondes</option>
+      </select>
+    </div>
+    <div class="row"><label for="flowSlider">Force</label><input id="flowSlider" type="range" min="0" max="0.9" step="0.01" value="0.6" /></div>
+  </div>
+
+  <!-- Rendu -->
+  <div class="section">
+    <h2>Rendu</h2>
+    <div id="gradientColors">
+      <input type="color" class="gradColor" value="#ffffff" title="Fond" aria-label="Couleur du fond" />
+      <input type="color" class="gradColor" value="#00ff80" title="Bord" aria-label="Couleur du bord" />
+      <input type="color" class="gradColor" value="#000000" title="Matière" aria-label="Couleur de la matière" />
+    </div>
+    <div id="gradientPreview" aria-hidden="true"></div>
+    <div class="btnRow">
+      <button id="gradientReverseBtn" type="button">Inverser</button>
+      <button id="gradientNegativeBtn" type="button">Négatif</button>
+    </div>
+    <div class="row"><label for="contrastSlider" title="Bords doux ou nets">Contraste</label><input id="contrastSlider" type="range" min="0" max="1" step="0.01" value="0.55" /></div>
+    <div class="row"><label for="embossSlider">Relief</label><input id="embossSlider" type="range" min="0" max="1" step="0.01" value="0" /></div>
+    <label class="check"><input id="crispTextToggle" type="checkbox" /> Texte net par-dessus</label>
+    <label class="check"><input id="gridToggle" type="checkbox" /> Grille</label>
+  </div>
+
+  <!-- Pinceau : souris ou main -->
+  <div class="section">
+    <h2>Pinceau</h2>
+    <div class="row"><label for="brushSlider">Taille</label><input id="brushSlider" type="range" min="4" max="120" step="1" value="28" /></div>
+    <label class="check"><input id="eraseToggle" type="checkbox" /> Gomme</label>
+    <div class="btnRow"><button id="clearStrokesBtn" type="button">Effacer les tracés</button></div>
+    <p class="hint">Souris : clic pour semer, Alt + clic pour gommer. Main : pince pouce + index pour semer.</p>
+  </div>
+
+  <div id="bar">
+    <button id="startBtn" disabled>Démarrer la caméra</button>
+    <button id="stopBtn" type="button" hidden>Stop cam</button>
+    <span id="readout"><span class="status" id="status">En attente…</span></span>
+  </div>
+  <div id="preview">
+    <video id="cam" playsinline muted></video>
+    <canvas id="previewCanvas"></canvas>
+  </div>
+
+  <button id="resetBtn" type="button">Réinitialiser</button>
+  <button id="privacyBtn" type="button">Confidentialité · RGPD</button>
+</aside>
+
+<dialog id="privacyDialog" aria-labelledby="privacyTitle">
+  <h2 id="privacyTitle">Confidentialité · RGPD</h2>
+  <h3>Responsable</h3>
+  <p>Valentin Maynadié — contact : <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
+  <h3>Caméra</h3>
+  <p>La caméra n'est activée que si tu cliques sur « Démarrer la caméra », après autorisation de ton navigateur.
+  Le flux vidéo est analysé uniquement dans ton navigateur pour détecter la position de ta main :
+  aucune image ni vidéo n'est enregistrée, conservée ou envoyée à un serveur.</p>
+  <h3>Images et exports</h3>
+  <p>L'image que tu importes reste sur ton appareil, le temps de la session. Les fichiers PNG et MP4 sont générés localement.</p>
+  <h3>Cookies et suivi</h3>
+  <p>Ce site n'utilise ni cookies, ni mesure d'audience, ni compte utilisateur.</p>
+  <h3>Services tiers</h3>
+  <ul>
+    <li>Google Fonts — police d'interface ;</li>
+    <li>jsDelivr — détection de la main (MediaPipe) et assembleur vidéo MP4 ;</li>
+    <li>Google Cloud Storage — modèle de détection de la main.</li>
+  </ul>
+  <p>Ces services reçoivent ton adresse IP, nécessaire à l'envoi des fichiers.</p>
+  <form method="dialog"><button type="submit">Fermer</button></form>
+</dialog>
+
+<!-- Zone principale : la matière (WebGL) + le texte net, la grille et le curseur (2D) -->
+<div id="main">
+  <div id="frame">
+    <canvas id="gl"></canvas>
+    <canvas id="overlay"></canvas>
+  </div>
+</div>
+
+<!-- Panneau de droite : mode, format, lecteur, export -->
+<aside id="rightPanel">
+  <div id="modeSwitch" role="group" aria-label="Mode">
+    <button type="button" data-mode="image" aria-pressed="true">Image</button>
+    <button type="button" data-mode="video" aria-pressed="false">Vidéo</button>
+  </div>
+
+  <div id="formatButtons">
+    <button type="button" data-format="din">A4</button>
+    <button type="button" data-format="square">1:1</button>
+    <button type="button" data-format="portrait">4:5</button>
+    <button type="button" data-format="story">9:16</button>
+  </div>
+  <p id="formatInfo"></p>
+
+  <div id="motionControls">
+    <div id="transport">
+      <button type="button" data-action="start" title="Recommencer" aria-label="Recommencer">
+        <svg viewBox="0 0 16 16"><rect x="3" y="3" width="2" height="10"/><polygon points="13,3 13,13 6,8"/></svg>
+      </button>
+      <button type="button" data-action="pause" title="Pause" aria-label="Pause">
+        <svg viewBox="0 0 16 16"><rect x="4" y="3" width="3" height="10"/><rect x="9" y="3" width="3" height="10"/></svg>
+      </button>
+      <button type="button" data-action="play" title="Lecture" aria-label="Lecture">
+        <svg viewBox="0 0 16 16"><polygon points="4,3 4,13 12,8"/></svg>
+      </button>
+      <button type="button" data-action="next" title="Image suivante" aria-label="Image suivante">
+        <svg viewBox="0 0 16 16"><polygon points="3,3 3,13 10,8"/><rect x="11" y="3" width="2" height="10"/></svg>
+      </button>
+    </div>
+    <p id="motionTimeLabel"></p>
+  </div>
+
+  <div class="row" id="durationRow" hidden>
+    <label for="durationSelect">Durée</label>
+    <select id="durationSelect">
+      <option value="5">5 s</option>
+      <option value="10">10 s</option>
+      <option value="15">15 s</option>
+    </select>
+  </div>
+  <div class="row" id="headStartRow" hidden>
+    <label for="headStartSlider" title="Pas de croissance déjà faits au début de la vidéo">Départ</label>
+    <input id="headStartSlider" type="range" min="0" max="3000" step="50" value="0" />
+  </div>
+  <p id="simInfo"></p>
+
+  <button id="exportBtn" type="button">Exporter PNG</button>
+  <button id="exportMp4Btn" type="button" hidden>Exporter MP4</button>
+</aside>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+
+// ── Éléments de l'interface ──
+const frameEl = $("frame");
+const mainEl = $("main");
+const glCanvas = $("gl");
+const overlay = $("overlay");
+const octx = overlay.getContext("2d");
+const video = $("cam");
+const pcv = $("previewCanvas");
+const pctx = pcv.getContext("2d");
+const startBtn = $("startBtn");
+const stopBtn = $("stopBtn");
+const statusEl = $("status");
+const readout = $("readout");
+const formatButtons = Array.from(document.querySelectorAll("#formatButtons button"));
+const modeButtons = Array.from(document.querySelectorAll("#modeSwitch button"));
+const transportButtons = Array.from(document.querySelectorAll("#transport button"));
+const gradColorInputs = Array.from(document.querySelectorAll(".gradColor"));
+const gradientPreview = $("gradientPreview");
+
+// Tous les réglages « simples » (sliders, menus, cases) : lus à la volée, remis par défaut avec Réinitialiser
+const controls = {
+  text: $("textInput"),
+  font: $("fontSelect"),
+  fontSize: $("fontSizeSlider"),
+  lineHeight: $("lineHeightSlider"),
+  letterSpacing: $("letterSpacingSlider"),
+  source: $("sourceSelect"),
+  imageThreshold: $("imageThresholdSlider"),
+  preset: $("presetSelect"),
+  feed: $("feedSlider"),
+  kill: $("killSlider"),
+  variation: $("variationSlider"),
+  speed: $("speedSlider"),
+  scale: $("scaleSlider"),
+  spores: $("sporesSlider"),
+  hold: $("holdSlider"),
+  flow: $("flowSelect"),
+  flowAmount: $("flowSlider"),
+  contrast: $("contrastSlider"),
+  emboss: $("embossSlider"),
+  crispText: $("crispTextToggle"),
+  grid: $("gridToggle"),
+  brush: $("brushSlider"),
+  erase: $("eraseToggle"),
+  duration: $("durationSelect"),
+  headStart: $("headStartSlider"),
+};
+const DEFAULTS = Object.fromEntries(Object.entries(controls).map(([k, el]) => [k, el.type === "checkbox" ? el.checked : el.value]));
+const DEFAULT_COLORS = gradColorInputs.map((i) => i.value);
+const num = (k) => Number(controls[k].value);
+
+// Matières de Gray-Scott (feed, kill), d'après les tables de Karl Sims / Robert Munafo
+const PRESETS = {
+  coral:   { feed: 0.0545, kill: 0.062 },
+  mitosis: { feed: 0.0367, kill: 0.0649 },
+  maze:    { feed: 0.029,  kill: 0.057 },
+  spots:   { feed: 0.030,  kill: 0.062 },
+  worms:   { feed: 0.062,  kill: 0.0609 },
+  holes:   { feed: 0.039,  kill: 0.058 },
+  chaos:   { feed: 0.026,  kill: 0.051 },
+};
+
+// ── Formats (identiques à tools_DA_cercle_001) ──
+const FORMATS = {
+  din:      { w: 1240, h: 1754 }, // DIN A4 portrait, 150 dpi
+  square:   { w: 1080, h: 1080 },
+  portrait: { w: 1080, h: 1350 },
+  story:    { w: 1080, h: 1920 },
+};
+let currentFormat = "din";
+
+// Repère de la page : petit côté = 800 unités, quel que soit le format
+const SCENE_SHORT_SIDE = 800;
+let sceneW = 800;
+let sceneH = 800;
+const SCENE_MARGIN = 40;
+const GRID_MARGIN = 10, GRID_GUTTER = 10, GRID_COLS = 5, GRID_ROWS = 10;
+
+// ── Polices ──
+const FONT_FILES = { "Replica Mono": "font/Replica-Mono.otf", "MingLiU-01": "font/MingLiU-01.ttf" };
+for (const [name, url] of Object.entries(FONT_FILES)) {
+  new FontFace(name, `url('${url}')`).load().then((face) => {
+    document.fonts.add(face);
+    if (controls.font.value === name) reseed(); // la graine est redessinée avec la vraie police
+  }).catch((err) => console.error(`Impossible de charger la police ${name} :`, err));
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// WebGL : simulation de réaction-diffusion (Gray-Scott) sur GPU
+// État par cellule : R = u (substrat), G = v (matière qui pousse)
+// ═══════════════════════════════════════════════════════════════════
+const gl = glCanvas.getContext("webgl2", { preserveDrawingBuffer: true, antialias: false, premultipliedAlpha: false });
+if (!gl || !gl.getExtension("EXT_color_buffer_float")) {
+  statusEl.textContent = "Navigateur incompatible (WebGL2 float requis : Chrome ou Edge).";
+  throw new Error("WebGL2 + EXT_color_buffer_float requis");
+}
+
+const VS = `#version 300 es
+in vec2 aPos;
+void main() { gl_Position = vec4(aPos, 0.0, 1.0); }`;
+
+// Fonctions communes : lecture d'une cellule (bords fermés) et lecture interpolée
+const COMMON = `#version 300 es
+precision highp float;
+precision highp int;
+uniform sampler2D uState;
+uniform vec2 uRes;
+vec2 S(ivec2 p) { return texelFetch(uState, clamp(p, ivec2(0), ivec2(uRes) - 1), 0).rg; }
+vec2 bil(vec2 p) {
+  p -= 0.5;
+  ivec2 i = ivec2(floor(p));
+  vec2 f = fract(p);
+  return mix(mix(S(i), S(i + ivec2(1, 0)), f.x), mix(S(i + ivec2(0, 1)), S(i + ivec2(1, 1)), f.x), f.y);
+}
+float hash(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+`;
+
+const SIM_FS = COMMON + `
+uniform sampler2D uMask;
+uniform float uFeed, uKill, uVar, uFlowAmt, uHold;
+uniform int uFlow;
+out vec4 outColor;
+
+vec2 flowDir(vec2 uv) {
+  vec2 q = (uv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  vec2 r = normalize(q + 1e-5);
+  vec2 t = vec2(-r.y, r.x);
+  if (uFlow == 1) return r;                         // radial
+  if (uFlow == 2) return t;                         // tourbillon
+  if (uFlow == 3) return normalize(r + t * 1.6);    // vortex (spirale)
+  if (uFlow == 4) return vec2(0.0, 1.0);            // vertical
+  if (uFlow == 5) return vec2(1.0, 0.0);            // horizontal
+  return normalize(vec2(1.0, 1.4 * cos(q.y * 18.0) + 0.8 * sin(q.x * 9.0))); // ondes
+}
+
+void main() {
+  ivec2 p = ivec2(gl_FragCoord.xy);
+  vec2 c = S(p);
+  vec2 uv = gl_FragCoord.xy / uRes;
+
+  // laplacien 3×3 (poids 0.2 / 0.05)
+  vec2 lap = -c
+    + 0.2 * (S(p + ivec2(1, 0)) + S(p - ivec2(1, 0)) + S(p + ivec2(0, 1)) + S(p - ivec2(0, 1)))
+    + 0.05 * (S(p + ivec2(1, 1)) + S(p + ivec2(-1, 1)) + S(p + ivec2(1, -1)) + S(p - ivec2(1, 1)));
+
+  // flux : une partie de la diffusion ne se fait que le long d'une direction -> motifs orientés
+  if (uFlow > 0) {
+    vec2 d = flowDir(uv);
+    vec2 pc = gl_FragCoord.xy;
+    vec2 lapD = bil(pc + d) + bil(pc - d) - 2.0 * c;
+    lap = mix(lap, 0.5 * lapD, uFlowAmt);
+  }
+
+  // variation : la matière change du haut vers le bas de l'affiche
+  float feed = uFeed + uVar * (uv.y - 0.5) * 0.03;
+  float kill = uKill;
+
+  float u = c.r, v = c.g;
+  float uvv = u * v * v;
+  u += 1.0 * lap.r - uvv + feed * (1.0 - u);
+  v += 0.5 * lap.g + uvv - (kill + feed) * v;
+
+  // tenue du texte : les lettres continuent de nourrir la matière
+  float m = texelFetch(uMask, p, 0).r;
+  // (un plancher sur v : forcer u et v figerait le front et bloquerait la croissance)
+  if (m > 0.5) v = max(v, 0.25 * uHold);
+  outColor = vec4(clamp(u, 0.0, 1.0), clamp(v, 0.0, 1.0), 0.0, 1.0);
+}`;
+
+// Graine : le masque (texte / image / tracés) + des spores aléatoires
+const SEED_FS = COMMON + `
+uniform sampler2D uMask;
+uniform float uSeed, uSpores;
+out vec4 outColor;
+void main() {
+  ivec2 p = ivec2(gl_FragCoord.xy);
+  float m = texelFetch(uMask, p, 0).r;
+  float n = hash(gl_FragCoord.xy + uSeed * 17.0);
+  vec2 block = floor(gl_FragCoord.xy / 4.0);
+  bool spore = hash(block * 1.7 + uSeed * 31.0) < uSpores * 0.012;
+  // bruit fort dans la graine : l'intérieur des formes se texture aussi, pas seulement les bords
+  float n2 = hash(gl_FragCoord.yx * 1.3 + uSeed * 7.0);
+  if (m > 0.5 || spore) outColor = vec4(0.4 + 0.2 * n2, 0.15 + 0.2 * n, 0.0, 1.0);
+  else outColor = vec4(1.0, 0.0, 0.0, 1.0);
+}`;
+
+// Pinceau : sème ou gomme le long d'un segment (de la position précédente à la nouvelle)
+const BRUSH_FS = COMMON + `
+uniform vec2 uA, uB;
+uniform float uRadius, uErase, uSeed;
+out vec4 outColor;
+void main() {
+  vec2 p = gl_FragCoord.xy;
+  vec2 c = S(ivec2(p));
+  vec2 ab = uB - uA;
+  float h = clamp(dot(p - uA, ab) / max(dot(ab, ab), 1e-4), 0.0, 1.0);
+  float d = length(p - uA - ab * h);
+  if (d < uRadius) {
+    if (uErase > 0.5) c = vec2(1.0, 0.0);
+    else c = vec2(0.5, 0.25 + 0.1 * hash(p + uSeed));
+  }
+  outColor = vec4(c, 0.0, 1.0);
+}`;
+
+// Affichage : la matière (v) passe dans le dégradé 3 couleurs, avec relief optionnel
+const DISPLAY_FS = COMMON + `
+uniform vec2 uOut;
+uniform vec3 uC0, uC1, uC2;
+uniform float uContrast, uEmboss, uFlipY;
+out vec4 outColor;
+float V(vec2 p) { return bil(p).g; }
+void main() {
+  vec2 uv = gl_FragCoord.xy / uOut;
+  if (uFlipY > 0.5) uv.y = 1.0 - uv.y;
+  vec2 p = uv * uRes;
+  float v = V(p);
+  float t = clamp(v / 0.33, 0.0, 1.0);
+  float w = mix(0.5, 0.015, uContrast);
+  t = smoothstep(0.5 - w, 0.5 + w, t);
+  vec3 col = t < 0.5 ? mix(uC0, uC1, t * 2.0) : mix(uC1, uC2, t * 2.0 - 1.0);
+  if (uEmboss > 0.0) {
+    float dx = V(p + vec2(1.0, 0.0)) - V(p - vec2(1.0, 0.0));
+    float dy = V(p + vec2(0.0, 1.0)) - V(p - vec2(0.0, 1.0));
+    vec3 n = normalize(vec3(-dx * 12.0, -dy * 12.0, 1.0));
+    vec3 light = normalize(vec3(-0.6, 0.6, 0.8));
+    float shade = dot(n, light) - light.z; // 0 sur les zones plates : le fond garde sa couleur
+    col *= 1.0 + uEmboss * shade * 2.5;
+  }
+  outColor = vec4(clamp(col, 0.0, 1.0), 1.0);
+}`;
+
+function compile(type, src) {
+  const sh = gl.createShader(type);
+  gl.shaderSource(sh, src);
+  gl.compileShader(sh);
+  if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
+  return sh;
+}
+function program(fs) {
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
+  gl.bindAttribLocation(prog, 0, "aPos");
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  const loc = {};
+  const n = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < n; i++) {
+    const name = gl.getActiveUniform(prog, i).name;
+    loc[name] = gl.getUniformLocation(prog, name);
+  }
+  return { prog, loc };
+}
+const simProg = program(SIM_FS);
+const seedProg = program(SEED_FS);
+const brushProg = program(BRUSH_FS);
+const displayProg = program(DISPLAY_FS);
+
+// Un grand triangle qui couvre tout l'écran
+const vao = gl.createVertexArray();
+gl.bindVertexArray(vao);
+const vbo = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+gl.enableVertexAttribArray(0);
+gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+function makeTexture(w, h, internal, format, type) {
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, internal, w, h, 0, format, type, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return tex;
+}
+function makeTarget(tex) {
+  const fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  return fb;
+}
+
+// État de la simulation (2 textures en ping-pong) + masque de la graine
+let simW = 0, simH = 0;
+let state = [];      // [{ tex, fb }, { tex, fb }]
+let cur = 0;         // index de l'état courant
+let maskTex = null;
+const maskCanvas = document.createElement("canvas");
+const mctx = maskCanvas.getContext("2d", { willReadFrequently: true });
+
+// Tracés (souris / main), gardés dans le repère de la page pour être rejoués à chaque « Recommencer »
+let strokes = []; // [{ erase, radius, points: [[x, y], …] }]
+let seedValue = 1;
+let stepCount = 0;
+
+function allocSim() {
+  const n = num("scale");
+  const k = n / Math.min(sceneW, sceneH);
+  const w = Math.round(sceneW * k), h = Math.round(sceneH * k);
+  if (w === simW && h === simH && state.length) return;
+  for (const s of state) { gl.deleteTexture(s.tex); gl.deleteFramebuffer(s.fb); }
+  simW = w; simH = h;
+  state = [0, 1].map(() => {
+    const tex = makeTexture(w, h, gl.RGBA32F, gl.RGBA, gl.FLOAT);
+    return { tex, fb: makeTarget(tex) };
+  });
+  if (maskTex) gl.deleteTexture(maskTex);
+  maskTex = makeTexture(w, h, gl.R8, gl.RED, gl.UNSIGNED_BYTE);
+  maskCanvas.width = w;
+  maskCanvas.height = h;
+}
+
+function bindState(prog, unit = 0) {
+  gl.activeTexture(gl.TEXTURE0 + unit);
+  gl.bindTexture(gl.TEXTURE_2D, state[cur].tex);
+  gl.uniform1i(prog.loc.uState, unit);
+  gl.uniform2f(prog.loc.uRes, simW, simH);
+}
+function bindMask(prog, unit = 1) {
+  gl.activeTexture(gl.TEXTURE0 + unit);
+  gl.bindTexture(gl.TEXTURE_2D, maskTex);
+  gl.uniform1i(prog.loc.uMask, unit);
+}
+// Lance un passage qui lit l'état courant et écrit dans l'autre, puis échange
+function pass(prog, setUniforms) {
+  const next = 1 - cur;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, state[next].fb);
+  gl.viewport(0, 0, simW, simH);
+  gl.useProgram(prog.prog);
+  bindState(prog);
+  setUniforms?.(prog.loc);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  cur = next;
+}
+
+// ── Graine : texte + image + tracés dessinés dans le masque ──
+let sourceImage = null; // ImageBitmap importée
+
+function textLines() {
+  return controls.text.value.split("\n");
+}
+
+// Dessine le bloc de texte centré, dans le repère de la page (ctx déjà mis à l'échelle)
+function drawTextBlock(ctx, color) {
+  const size = num("fontSize");
+  const lh = size * num("lineHeight");
+  const lines = textLines();
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.font = `${size}px "${controls.font.value}"`;
+  ctx.letterSpacing = `${num("letterSpacing") * size}px`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const top = sceneH / 2 - (lh * (lines.length - 1)) / 2;
+  lines.forEach((line, i) => ctx.fillText(line, sceneW / 2, top + i * lh));
+  ctx.restore();
+}
+
+function drawImageMask(ctx) {
+  if (!sourceImage) return;
+  // image recadrée (cover) puis seuillée : les zones sombres deviennent de la graine
+  const w = maskCanvas.width, h = maskCanvas.height;
+  const tmp = document.createElement("canvas");
+  tmp.width = w; tmp.height = h;
+  const tctx = tmp.getContext("2d", { willReadFrequently: true });
+  const s = Math.max(w / sourceImage.width, h / sourceImage.height);
+  const dw = sourceImage.width * s, dh = sourceImage.height * s;
+  tctx.drawImage(sourceImage, (w - dw) / 2, (h - dh) / 2, dw, dh);
+  const data = tctx.getImageData(0, 0, w, h);
+  const px = data.data;
+  const thr = num("imageThreshold") * 255;
+  for (let i = 0; i < px.length; i += 4) {
+    const lum = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
+    const on = lum < thr && px[i + 3] > 128;
+    px[i] = px[i + 1] = px[i + 2] = on ? 255 : 0;
+    px[i + 3] = on ? 255 : 0;
+  }
+  tctx.putImageData(data, 0, 0);
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(tmp, 0, 0);
+  ctx.restore();
+}
+
+function drawStrokes(ctx) {
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  for (const s of strokes) {
+    ctx.globalCompositeOperation = s.erase ? "destination-out" : "source-over";
+    ctx.strokeStyle = "#fff";
+    ctx.fillStyle = "#fff";
+    ctx.lineWidth = s.radius * 2;
+    ctx.beginPath();
+    s.points.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    if (s.points.length === 1) { ctx.arc(s.points[0][0], s.points[0][1], s.radius, 0, Math.PI * 2); ctx.fill(); }
+    else ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function buildMask() {
+  const w = maskCanvas.width, h = maskCanvas.height;
+  mctx.setTransform(1, 0, 0, 1, 0, 0);
+  mctx.clearRect(0, 0, w, h);
+  mctx.setTransform(w / sceneW, 0, 0, h / sceneH, 0, 0);
+  const src = controls.source.value;
+  if (src !== "text") drawImageMask(mctx);
+  if (src !== "image" || !sourceImage) drawTextBlock(mctx, "#fff");
+  drawStrokes(mctx);
+  // le canvas 2D a l'origine en haut, la texture GL en bas : on retourne à l'envoi
+  gl.bindTexture(gl.TEXTURE_2D, maskTex);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, w, h, 0, gl.RED, gl.UNSIGNED_BYTE, maskCanvas);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+}
+
+// Repart de la graine (déterministe : même réglages = même croissance)
+function reseed() {
+  allocSim();
+  buildMask();
+  pass(seedProg, (loc) => {
+    bindMask(seedProg);
+    gl.uniform1f(loc.uSeed, seedValue);
+    gl.uniform1f(loc.uSpores, num("spores"));
+  });
+  stepCount = 0;
+  pendingGrowth = 0;
+}
+
+function step(n) {
+  const flow = Number(controls.flow.value);
+  for (let i = 0; i < n; i++) {
+    pass(simProg, (loc) => {
+      bindMask(simProg);
+      gl.uniform1f(loc.uFeed, num("feed"));
+      gl.uniform1f(loc.uKill, num("kill"));
+      gl.uniform1f(loc.uVar, num("variation"));
+      gl.uniform1i(loc.uFlow, flow);
+      gl.uniform1f(loc.uFlowAmt, num("flowAmount"));
+      gl.uniform1f(loc.uHold, num("hold"));
+    });
+  }
+  stepCount += n;
+}
+
+// Pinceau appliqué directement sur la matière (coordonnées de la page)
+function brushSegment(a, b, radius, erase) {
+  const k = simW / sceneW;
+  pass(brushProg, (loc) => {
+    gl.uniform2f(loc.uA, a[0] * k, (sceneH - a[1]) * k);
+    gl.uniform2f(loc.uB, b[0] * k, (sceneH - b[1]) * k);
+    gl.uniform1f(loc.uRadius, radius * k);
+    gl.uniform1f(loc.uErase, erase ? 1 : 0);
+    gl.uniform1f(loc.uSeed, Math.random() * 1000);
+  });
+}
+
+const hexToRgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+
+// Dessine la matière en couleurs dans fb (null = l'écran), à la taille w × h
+function renderDisplay(fb, w, h, flipY) {
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.viewport(0, 0, w, h);
+  gl.useProgram(displayProg.prog);
+  bindState(displayProg);
+  const L = displayProg.loc;
+  const cols = gradColorInputs.map((i) => hexToRgb(i.value));
+  gl.uniform3fv(L.uC0, cols[0]);
+  gl.uniform3fv(L.uC1, cols[1]);
+  gl.uniform3fv(L.uC2, cols[2]);
+  gl.uniform2f(L.uOut, w, h);
+  gl.uniform1f(L.uContrast, num("contrast"));
+  gl.uniform1f(L.uEmboss, num("emboss"));
+  gl.uniform1f(L.uFlipY, flipY ? 1 : 0);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+// ── Mise en page de la frame ──
+function applyFormat(key) {
+  currentFormat = key;
+  const { w, h } = FORMATS[key];
+  const scale = SCENE_SHORT_SIDE / Math.min(w, h);
+  const oldW = sceneW, oldH = sceneH;
+  sceneW = w * scale;
+  sceneH = h * scale;
+  // les tracés suivent le changement de format (recentrés)
+  const dx = (sceneW - oldW) / 2, dy = (sceneH - oldH) / 2;
+  strokes.forEach((s) => s.points.forEach((p) => { p[0] += dx; p[1] += dy; }));
+  formatButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.format === key));
+  $("formatInfo").textContent = `${w} × ${h} px`;
+  resizeScene();
+  restart();
+}
+
+let pixelScale = 1;
+function resizeScene() {
+  const maxW = mainEl.clientWidth - SCENE_MARGIN * 2;
+  const maxH = mainEl.clientHeight - SCENE_MARGIN * 2;
+  const ratio = sceneW / sceneH;
+  let dw = maxW, dh = dw / ratio;
+  if (dh > maxH) { dh = maxH; dw = dh * ratio; }
+  frameEl.style.width = dw + "px";
+  frameEl.style.height = dh + "px";
+  const dpr = window.devicePixelRatio || 1;
+  for (const c of [glCanvas, overlay]) {
+    c.width = Math.round(dw * dpr);
+    c.height = Math.round(dh * dpr);
+  }
+  pixelScale = overlay.width / sceneW;
+}
+window.addEventListener("resize", resizeScene);
+
+// ── Calque 2D : texte net, grille, curseur du pinceau ──
+function drawGrid(ctx) {
+  const cw = (sceneW - GRID_MARGIN * 2 - GRID_GUTTER * (GRID_COLS - 1)) / GRID_COLS;
+  const rh = (sceneH - GRID_MARGIN * 2 - GRID_GUTTER * (GRID_ROWS - 1)) / GRID_ROWS;
+  ctx.save();
+  ctx.strokeStyle = "rgba(255, 0, 80, 0.6)";
+  ctx.lineWidth = 1 / pixelScale;
+  for (let c = 0; c < GRID_COLS; c++) {
+    for (let r = 0; r < GRID_ROWS; r++) {
+      ctx.strokeRect(GRID_MARGIN + c * (cw + GRID_GUTTER), GRID_MARGIN + r * (rh + GRID_GUTTER), cw, rh);
+    }
+  }
+  ctx.restore();
+}
+
+// Couleur du texte net : celle de la matière
+const crispColor = () => gradColorInputs[2].value;
+
+let cursor = null; // { x, y, active, hand } dans le repère de la page
+function drawOverlay() {
+  octx.setTransform(1, 0, 0, 1, 0, 0);
+  octx.clearRect(0, 0, overlay.width, overlay.height);
+  octx.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
+  if (controls.crispText.checked) drawTextBlock(octx, crispColor());
+  if (controls.grid.checked) drawGrid(octx);
+  if (cursor) {
+    octx.save();
+    octx.lineWidth = 1.5 / pixelScale;
+    octx.strokeStyle = cursor.active ? "#ff0050" : "rgba(0,0,0,0.6)";
+    octx.setLineDash(controls.erase.checked || cursor.erase ? [4 / pixelScale, 4 / pixelScale] : []);
+    octx.beginPath();
+    octx.arc(cursor.x, cursor.y, num("brush"), 0, Math.PI * 2);
+    octx.stroke();
+    octx.restore();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Horloge : la simulation avance par « tics » de 1/30 s
+// Image : croissance libre, en continu. Vidéo : boucle de N s rejouée depuis la graine,
+// exactement comme l'export MP4 (même nombre de pas par image).
+// ═══════════════════════════════════════════════════════════════════
+const FPS = 30;
+let videoMode = false;
+let playing = true;
+let videoFrame = 0;
+let tickAcc = 0;
+let pendingGrowth = 0;   // pas restants de « Faire pousser »
+let lastTime = performance.now();
+
+const videoFrames = () => num("duration") * FPS;
+
+// Repart du début : graine, puis avance « Départ » en mode vidéo
+function restart() {
+  reseed();
+  videoFrame = 0;
+  if (videoMode) step(num("headStart"));
+}
+
+function tick() {
+  if (videoMode) {
+    if (videoFrame >= videoFrames()) restart();
+    step(num("speed"));
+    videoFrame++;
+  } else {
+    step(num("speed"));
+  }
+}
+
+function loop(now) {
+  const dt = Math.min(0.25, (now - lastTime) / 1000);
+  lastTime = now;
+
+  if (running && video.currentTime !== lastVideoTime) detectHand(now);
+  applyHandBrush();
+
+  if (playing) {
+    tickAcc += dt;
+    // au plus 2 tics par image affichée : si le GPU ralentit, l'animation ralentit sans saccader
+    let n = 0;
+    while (tickAcc >= 1 / FPS && n < 2) { tick(); tickAcc -= 1 / FPS; n++; }
+    if (n === 2) tickAcc = 0;
+  }
+  if (pendingGrowth > 0) {
+    const n = Math.min(pendingGrowth, 150);
+    step(n);
+    pendingGrowth -= n;
+  }
+
+  renderDisplay(null, glCanvas.width, glCanvas.height, false);
+  drawOverlay();
+  updateInfo();
+  if (running) drawPreview();
+  requestAnimationFrame(loop);
+}
+
+function updateInfo() {
+  const label = $("motionTimeLabel");
+  if (videoMode) label.textContent = `${(videoFrame / FPS).toFixed(2)} / ${num("duration").toFixed(2)} s`;
+  else label.textContent = playing ? "Croissance en cours" : "En pause";
+  $("simInfo").textContent = `${simW} × ${simH} cellules · ${stepCount} pas` + (pendingGrowth > 0 ? " · pousse…" : "");
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Pinceau à la souris
+// ═══════════════════════════════════════════════════════════════════
+let drawing = null; // tracé en cours
+
+function eventToPage(e) {
+  const r = overlay.getBoundingClientRect();
+  return [(e.clientX - r.left) / r.width * sceneW, (e.clientY - r.top) / r.height * sceneH];
+}
+
+function beginStroke(p, erase) {
+  drawing = { erase, radius: num("brush"), points: [p] };
+  strokes.push(drawing);
+  brushSegment(p, p, drawing.radius, erase);
+}
+function extendStroke(p) {
+  const last = drawing.points[drawing.points.length - 1];
+  if (Math.hypot(p[0] - last[0], p[1] - last[1]) < 1) return;
+  drawing.points.push(p);
+  brushSegment(last, p, drawing.radius, drawing.erase);
+}
+
+overlay.addEventListener("pointerdown", (e) => {
+  overlay.setPointerCapture(e.pointerId);
+  beginStroke(eventToPage(e), e.altKey || e.button === 2 || controls.erase.checked);
+});
+overlay.addEventListener("pointermove", (e) => {
+  const p = eventToPage(e);
+  cursor = { x: p[0], y: p[1], active: !!drawing, erase: e.altKey };
+  if (drawing) extendStroke(p);
+});
+overlay.addEventListener("pointerup", () => { drawing = null; });
+overlay.addEventListener("pointerleave", () => { if (!drawing) cursor = null; });
+overlay.addEventListener("contextmenu", (e) => e.preventDefault());
+
+// ═══════════════════════════════════════════════════════════════════
+// Main à la webcam (MediaPipe) : l'index pointe, la pince pouce + index sème
+// ═══════════════════════════════════════════════════════════════════
+const WRIST = 0, THUMB_TIP = 4, INDEX_TIP = 8, MIDDLE_MCP = 9;
+let handLandmarker = null;
+let running = false;
+let lastVideoTime = -1;
+let lastLandmarks = null;
+let handPos = null;      // position lissée dans la page
+let handPinching = false;
+let handStroke = null;
+
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y, (a.z ?? 0) - (b.z ?? 0));
+
+async function init() {
+  statusEl.textContent = "Chargement du modèle…";
+  // import à la demande : sans réseau, l'outil marche quand même (sans la main)
+  const { HandLandmarker, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14");
+  const vision = await FilesetResolver.forVisionTasks(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+  );
+  handLandmarker = await HandLandmarker.createFromOptions(vision, {
+    baseOptions: {
+      modelAssetPath:
+        "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+      delegate: "GPU",
+    },
+    runningMode: "VIDEO",
+    numHands: 1,
+  });
+  statusEl.textContent = "Modèle prêt.";
+  startBtn.disabled = false;
+}
+
+async function startCamera() {
+  startBtn.disabled = true;
+  statusEl.textContent = "Ouverture de la caméra…";
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 960 } },
+    audio: false,
+  });
+  video.srcObject = stream;
+  await video.play();
+  pcv.width = video.videoWidth;
+  pcv.height = video.videoHeight;
+  running = true;
+  startBtn.hidden = true;
+  stopBtn.hidden = false;
+  readout.textContent = "";
+}
+
+function stopCamera() {
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach((t) => t.stop());
+    video.srcObject = null;
+  }
+  running = false;
+  lastVideoTime = -1;
+  lastLandmarks = null;
+  handPos = null;
+  handStroke = null;
+  cursor = null;
+  pctx.clearRect(0, 0, pcv.width, pcv.height);
+  startBtn.hidden = false;
+  startBtn.disabled = false;
+  stopBtn.hidden = true;
+  readout.textContent = "Caméra coupée.";
+}
+
+function detectHand(now) {
+  lastVideoTime = video.currentTime;
+  const result = handLandmarker.detectForVideo(video, now);
+  lastLandmarks = result.landmarks?.[0] ?? null;
+  if (!lastLandmarks) { handPos = null; handPinching = false; return; }
+  const L = lastLandmarks;
+  const tip = L[INDEX_TIP];
+  // vue selfie : x inversé ; on étend un peu la zone utile pour atteindre les bords
+  const nx = Math.min(1, Math.max(0, ((1 - tip.x) - 0.5) * 1.3 + 0.5));
+  const ny = Math.min(1, Math.max(0, (tip.y - 0.5) * 1.3 + 0.5));
+  const target = [nx * sceneW, ny * sceneH];
+  handPos = handPos ? [handPos[0] + (target[0] - handPos[0]) * 0.5, handPos[1] + (target[1] - handPos[1]) * 0.5] : target;
+  const pinch = dist(L[THUMB_TIP], L[INDEX_TIP]) / dist(L[WRIST], L[MIDDLE_MCP]);
+  // hystérésis : évite que la pince clignote au seuil
+  handPinching = handPinching ? pinch < 0.45 : pinch < 0.3;
+}
+
+function applyHandBrush() {
+  if (!running) return;
+  if (!handPos) { handStroke = null; return; }
+  cursor = { x: handPos[0], y: handPos[1], active: handPinching, erase: false };
+  if (!handPinching) { handStroke = null; return; }
+  const p = [handPos[0], handPos[1]];
+  if (!handStroke) {
+    beginStroke(p, controls.erase.checked);
+    handStroke = drawing;
+    drawing = null;
+  } else {
+    const prev = drawing;
+    drawing = handStroke;
+    extendStroke(p);
+    drawing = prev;
+  }
+}
+
+function drawPreview() {
+  if (!video.videoWidth) return;
+  pctx.drawImage(video, 0, 0, pcv.width, pcv.height);
+  if (!lastLandmarks) return;
+  pctx.fillStyle = "#00e0a4";
+  for (const p of lastLandmarks) {
+    pctx.beginPath();
+    pctx.arc(p.x * pcv.width, p.y * pcv.height, 4, 0, Math.PI * 2);
+    pctx.fill();
+  }
+  const t = lastLandmarks[THUMB_TIP], i = lastLandmarks[INDEX_TIP];
+  pctx.beginPath();
+  pctx.moveTo(t.x * pcv.width, t.y * pcv.height);
+  pctx.lineTo(i.x * pcv.width, i.y * pcv.height);
+  pctx.lineWidth = 3;
+  pctx.strokeStyle = handPinching ? "#ff0050" : "#ffcf6b";
+  pctx.stroke();
+}
+
+startBtn.addEventListener("click", () => startCamera().catch((err) => {
+  statusEl.textContent = "Erreur caméra : " + err.message;
+  startBtn.disabled = false;
+}));
+stopBtn.addEventListener("click", stopCamera);
+
+// ═══════════════════════════════════════════════════════════════════
+// Réglages
+// ═══════════════════════════════════════════════════════════════════
+function updateGradientPreview() {
+  const c = gradColorInputs.map((i) => i.value);
+  gradientPreview.style.background = `linear-gradient(to right, ${c[0]}, ${c[1]}, ${c[2]})`;
+}
+gradColorInputs.forEach((i) => i.addEventListener("input", updateGradientPreview));
+$("gradientReverseBtn").addEventListener("click", () => {
+  const c = gradColorInputs.map((i) => i.value).reverse();
+  gradColorInputs.forEach((i, k) => (i.value = c[k]));
+  updateGradientPreview();
+});
+$("gradientNegativeBtn").addEventListener("click", () => {
+  gradColorInputs.forEach((i) => {
+    const n = 0xffffff ^ parseInt(i.value.slice(1), 16);
+    i.value = "#" + n.toString(16).padStart(6, "0");
+  });
+  updateGradientPreview();
+});
+
+// Ce qui change la graine -> on repart de la graine
+["text", "font", "fontSize", "lineHeight", "letterSpacing", "source", "imageThreshold", "scale", "spores"]
+  .forEach((k) => controls[k].addEventListener("input", restart));
+// En vidéo, la durée et le départ changent l'animation -> on rejoue depuis le début
+["duration", "headStart"].forEach((k) => controls[k].addEventListener("input", () => { if (videoMode) restart(); }));
+
+controls.preset.addEventListener("input", () => {
+  const p = PRESETS[controls.preset.value];
+  controls.feed.value = p.feed;
+  controls.kill.value = p.kill;
+});
+
+$("growBtn").addEventListener("click", () => { pendingGrowth += 1500; });
+$("reseedBtn").addEventListener("click", restart);
+$("newSeedBtn").addEventListener("click", () => { seedValue = Math.floor(Math.random() * 1e6); restart(); });
+$("clearStrokesBtn").addEventListener("click", () => { strokes = []; restart(); });
+
+$("importBtn").addEventListener("click", () => $("imageInput").click());
+$("imageInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  try {
+    sourceImage = await createImageBitmap(file);
+    $("imageName").textContent = file.name;
+    if (controls.source.value === "text") controls.source.value = "both";
+    restart();
+  } catch (err) {
+    alert("Image illisible : " + err.message);
+  }
+});
+
+$("resetBtn").addEventListener("click", () => {
+  for (const [k, el] of Object.entries(controls)) {
+    if (el.type === "checkbox") el.checked = DEFAULTS[k];
+    else el.value = DEFAULTS[k];
+  }
+  gradColorInputs.forEach((i, k) => (i.value = DEFAULT_COLORS[k]));
+  updateGradientPreview();
+  strokes = [];
+  sourceImage = null;
+  $("imageName").textContent = "Aucune image";
+  seedValue = 1;
+  restart();
+});
+
+$("privacyBtn").addEventListener("click", () => $("privacyDialog").showModal());
+
+// ── Mode Image / Vidéo ──
+modeButtons.forEach((btn) => btn.addEventListener("click", () => setMode(btn.dataset.mode)));
+function setMode(mode) {
+  videoMode = mode === "video";
+  modeButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+  $("exportBtn").hidden = videoMode;
+  $("exportMp4Btn").hidden = !videoMode;
+  $("durationRow").hidden = !videoMode;
+  $("headStartRow").hidden = !videoMode;
+  $("transport").querySelector('[data-action="start"]').title = videoMode ? "Début" : "Recommencer";
+  restart();
+  setPlaying(true);
+}
+
+function setPlaying(p) {
+  playing = p;
+  transportButtons.forEach((b) => {
+    const a = b.dataset.action;
+    b.classList.toggle("active", (a === "play" && p) || (a === "pause" && !p));
+  });
+}
+transportButtons.forEach((btn) => btn.addEventListener("click", () => {
+  switch (btn.dataset.action) {
+    case "start": restart(); break;
+    case "pause": setPlaying(false); break;
+    case "play": setPlaying(true); break;
+    case "next": setPlaying(false); tick(); break;
+  }
+}));
+
+formatButtons.forEach((btn) => btn.addEventListener("click", () => applyFormat(btn.dataset.format)));
+
+// ═══════════════════════════════════════════════════════════════════
+// Exports : la matière est recalculée à la taille réelle du format
+// ═══════════════════════════════════════════════════════════════════
+let exportTarget = null;
+function getExportTarget(w, h) {
+  if (!exportTarget || exportTarget.w !== w || exportTarget.h !== h) {
+    if (exportTarget) { gl.deleteTexture(exportTarget.tex); gl.deleteFramebuffer(exportTarget.fb); }
+    const tex = makeTexture(w, h, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE);
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    exportTarget = { w, h, tex, fb: makeTarget(tex), canvas, ctx: canvas.getContext("2d"), pixels: new Uint8ClampedArray(w * h * 4) };
+  }
+  return exportTarget;
+}
+
+// Rend l'affiche (matière + texte net) dans le canvas d'export
+function renderPoster() {
+  const { w, h } = FORMATS[currentFormat];
+  const t = getExportTarget(w, h);
+  renderDisplay(t.fb, w, h, true);
+  gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, t.pixels);
+  t.ctx.setTransform(1, 0, 0, 1, 0, 0);
+  t.ctx.putImageData(new ImageData(t.pixels, w, h), 0, 0);
+  if (controls.crispText.checked) {
+    t.ctx.setTransform(w / sceneW, 0, 0, h / sceneH, 0, 0);
+    drawTextBlock(t.ctx, crispColor());
+  }
+  return t.canvas;
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+$("exportBtn").addEventListener("click", () => {
+  const { w, h } = FORMATS[currentFormat];
+  renderPoster().toBlob((blob) => downloadBlob(blob, `typo-organique-${currentFormat}-${w}x${h}.png`), "image/png");
+});
+
+const exportMp4Btn = $("exportMp4Btn");
+exportMp4Btn.addEventListener("click", () => {
+  exportMP4().catch((err) => {
+    console.error(err);
+    alert("Export MP4 impossible : " + err.message);
+  }).finally(() => {
+    exportMp4Btn.disabled = false;
+    exportMp4Btn.textContent = "Exporter MP4";
+    setPlaying(true);
+  });
+});
+
+async function exportMP4() {
+  if (!("VideoEncoder" in window)) throw new Error("ce navigateur ne gère pas l'encodage vidéo (utilise Chrome ou Edge).");
+  exportMp4Btn.disabled = true;
+  exportMp4Btn.textContent = "Export… 0 %";
+  setPlaying(false);
+
+  const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5/+esm");
+  const { w, h } = FORMATS[currentFormat];
+  const config = { codec: "avc1.640033", width: w, height: h, bitrate: 12_000_000, framerate: FPS };
+  const { supported } = await VideoEncoder.isConfigSupported(config);
+  if (!supported) throw new Error(`encodage H.264 ${w}×${h} non supporté par ce navigateur.`);
+
+  const muxer = new Muxer({
+    target: new ArrayBufferTarget(),
+    video: { codec: "avc", width: w, height: h, frameRate: FPS },
+    fastStart: "in-memory",
+  });
+  let encodeError = null;
+  const encoder = new VideoEncoder({
+    output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+    error: (e) => { encodeError = e; },
+  });
+  encoder.configure(config);
+
+  // même déroulé que l'aperçu : graine, départ, puis « Vitesse » pas par image
+  restart();
+  const total = videoFrames();
+  const frameDuration = 1e6 / FPS;
+  for (let i = 0; i < total; i++) {
+    if (encodeError) throw encodeError;
+    const canvas = renderPoster();
+    const frame = new VideoFrame(canvas, { timestamp: i * frameDuration, duration: frameDuration });
+    encoder.encode(frame, { keyFrame: i % FPS === 0 });
+    frame.close();
+    step(num("speed"));
+    videoFrame = i + 1;
+    while (encoder.encodeQueueSize > 4) await new Promise((r) => setTimeout(r, 0));
+    exportMp4Btn.textContent = `Export… ${Math.round(((i + 1) / total) * 100)} %`;
+    if (i % 5 === 0) await new Promise((r) => setTimeout(r, 0));
+  }
+  await encoder.flush();
+  if (encodeError) throw encodeError;
+  encoder.close();
+  muxer.finalize();
+  downloadBlob(new Blob([muxer.target.buffer], { type: "video/mp4" }), `typo-organique-${currentFormat}-${w}x${h}-${num("duration")}s.mp4`);
+  restart();
+}
+
+// ── Démarrage ──
+updateGradientPreview();
+applyFormat(currentFormat);
+setPlaying(true);
+requestAnimationFrame(loop);
+init().catch((err) => { statusEl.textContent = "Détection de la main indisponible : " + err.message; });
+</script>
+</body>
+</html>
