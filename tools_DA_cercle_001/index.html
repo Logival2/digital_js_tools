@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Anneau de cartes piloté à la main</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&display=swap" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Panneau latéral (paramètres) -->
+<aside id="panel">
+  <!-- 2 blocs de texte centrés verticalement : colonnes 1-2 et colonnes 4-5 -->
+  <div id="textFields">
+    <textarea class="posterLine" placeholder="Colonnes 1-2" rows="2" maxlength="400">NORDWAY</textarea>
+    <textarea class="posterLine" placeholder="Colonnes 4-5" rows="2" maxlength="400">RUNNING</textarea>
+  </div>
+
+  <!-- Bloc de texte haut : 5 colonnes, taille ajustée automatiquement à la largeur -->
+  <div id="bigTextControl">
+    <textarea id="bigTextInput" class="posterLine" placeholder="Texte haut, pleine largeur" rows="3" maxlength="400">MOUNTAINS
+EXIST TO BE
+CHALLENGED.</textarea>
+  </div>
+
+  <!-- Taille de la typo du titre -->
+  <div id="fontSizeControl">
+    <label for="fontSizeSlider">Font size</label>
+    <input id="fontSizeSlider" type="range" min="12" max="320" step="1" value="29" />
+  </div>
+
+  <!-- Interlignage du bloc pleine largeur -->
+  <div id="lineHeightControl">
+    <label for="lineHeightSlider">Line height</label>
+    <input id="lineHeightSlider" type="range" min="0.5" max="3" step="0.01" value="0.84" />
+  </div>
+
+  <!-- Interlettrage (en fraction de la taille de police) -->
+  <div id="letterSpacingControl">
+    <label for="letterSpacingSlider">Letter spacing</label>
+    <input id="letterSpacingSlider" type="range" min="-0.2" max="1" step="0.01" value="-0.04" />
+  </div>
+
+  <!-- Fond : dégradé vertical à 3 couleurs (haut, milieu, bas) -->
+  <div id="bgControl">
+    <label for="gradientToggle">
+      <input id="gradientToggle" type="checkbox" checked />
+      Dégradé
+    </label>
+    <div id="gradientColors">
+      <input type="color" class="gradColor" value="#00ff80" title="Haut" aria-label="Couleur du haut" />
+      <input type="color" class="gradColor" value="#7dffbe" title="Milieu" aria-label="Couleur du milieu" />
+      <input type="color" class="gradColor" value="#ffffff" title="Bas" aria-label="Couleur du bas" />
+    </div>
+    <div id="gradientPreview" aria-hidden="true"></div>
+    <div id="gradientActions">
+      <button id="gradientReverseBtn" type="button" title="Retourne le dégradé : haut ↔ bas">Inverser</button>
+      <button id="gradientNegativeBtn" type="button" title="Remplace chaque couleur par sa complémentaire">Négatif</button>
+    </div>
+  </div>
+
+  <!-- Afficher / masquer la grille -->
+  <div id="gridControl">
+    <label for="gridToggle">
+      <input id="gridToggle" type="checkbox" />
+      Grille
+    </label>
+  </div>
+
+  <!-- Réglages de l'anneau (sans la caméra), juste au-dessus de la vue caméra -->
+  <div id="cardSettings">
+    <!-- Images affichées à la place des cartes noires -->
+    <div id="imageControl">
+      <button id="importBtn" type="button">Importer des images</button>
+      <input id="imageInput" type="file" accept="image/*" multiple hidden />
+      <ul id="imageList"></ul>
+    </div>
+
+    <!-- Nombre de cartes -->
+    <div id="cardCountControl">
+      <label for="cardCountSlider">Cards</label>
+      <input id="cardCountSlider" type="range" min="4" max="18" step="1" value="10" />
+    </div>
+
+    <!-- Rayon de l'anneau -->
+    <div id="radiusControl">
+      <label for="radiusSlider">Radius</label>
+      <input id="radiusSlider" type="range" min="30" max="400" step="1" value="300" />
+    </div>
+  </div>
+
+  <!-- Barre de contrôle, juste au-dessus de la fenêtre caméra -->
+  <div id="bar">
+    <button id="startBtn" disabled>Démarrer la caméra</button>
+    <button id="stopBtn" type="button" hidden>Stop cam</button>
+    <span id="readout"><span class="status" id="status">En attente…</span></span>
+  </div>
+
+  <!-- Recopie de la caméra, pleine largeur du panneau -->
+  <div id="preview">
+    <video id="cam" playsinline muted></video>
+    <canvas id="previewCanvas"></canvas>
+  </div>
+
+  <!-- Réinitialise tous les réglages -->
+  <button id="resetBtn" type="button">Réinitialiser</button>
+
+  <button id="privacyBtn" type="button">Confidentialité · RGPD</button>
+</aside>
+
+<!-- Notice de confidentialité (RGPD) -->
+<dialog id="privacyDialog" aria-labelledby="privacyTitle">
+  <h2 id="privacyTitle">Confidentialité · RGPD</h2>
+
+  <h3>Responsable</h3>
+  <p>Valentin Maynadié — contact : <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
+
+  <h3>Caméra</h3>
+  <p>La caméra n'est activée que si tu cliques sur « Démarrer la caméra », après autorisation de ton navigateur.
+  Le flux vidéo est analysé uniquement dans ton navigateur pour détecter la position de ta main :
+  aucune image ni vidéo n'est enregistrée, conservée ou envoyée à un serveur.
+  Tu peux l'arrêter à tout moment avec « Stop cam ».</p>
+
+  <h3>Images et exports</h3>
+  <p>Les images que tu importes restent sur ton appareil : elles sont chargées en mémoire le temps de la session
+  et disparaissent à la fermeture de la page. Les fichiers PNG et MP4 sont générés localement.</p>
+
+  <h3>Cookies et suivi</h3>
+  <p>Ce site n'utilise ni cookies, ni mesure d'audience, ni compte utilisateur.</p>
+
+  <h3>Services tiers</h3>
+  <p>Pour fonctionner, ton navigateur télécharge des fichiers auprès de :</p>
+  <ul>
+    <li>Google Fonts — police d'interface ;</li>
+    <li>jsDelivr — bibliothèque de détection de la main (MediaPipe) et, lors d'un export MP4, l'assembleur vidéo ;</li>
+    <li>Google Cloud Storage — modèle de détection de la main.</li>
+  </ul>
+  <p>Ces services reçoivent ton adresse IP, nécessaire à l'envoi des fichiers, selon leurs propres politiques de confidentialité.</p>
+
+  <h3>Tes droits</h3>
+  <p>Ce site ne conserve aucune donnée personnelle. Pour toute question sur tes droits (accès, rectification,
+  effacement, opposition), écris à l'adresse ci-dessus. Tu peux aussi saisir la CNIL (cnil.fr).</p>
+
+  <form method="dialog">
+    <button type="submit">Fermer</button>
+  </form>
+</dialog>
+
+<!-- Zone principale : scène au format DIN portrait (1 : √2), fond blanc, cartes noires -->
+<div id="main">
+  <canvas id="scene"></canvas>
+  <!-- 2e frame, même format : la première image de la série en plein cadre -->
+  <canvas id="scene2"></canvas>
+</div>
+
+<!-- Panneau de droite, calé en bas : mode, format de l'affiche, lecteur, export -->
+<aside id="rightPanel">
+  <!-- Mode de travail : affiche (boucle 5 min, export PNG) ou vidéo (boucle 5 s, export MP4) -->
+  <div id="modeSwitch" role="group" aria-label="Mode">
+    <button type="button" data-mode="image" aria-pressed="true">Image</button>
+    <button type="button" data-mode="video" aria-pressed="false">Vidéo</button>
+  </div>
+
+  <div id="formatButtons">
+    <button type="button" data-format="din">A4</button>
+    <button type="button" data-format="square">1:1</button>
+    <button type="button" data-format="portrait">4:5</button>
+    <button type="button" data-format="story">9:16</button>
+  </div>
+  <p id="formatInfo"></p>
+
+  <!-- Lecture de la boucle (5 min en image, 5 s en vidéo) -->
+  <div id="motionControls">
+    <div id="transport">
+      <button type="button" data-action="start" title="Début" aria-label="Début">
+        <svg viewBox="0 0 16 16"><rect x="3" y="3" width="2" height="10"/><polygon points="13,3 13,13 6,8"/></svg>
+      </button>
+      <button type="button" data-action="prev" title="Image précédente" aria-label="Image précédente">
+        <svg viewBox="0 0 16 16"><polygon points="12,3 12,13 4,8"/></svg>
+      </button>
+      <button type="button" data-action="pause" title="Pause" aria-label="Pause">
+        <svg viewBox="0 0 16 16"><rect x="4" y="3" width="3" height="10"/><rect x="9" y="3" width="3" height="10"/></svg>
+      </button>
+      <button type="button" data-action="play" title="Lecture" aria-label="Lecture">
+        <svg viewBox="0 0 16 16"><polygon points="4,3 4,13 12,8"/></svg>
+      </button>
+      <button type="button" data-action="next" title="Image suivante" aria-label="Image suivante">
+        <svg viewBox="0 0 16 16"><polygon points="3,3 3,13 10,8"/><rect x="11" y="3" width="2" height="10"/></svg>
+      </button>
+    </div>
+    <p id="motionTimeLabel">0.00 / 5.00 s</p>
+  </div>
+
+  <button id="exportBtn" type="button">Exporter PNG</button>
+  <button id="exportMp4Btn" type="button" hidden>Exporter MP4 (5 s)</button>
+</aside>
+
+<script type="module">
+import {
+  HandLandmarker,
+  FilesetResolver,
+} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+
+const video       = document.getElementById("cam");
+const mainEl      = document.getElementById("main");
+const scene       = document.getElementById("scene");
+let sctx          = scene.getContext("2d"); // remplacé le temps d'un export PNG
+const scene2      = document.getElementById("scene2");
+const s2ctx       = scene2.getContext("2d");
+const pcv         = document.getElementById("previewCanvas");
+const pctx        = pcv.getContext("2d");
+const startBtn    = document.getElementById("startBtn");
+const stopBtn     = document.getElementById("stopBtn");
+const statusEl    = document.getElementById("status");
+const readout     = document.getElementById("readout");
+const textInputs  = Array.from(document.querySelectorAll("#textFields .posterLine"));
+const bigTextInput = document.getElementById("bigTextInput");
+const fontSizeSlider = document.getElementById("fontSizeSlider");
+const lineHeightSlider = document.getElementById("lineHeightSlider");
+const letterSpacingSlider = document.getElementById("letterSpacingSlider");
+const cardCountSlider = document.getElementById("cardCountSlider");
+const radiusSlider = document.getElementById("radiusSlider");
+const gridToggle  = document.getElementById("gridToggle");
+const resetBtn    = document.getElementById("resetBtn");
+const formatButtons = Array.from(document.querySelectorAll("#formatButtons button"));
+const formatInfo  = document.getElementById("formatInfo");
+const exportBtn   = document.getElementById("exportBtn");
+const exportMp4Btn = document.getElementById("exportMp4Btn");
+const modeButtons = Array.from(document.querySelectorAll("#modeSwitch button"));
+const motionTimeLabel = document.getElementById("motionTimeLabel");
+const transportButtons = Array.from(document.querySelectorAll("#transport button"));
+const importBtn   = document.getElementById("importBtn");
+const imageInput  = document.getElementById("imageInput");
+const imageList   = document.getElementById("imageList");
+
+const DEFAULT_FONT_SIZE = Number(fontSizeSlider.value);
+const DEFAULT_LINE_HEIGHT = Number(lineHeightSlider.value);
+const DEFAULT_LETTER_SPACING = Number(letterSpacingSlider.value);
+const DEFAULT_CARD_COUNT = Number(cardCountSlider.value);
+const DEFAULT_RADIUS = Number(radiusSlider.value);
+const DEFAULT_TEXTS = textInputs.map((input) => input.value);
+const DEFAULT_BIG_TEXT = bigTextInput.value;
+const DEFAULT_SHOW_GRID = gridToggle.checked;
+
+// Fond en dégradé (vert → menthe → blanc par défaut, lu sur les pastilles du HTML)
+const gradientToggle = document.getElementById("gradientToggle");
+const gradColorInputs = Array.from(document.querySelectorAll(".gradColor"));
+const gradientPreview = document.getElementById("gradientPreview");
+const gradientActionButtons = Array.from(document.querySelectorAll("#gradientActions button"));
+const DEFAULT_GRADIENT_ON = gradientToggle.checked;
+const DEFAULT_GRADIENT_COLORS = gradColorInputs.map((input) => input.value);
+let gradientOn = DEFAULT_GRADIENT_ON;
+let gradientColors = [...DEFAULT_GRADIENT_COLORS];
+
+// Indices des 21 points de la main (modèle MediaPipe)
+const WRIST = 0;      // poignet
+const THUMB_TIP = 4;  // bout du pouce
+const INDEX_TIP = 8;  // bout de l'index
+const MIDDLE_MCP = 9; // base du majeur (référence d'échelle)
+const PINKY_TIP = 20; // bout de l'auriculaire (petit doigt)
+
+let handLandmarker = null;
+let running = false;
+let lastVideoTime = -1;
+
+// 2 blocs de texte (colonnes 1-2 et 4-5), centrés verticalement sur l'affiche
+let posterLines = [...DEFAULT_TEXTS];
+let bigText = DEFAULT_BIG_TEXT;              // bloc bas pleine largeur
+let posterFontSize = DEFAULT_FONT_SIZE;      // taille du texte, réglée par le slider
+let lineHeightMul = DEFAULT_LINE_HEIGHT;     // interlignage du bloc pleine largeur (× sa taille)
+let letterSpacingEm = DEFAULT_LETTER_SPACING; // interlettrage (× la taille de police)
+let showGrid = gridToggle.checked;           // afficher / masquer la grille
+
+// Grille de mise en page de l'affiche : 5 colonnes × 10 lignes, marge + gouttière de 10px
+const GRID_MARGIN = 10;
+const GRID_GUTTER = 10;
+const GRID_COLS = 5;
+const GRID_ROWS = 10;
+
+// Largeur d'une colonne de la grille
+function columnWidth() {
+  return (sceneW - GRID_MARGIN * 2 - GRID_GUTTER * (GRID_COLS - 1)) / GRID_COLS;
+}
+
+// Position (x) du bord gauche de la colonne i (0-indexée)
+function columnX(i) {
+  return GRID_MARGIN + i * (columnWidth() + GRID_GUTTER);
+}
+
+// Zone horizontale de chaque champ de texte (colonnes 0-indexées, incluses) :
+// champ 1 -> colonnes 1-2, champ 2 -> colonnes 4-5
+const TEXT_SLOTS = [
+  { fromCol: 0, toCol: 1 },
+  { fromCol: 3, toCol: 4 },
+];
+
+// Hauteur d'une ligne de la grille
+function rowHeight() {
+  return (sceneH - GRID_MARGIN * 2 - GRID_GUTTER * (GRID_ROWS - 1)) / GRID_ROWS;
+}
+
+// Position (y) du bord haut de la ligne i (0-indexée)
+function rowY(i) {
+  return GRID_MARGIN + i * (rowHeight() + GRID_GUTTER);
+}
+
+// Police "maison" chargée depuis /font, utilisée uniquement pour le titre sur l'affiche
+const posterFace = new FontFace(
+  "MingLiU-01",
+  "url('font/MingLiU-01.ttf')"
+);
+posterFace.load().then((loaded) => {
+  document.fonts.add(loaded); // la boucle d'animation redessinera au prochain tick
+}).catch((err) => {
+  console.error("Impossible de charger la police MingLiU-01 :", err);
+});
+
+// Police du gros titre pleine largeur
+new FontFace("Replica Mono", "url('font/Replica-Mono.otf')").load().then((loaded) => {
+  document.fonts.add(loaded);
+}).catch((err) => {
+  console.error("Impossible de charger la police Replica Mono :", err);
+});
+
+// MingLiU n'existe qu'en une graisse fine : on l'épaissit légèrement avec un
+// contour de la même couleur (faux gras), proportionnel à la taille du texte.
+const POSTER_EMBOLDEN = 0.025; // épaisseur du contour, en fraction de la taille de police
+
+// Logo affiché en petit au centre de l'affiche
+const LOGO_SIZE = 90; // largeur du logo (px, repère de la page)
+const logoImg = new Image();
+logoImg.onload = buildLogo;
+logoImg.src = "sources_img/5621.png";
+let logoBitmap = null;
+
+// Réduire 1080px -> ~90px d'un seul drawImage fait sauter des pixels (traits
+// fins hachés). On réduit donc par moitiés successives jusqu'à la taille exacte
+// en pixels, une seule fois (et à chaque redimensionnement de la page).
+function buildLogo() {
+  logoBitmap = makeLogoBitmap(pixelScale);
+}
+
+function makeLogoBitmap(scale) {
+  if (!logoImg.complete || !logoImg.naturalWidth) return null;
+  const targetW = Math.round(LOGO_SIZE * scale);
+  const targetH = Math.round(targetW * logoImg.naturalHeight / logoImg.naturalWidth);
+
+  let src = logoImg;
+  let w = logoImg.naturalWidth;
+  let h = logoImg.naturalHeight;
+  while (w / 2 > targetW) {
+    w = Math.round(w / 2);
+    h = Math.round(h / 2);
+    src = drawScaled(src, w, h);
+  }
+  return drawScaled(src, targetW, targetH);
+}
+
+function drawScaled(src, w, h) {
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(src, 0, 0, w, h);
+  return canvas;
+}
+
+// Rayon (lissé) du cercle sur lequel sont disposées les cartes
+let radius = DEFAULT_RADIUS;
+// bornes lues sur le slider « Radius » (une seule source à modifier, dans le HTML)
+const RADIUS_MIN = Number(radiusSlider.min);
+const RADIUS_MAX = Number(radiusSlider.max);
+
+// Anneau de cartes noires VERTICALES qui tourne lentement
+const CARD_W = 120;        // largeur d'une carte (px) — +200 %
+const CARD_H = 192;        // hauteur d'une carte (px) — +200 %
+const CARD_AREA = CARD_W * CARD_H; // surface conservée quand une carte prend le ratio d'une image
+const SPIN_SPEED = 0.36;   // vitesse de rotation (rad / s), = 0.006 rad/image à 60 fps
+let spin = 0;              // angle de rotation courant
+
+// Nombre de cartes (lissé), piloté par l'écart pouce ↔ petit doigt
+let cardCount = DEFAULT_CARD_COUNT;
+// bornes lues sur le slider « Cards »
+const CARD_MIN = Number(cardCountSlider.min);
+const CARD_MAX = Number(cardCountSlider.max);
+
+// Valeurs manuelles (sliders « Cards » / « Radius »), utilisées comme cible
+// quand aucune main n'est détectée — le geste prend le dessus dès qu'il y en a une.
+let manualCardCount = DEFAULT_CARD_COUNT;
+let manualRadius = DEFAULT_RADIUS;
+
+// Images importées : { name, bitmap }. Remplacent les cartes noires, en
+// boucle dans l'ordre si les cartes sont plus nombreuses que les images.
+let cardImages = [];
+
+function dist(a, b) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  const dz = (a.z ?? 0) - (b.z ?? 0);
+  return Math.hypot(dx, dy, dz);
+}
+
+// Ratio de pincement pouce ↔ index -> rayon de l'anneau
+function pinchToRadius(ratio) {
+  // ratio observé ≈ 0.15 (doigts collés) → ≈ 1.1 (doigts écartés)
+  const t = (ratio - 0.15) / (1.1 - 0.15);
+  const clamped = Math.min(1, Math.max(0, t));
+  return RADIUS_MIN + clamped * (RADIUS_MAX - RADIUS_MIN);
+}
+
+// Écart pouce ↔ petit doigt -> nombre de cartes (bornes du slider « Cards »)
+function spreadToCount(ratio) {
+  // ratio observé ≈ 0.35 (main fermée) → ≈ 1.7 (main grande ouverte)
+  const t = (ratio - 0.35) / (1.7 - 0.35);
+  const clamped = Math.min(1, Math.max(0, t));
+  return CARD_MIN + clamped * (CARD_MAX - CARD_MIN);
+}
+
+const SCENE_MARGIN = 40; // marge autour de la page, en px CSS
+
+// Formats d'affiche : taille réelle d'export en px
+const FORMATS = {
+  din:      { w: 1240, h: 1754 }, // DIN A4 portrait (1:√2), 150 dpi
+  square:   { w: 1080, h: 1080 }, // 1:1
+  portrait: { w: 1080, h: 1350 }, // 4:5 portrait Instagram
+  story:    { w: 1080, h: 1920 }, // 9:16 story
+};
+let currentFormat = "din";
+
+// Repère de dessin de la page (marges, gouttières, cartes, texte…). Son PETIT
+// côté vaut toujours 800 unités, quel que soit le format : toutes les tailles
+// gardent donc les mêmes proportions, seul le grand côté s'allonge. Ce repère
+// ne dépend ni de la fenêtre ni du zoom navigateur ; seule la taille
+// d'AFFICHAGE (CSS) de la page s'adapte à l'espace disponible.
+const SCENE_SHORT_SIDE = 800;
+let sceneW = 800;
+let sceneH = 800;
+
+function applyFormat(key) {
+  currentFormat = key;
+  const { w, h } = FORMATS[key];
+  const scale = SCENE_SHORT_SIDE / Math.min(w, h);
+  sceneW = w * scale;
+  sceneH = h * scale;
+  formatButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.format === key));
+  formatInfo.textContent = `${w} × ${h} px`;
+  resizeScene();
+}
+
+// Pixels physiques d'écran par unité du repère de la page
+let pixelScale = 1;
+
+const FRAME_GAP = 20; // espace entre les deux frames (px CSS)
+
+function resizeScene() {
+  // deux frames côte à côte, de même taille
+  const maxW = (mainEl.clientWidth - SCENE_MARGIN * 2 - FRAME_GAP) / 2;
+  const maxH = mainEl.clientHeight - SCENE_MARGIN * 2;
+  const ratio = sceneW / sceneH;
+
+  let displayW = maxW;
+  let displayH = displayW / ratio;
+  if (displayH > maxH) {
+    displayH = maxH;
+    displayW = displayH * ratio;
+  }
+
+  // taille affichée (CSS), variable selon la fenêtre/le zoom
+  scene.style.width = displayW + "px";
+  scene.style.height = displayH + "px";
+
+  // Le buffer du canvas correspond exactement aux pixels physiques affichés
+  // (sinon le navigateur re-réduit toute l'image et abîme les traits fins) ;
+  // la transformation ramène le dessin dans le repère fixe sceneW × sceneH.
+  const dpr = window.devicePixelRatio || 1;
+  scene.width = Math.round(displayW * dpr);
+  scene.height = Math.round(displayH * dpr);
+  pixelScale = scene.width / sceneW;
+  sctx.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
+  sctx.imageSmoothingQuality = "high";
+
+  // 2e frame : exactement la même taille et la même résolution
+  scene2.style.width = scene.style.width;
+  scene2.style.height = scene.style.height;
+  scene2.width = scene.width;
+  scene2.height = scene.height;
+  s2ctx.imageSmoothingQuality = "high";
+
+  buildLogo(); // le logo est pré-réduit à la taille écran exacte
+}
+window.addEventListener("resize", resizeScene);
+applyFormat(currentFormat);
+requestAnimationFrame(loop); // démarre la boucle d'animation (rotation incluse) dès le chargement
+
+async function init() {
+  statusEl.textContent = "Chargement du modèle…";
+  const vision = await FilesetResolver.forVisionTasks(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+  );
+  handLandmarker = await HandLandmarker.createFromOptions(vision, {
+    baseOptions: {
+      modelAssetPath:
+        "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+      delegate: "GPU",
+    },
+    runningMode: "VIDEO",
+    numHands: 1,
+  });
+  statusEl.textContent = "Modèle prêt. Clique sur « Démarrer la caméra ».";
+  startBtn.disabled = false;
+}
+
+async function startCamera() {
+  startBtn.disabled = true;
+  statusEl.textContent = "Ouverture de la caméra…";
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 960 } },
+    audio: false,
+  });
+  video.srcObject = stream;
+  await video.play();
+
+  // le canvas de preview suit la résolution réelle de la vidéo
+  pcv.width = video.videoWidth;
+  pcv.height = video.videoHeight;
+
+  running = true;
+  startBtn.hidden = true;
+  stopBtn.hidden = false;
+  readout.textContent = "";
+}
+
+function stopCamera() {
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach((track) => track.stop());
+    video.srcObject = null;
+  }
+  running = false;
+  lastVideoTime = -1;
+  lastLandmarks = null;
+  lastHandTime = -Infinity; // repasse tout de suite sur les sliders
+  pctx.clearRect(0, 0, pcv.width, pcv.height);
+
+  startBtn.hidden = false;
+  startBtn.disabled = false;
+  stopBtn.hidden = true;
+  readout.textContent = "Caméra coupée.";
+}
+
+// Boucle d'animation permanente : tourne dès le chargement de la page (cartes
+// par défaut, rotation incluse), que la caméra soit démarrée ou non. Quand
+// la caméra tourne, elle vient en plus détecter la main à chaque frame.
+// La caméra livre ~30 images/s alors que la boucle tourne à ~60 : on garde
+// donc la dernière main détectée entre deux images vidéo (sinon la cible
+// alterne main / sliders une frame sur deux et l'anneau saccade).
+let lastLandmarks = null;
+let lastHandTime = -Infinity;
+let handRadius = DEFAULT_RADIUS;
+let handCount = DEFAULT_CARD_COUNT;
+const HAND_HOLD_MS = 300;    // tolère une détection ratée sans repasser sur les sliders
+
+// Temps de réponse du lissage (s) : plus c'est grand, plus c'est doux
+const RADIUS_SMOOTH_S = 0.18;
+const COUNT_SMOOTH_S = 0.45;
+
+let lastFrameTime = performance.now();
+
+function loop(now) {
+  const dt = Math.min(0.1, Math.max(0, (now - lastFrameTime) / 1000));
+  lastFrameTime = now;
+
+  if (running && video.currentTime !== lastVideoTime) {
+    lastVideoTime = video.currentTime;
+    const result = handLandmarker.detectForVideo(video, now);
+    if (result.landmarks && result.landmarks.length > 0) {
+      lastLandmarks = result.landmarks[0]; // coords normalisées 0..1
+      lastHandTime = now;
+      updateHandTargets(lastLandmarks);
+    } else {
+      lastLandmarks = null;
+    }
+  }
+
+  render(dt, now - lastHandTime < HAND_HOLD_MS);
+  requestAnimationFrame(loop);
+}
+
+function updateHandTargets(landmarks) {
+  const handSize = dist(landmarks[WRIST], landmarks[MIDDLE_MCP]);
+
+  // pouce ↔ index -> rayon
+  const pinchRatio = dist(landmarks[THUMB_TIP], landmarks[INDEX_TIP]) / handSize;
+  handRadius = pinchToRadius(pinchRatio);
+
+  // pouce ↔ petit doigt -> nombre de cartes
+  const spreadRatio = dist(landmarks[THUMB_TIP], landmarks[PINKY_TIP]) / handSize;
+  handCount = spreadToCount(spreadRatio);
+}
+
+function render(dt, handActive) {
+  if (motionPlaying) motionTime = (motionTime + dt) % loopDuration();
+  updateMotionTime();
+
+  if (motionMode || motionTime < MOTION_INTRO) {
+    // vidéo : tout est fonction du temps ; image : même ouverture au début de la boucle
+    ({ radius, cardCount, spin } = motionStateAt(motionTime));
+  } else {
+    // Mode image après l'ouverture : la rotation suit le temps du lecteur (figée
+    // en pause), mais sliders et main restent actifs même en pause.
+    // une main présente prend le dessus sur les sliders « Cards » / « Radius »
+    const targetRadius = handActive ? handRadius : manualRadius;
+    const targetCount = handActive ? handCount : manualCardCount;
+
+    // lissage exponentiel indépendant du framerate
+    radius += (targetRadius - radius) * (1 - Math.exp(-dt / RADIUS_SMOOTH_S));
+    cardCount += (targetCount - cardCount) * (1 - Math.exp(-dt / COUNT_SMOOTH_S));
+    spin = SPIN_SPEED * motionTime;
+  }
+
+  drawScene();
+  drawFrame2();
+  if (running) drawPreview(lastLandmarks);
+}
+
+// ── Lecteur : une horloge commune aux deux modes ──
+// Vidéo : boucle de 5 s entièrement calculée à partir du temps t (pas
+// d'accumulation d'une frame à l'autre), pour que la prévisualisation et
+// l'export MP4 image par image donnent exactement la même animation.
+// Image : boucle de 5 min, l'ouverture de l'anneau rejouée à chaque tour.
+const MOTION_DURATION = 5;    // boucle du mode vidéo (s)
+const IMAGE_DURATION = 300;   // boucle du mode image (s)
+const MOTION_FPS = 30;        // images/s de l'export MP4
+const MOTION_INTRO = 2;       // durée de l'ouverture de l'anneau (s)
+let motionMode = false;
+let motionPlaying = true;
+let motionTime = 0;           // position dans la boucle (s)
+
+const loopDuration = () => (motionMode ? MOTION_DURATION : IMAGE_DURATION);
+
+// Courbe de vitesse de l'ouverture : départ et arrivée très doux, accélération
+// au milieu (ease-in-out quartique), pour éviter tout à-coup.
+const easeInOutQuart = (x) => (x < 0.5 ? 8 * x ** 4 : 1 - (-2 * x + 2) ** 4 / 2);
+
+// Au début de la boucle, l'anneau part des valeurs minimales des sliders
+// (4 cartes resserrées au centre) et rejoint en 2 s les valeurs réglées.
+function motionStateAt(t) {
+  const k = easeInOutQuart(Math.min(1, t / MOTION_INTRO));
+  const minRadius = Number(radiusSlider.min);
+  const minCount = Number(cardCountSlider.min);
+  return {
+    radius: minRadius + (manualRadius - minRadius) * k,
+    cardCount: minCount + (manualCardCount - minCount) * k,
+    spin: SPIN_SPEED * t,
+  };
+}
+
+function drawBackground() {
+  if (gradientOn) {
+    const gradient = sctx.createLinearGradient(0, 0, 0, sceneH);
+    gradient.addColorStop(0, gradientColors[0]);
+    gradient.addColorStop(0.5, gradientColors[1]);
+    gradient.addColorStop(1, gradientColors[2]);
+    sctx.fillStyle = gradient;
+  } else {
+    sctx.fillStyle = "#ffffff";
+  }
+  sctx.fillRect(0, 0, sceneW, sceneH);
+}
+
+// ── 2e frame : la première image de la série, en plein cadre ──
+// Recadrée (comme object-fit: cover) et réduite une seule fois à la taille
+// exacte de la frame en pixels écran, puis simplement recopiée à chaque image.
+let hero = { entry: null, img: null, baked: null };
+
+function updateHero() {
+  const first = cardImages[0] || null;
+  if (first !== hero.entry) {
+    const target = { entry: first, img: null, baked: null };
+    hero = target;
+    if (first) {
+      decodeImage(first.source)
+        .then((img) => { target.img = img; })
+        .catch((err) => console.error(`Image « ${first.name} » illisible :`, err));
+    }
+  }
+  if (hero.img && (!hero.baked || hero.baked.width !== scene2.width || hero.baked.height !== scene2.height)) {
+    hero.baked = bakeCover(hero.img, scene2.width, scene2.height);
+  }
+}
+
+function bakeCover(img, W, H) {
+  // zone de l'image qui remplit le cadre sans déformation
+  const scale = Math.max(W / img.naturalWidth, H / img.naturalHeight);
+  const sw = W / scale;
+  const sh = H / scale;
+  let src = document.createElement("canvas");
+  src.width = Math.round(sw);
+  src.height = Math.round(sh);
+  src.getContext("2d").drawImage(img, (img.naturalWidth - sw) / 2, (img.naturalHeight - sh) / 2, sw, sh, 0, 0, src.width, src.height);
+  // réduction par moitiés successives (net, sans pixels sautés)
+  let w = src.width;
+  let h = src.height;
+  while (w / 2 > W) {
+    w = Math.round(w / 2);
+    h = Math.round(h / 2);
+    src = drawScaled(src, w, h);
+  }
+  return drawScaled(src, W, H);
+}
+
+function drawFrame2() {
+  updateHero();
+  // le dessin partagé (fond, mention) écrit dans sctx : on pointe sur la 2e frame le temps de ce dessin
+  const saved = sctx;
+  sctx = s2ctx;
+  try {
+    s2ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (hero.baked) s2ctx.drawImage(hero.baked, 0, 0);
+    s2ctx.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
+    if (!hero.baked) drawBackground(); // pas encore d'image : même fond que la 1re frame
+    drawFooterNote();
+  } finally {
+    sctx = saved;
+  }
+}
+
+function drawScene() {
+  drawBackground();
+
+  drawBigText(); // au second plan : derrière les cartes, le logo et les autres textes
+
+  const cx = sceneW / 2;
+  const cy = sceneH / 2;
+
+  // Nombre de cartes fractionnaire : l'espacement suit cardCount en continu,
+  // et la carte « en cours d'arrivée » sort de sous la première carte en
+  // glissant dans l'espace qui s'ouvre, au lieu que toutes les cartes sautent
+  // d'un coup.
+  const fullCards = Math.floor(cardCount);
+  const partial = cardCount - fullCards;
+  const total = partial > 0.01 ? fullCards + 1 : fullCards;
+  const step = (Math.PI * 2) / cardCount;
+
+  for (let i = 0; i < total; i++) {
+    // la carte se déplace le long de l'anneau...
+    const a = spin + i * step;
+    const x = cx + Math.cos(a) * radius;
+    const y = cy + Math.sin(a) * radius;
+    // ...mais reste TOUJOURS verticale (pas de rotation de la carte)
+    const image = cardImages.length ? cardImages[i % cardImages.length].bitmap : null;
+    if (image) {
+      // la carte prend le ratio de l'image, à surface égale à une carte noire
+      const ratio = image.width / image.height;
+      const w = Math.sqrt(CARD_AREA * ratio);
+      const h = Math.sqrt(CARD_AREA / ratio);
+      sctx.drawImage(image, x - w / 2, y - h / 2, w, h);
+    } else {
+      sctx.fillStyle = "#000000";
+      sctx.fillRect(x - CARD_W / 2, y - CARD_H / 2, CARD_W, CARD_H);
+    }
+  }
+
+  if (logoBitmap) {
+    // bitmap déjà à la taille écran : on le pose pile sur un pixel physique
+    const logoW = logoBitmap.width / pixelScale;
+    const logoH = logoBitmap.height / pixelScale;
+    const lx = Math.round((cx - logoW / 2) * pixelScale) / pixelScale;
+    const ly = Math.round((cy - logoH / 2) * pixelScale) / pixelScale;
+    sctx.drawImage(logoBitmap, lx, ly, logoW, logoH);
+  }
+
+  drawPosterLines();
+  drawFooterNote();
+  if (showGrid) drawGrid();
+}
+
+// Bloc de texte pleine largeur : centré, en Replica Mono, calé sur la marge du haut. Sa
+// taille est calculée pour que la ligne la plus large occupe exactement la
+// largeur des 5 colonnes (d'une marge à l'autre), d'après le contour réel des
+// lettres (pas la boîte de la police), pour que l'encre touche les marges.
+const BIG_FONT = (size) => `${size}px "Replica Mono", monospace`;
+
+function drawBigText() {
+  const lines = bigText.split("\n");
+  if (!lines.some((line) => line.trim())) return;
+
+  sctx.textAlign = "left";
+  sctx.textBaseline = "alphabetic";
+
+  // Mesure à une taille de référence, puis mise à l'échelle. L'interlettrage
+  // (slider « Letter spacing ») est proportionnel à la taille : tout reste
+  // proportionnel, donc l'ajustement à la largeur reste exact.
+  const REF = 100;
+  sctx.font = BIG_FONT(REF);
+  sctx.letterSpacing = `${REF * letterSpacingEm}px`;
+  const inkWidth = (m) => m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
+  const widest = Math.max(...lines.map((line) => inkWidth(sctx.measureText(line))));
+  const availableW = sceneW - GRID_MARGIN * 2;
+  const size = (REF * availableW) / widest;
+
+  sctx.font = BIG_FONT(size);
+  sctx.letterSpacing = `${size * letterSpacingEm}px`;
+  sctx.fillStyle = "#000000";
+  const lineH = size * lineHeightMul; // slider « Line height »
+
+  // la première ligne pose le haut de ses lettres sur la marge du haut,
+  // les suivantes descendent
+  const first = sctx.measureText(lines[0]);
+  const firstBaseline = GRID_MARGIN + first.actualBoundingBoxAscent;
+
+  lines.forEach((line, i) => {
+    if (!line) return;
+    const m = sctx.measureText(line);
+    const x = sceneW / 2 - inkWidth(m) / 2 + m.actualBoundingBoxLeft;
+    sctx.fillText(line, x, firstBaseline + i * lineH);
+  });
+}
+
+// Petite mention centrée en bas de l'affiche, dans la marge basse de la grille
+const FOOTER_TEXT = "[For experimental purposes only]";
+const FOOTER_SIZE = 11; // taille du texte (repère de la page, petit côté = 800)
+
+function drawFooterNote() {
+  sctx.fillStyle = "#000000";
+  sctx.font = `${FOOTER_SIZE}px "MingLiU-01", serif`;
+  sctx.letterSpacing = "0px"; // indépendant du slider d'interlettrage
+  sctx.textAlign = "center";
+  sctx.textBaseline = "bottom";
+  sctx.fillText(FOOTER_TEXT, sceneW / 2, sceneH - GRID_MARGIN - 6);
+}
+
+// Chaque champ est centré dans sa zone de colonnes (TEXT_SLOTS) et son bloc
+// de lignes est centré verticalement sur l'affiche.
+const POSTER_LINE_HEIGHT = 1.6; // interligne fixe des deux textes MingLiU (× leur taille)
+
+function drawPosterLines() {
+  sctx.fillStyle = "#000000";
+  sctx.strokeStyle = "#000000";
+  sctx.lineWidth = posterFontSize * POSTER_EMBOLDEN;
+  sctx.lineJoin = "round";
+  sctx.textAlign = "center";
+  sctx.textBaseline = "top";
+  sctx.font = `${posterFontSize}px "MingLiU-01", serif`;
+  const spacing = posterFontSize * letterSpacingEm;
+  sctx.letterSpacing = `${spacing}px`;
+
+  const lineHeight = posterFontSize * POSTER_LINE_HEIGHT;
+  // le canvas ajoute aussi l'espacement après la dernière lettre : on décale
+  // d'un demi-espacement pour que le mot reste centré dans sa zone
+  const drawLine = (line, x, y) => {
+    sctx.fillText(line, x + spacing / 2, y);
+    sctx.strokeText(line, x + spacing / 2, y);
+  };
+
+  posterLines.forEach((text, i) => {
+    if (!text) return;
+    const slot = TEXT_SLOTS[i];
+    const left = columnX(slot.fromCol);
+    const right = columnX(slot.toCol) + columnWidth();
+    const x = (left + right) / 2;
+    const lines = text.split("\n");
+    const blockHeight = (lines.length - 1) * lineHeight + posterFontSize;
+    const baseY = (sceneH - blockHeight) / 2;
+
+    lines.forEach((line, j) => drawLine(line, x, baseY + j * lineHeight));
+  });
+}
+
+// Grille de mise en page : marge 10px, 5 colonnes × 10 lignes, gouttière 10px
+// Traits de 1 px physique exactement, calés sur la grille de pixels de l'écran.
+function drawGrid() {
+  const colW = columnWidth();
+  const rowH = rowHeight();
+  // centre d'un pixel physique, exprimé dans le repère de la page
+  const snap = (v) => (Math.round(v * pixelScale - 0.5) + 0.5) / pixelScale;
+
+  // bords de chaque colonne / ligne (les bords extérieurs forment le cadre de
+  // marge) ; dédoublonnés pour ne jamais tracer deux fois le même trait
+  const xs = new Set();
+  for (let i = 0; i < GRID_COLS; i++) xs.add(snap(columnX(i))).add(snap(columnX(i) + colW));
+  const ys = new Set();
+  for (let i = 0; i < GRID_ROWS; i++) ys.add(snap(rowY(i))).add(snap(rowY(i) + rowH));
+
+  const top = snap(GRID_MARGIN);
+  const bottom = snap(sceneH - GRID_MARGIN);
+  const left = snap(GRID_MARGIN);
+  const right = snap(sceneW - GRID_MARGIN);
+
+  // un seul tracé : les croisements ne s'assombrissent pas
+  sctx.beginPath();
+  xs.forEach((x) => { sctx.moveTo(x, top); sctx.lineTo(x, bottom); });
+  ys.forEach((y) => { sctx.moveTo(left, y); sctx.lineTo(right, y); });
+  sctx.strokeStyle = "rgba(0, 0, 0, 0.25)"; // gris 25 %
+  sctx.lineWidth = 1 / pixelScale;          // 1 px physique
+  sctx.stroke();
+}
+
+function drawPreview(landmarks) {
+  if (!video.videoWidth) return;
+  pctx.drawImage(video, 0, 0, pcv.width, pcv.height);
+
+  if (!landmarks) return;
+  const px = (p) => [p.x * pcv.width, p.y * pcv.height];
+
+  pctx.fillStyle = "#00e0a4";
+  for (const p of landmarks) {
+    const [x, y] = px(p);
+    pctx.beginPath();
+    pctx.arc(x, y, 4, 0, Math.PI * 2);
+    pctx.fill();
+  }
+
+  const [tx, ty] = px(landmarks[THUMB_TIP]);
+  const [ix, iy] = px(landmarks[INDEX_TIP]);
+  pctx.beginPath();
+  pctx.moveTo(tx, ty);
+  pctx.lineTo(ix, iy);
+  pctx.lineWidth = 3;
+  pctx.strokeStyle = "#ffcf6b";
+  pctx.stroke();
+}
+
+startBtn.addEventListener("click", () => startCamera().catch(err => {
+  statusEl.textContent = "Erreur caméra : " + err.message;
+  startBtn.disabled = false;
+}));
+
+stopBtn.addEventListener("click", stopCamera);
+
+formatButtons.forEach((btn) => {
+  btn.addEventListener("click", () => applyFormat(btn.dataset.format));
+});
+
+exportBtn.addEventListener("click", exportPNG);
+
+// Canvas hors écran à la taille réelle du format (ex. 1080×1350), pour les exports
+function createExportCanvas() {
+  const { w, h } = FORMATS[currentFormat];
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  const scale = w / sceneW;
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  ctx.imageSmoothingQuality = "high";
+  return { canvas, ctx, scale, logo: makeLogoBitmap(scale) };
+}
+
+// Dessine l'affiche dans un canvas d'export, sans la grille (simple repère de
+// mise en page). drawScene() lit des variables globales (contexte, échelle,
+// logo pré-réduit, état de l'anneau) : on les remplace le temps de ce dessin
+// synchrone, puis on les restaure.
+function drawPosterInto(target, motionState) {
+  const saved = { sctx, pixelScale, logoBitmap, showGrid, radius, cardCount, spin };
+  sctx = target.ctx;
+  pixelScale = target.scale;
+  logoBitmap = target.logo;
+  showGrid = false;
+  if (motionState) ({ radius, cardCount, spin } = motionState);
+  try {
+    drawScene();
+  } finally {
+    ({ sctx, pixelScale, logoBitmap, showGrid, radius, cardCount, spin } = saved);
+  }
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportPNG() {
+  const target = createExportCanvas();
+  drawPosterInto(target);
+  const { w, h } = FORMATS[currentFormat];
+  target.canvas.toBlob((blob) => downloadBlob(blob, `affiche-${currentFormat}-${w}x${h}.png`), "image/png");
+}
+
+// ── Sélecteur Image / Vidéo ──
+// Image : affiche fixe, export PNG. Vidéo : boucle de 5 s avec lecteur, export MP4.
+modeButtons.forEach((btn) => {
+  btn.addEventListener("click", () => setMode(btn.dataset.mode));
+});
+
+function setMode(mode) {
+  motionMode = mode === "video";
+  modeButtons.forEach((btn) => btn.setAttribute("aria-pressed", String(btn.dataset.mode === mode)));
+  exportMp4Btn.hidden = !motionMode;
+  exportBtn.hidden = motionMode;
+  motionTime = 0; // repart du début : l'ouverture de l'anneau est rejouée
+  setMotionPlaying(true);
+}
+
+function setMotionPlaying(playing) {
+  motionPlaying = playing;
+  transportButtons.forEach((btn) => {
+    const action = btn.dataset.action;
+    btn.classList.toggle("active", (action === "play" && playing) || (action === "pause" && !playing));
+  });
+}
+
+const FRAME = 1 / MOTION_FPS;
+transportButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    switch (btn.dataset.action) {
+      case "start": motionTime = 0; break;
+      case "prev":
+        setMotionPlaying(false);
+        motionTime = (motionTime - FRAME + loopDuration()) % loopDuration();
+        break;
+      case "pause": setMotionPlaying(false); break;
+      case "play": setMotionPlaying(true); break;
+      case "next":
+        setMotionPlaying(false);
+        motionTime = (motionTime + FRAME) % loopDuration();
+        break;
+    }
+  });
+});
+
+// m:ss.cc — lisible pour la boucle de 5 s comme pour celle de 5 min
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = (seconds - m * 60).toFixed(2).padStart(5, "0");
+  return `${m}:${s}`;
+}
+
+function updateMotionTime() {
+  motionTimeLabel.textContent = `${formatTime(motionTime)} / ${formatTime(loopDuration())}`;
+}
+
+// ── Export MP4 : la boucle de 5 s, encodée image par image (WebCodecs) ──
+// Chaque image est calculée à son temps exact t = i / 30 : pas d'image sautée,
+// quelle que soit la puissance de la machine.
+exportMp4Btn.addEventListener("click", () => {
+  exportMP4().catch((err) => {
+    console.error(err);
+    alert("Export MP4 impossible : " + err.message);
+  }).finally(() => {
+    exportMp4Btn.disabled = false;
+    exportMp4Btn.textContent = "Exporter MP4 (5 s)";
+  });
+});
+
+async function exportMP4() {
+  if (!("VideoEncoder" in window)) {
+    throw new Error("ce navigateur ne gère pas l'encodage vidéo (utilise Chrome ou Edge).");
+  }
+  exportMp4Btn.disabled = true;
+  exportMp4Btn.textContent = "Export… 0 %";
+
+  const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5/+esm");
+  const { w, h } = FORMATS[currentFormat];
+
+  // H.264 High profile, niveau 5.1 : couvre jusqu'aux grandes tailles (A4 1240×1754)
+  const config = { codec: "avc1.640033", width: w, height: h, bitrate: 12_000_000, framerate: MOTION_FPS };
+  const { supported } = await VideoEncoder.isConfigSupported(config);
+  if (!supported) throw new Error(`encodage H.264 ${w}×${h} non supporté par ce navigateur.`);
+
+  const muxer = new Muxer({
+    target: new ArrayBufferTarget(),
+    video: { codec: "avc", width: w, height: h, frameRate: MOTION_FPS },
+    fastStart: "in-memory",
+  });
+  let encodeError = null;
+  const encoder = new VideoEncoder({
+    output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+    error: (e) => { encodeError = e; },
+  });
+  encoder.configure(config);
+
+  const target = createExportCanvas();
+  const totalFrames = MOTION_DURATION * MOTION_FPS;
+  const frameDuration = 1e6 / MOTION_FPS; // µs
+
+  for (let i = 0; i < totalFrames; i++) {
+    if (encodeError) throw encodeError;
+    drawPosterInto(target, motionStateAt(i / MOTION_FPS));
+    const frame = new VideoFrame(target.canvas, { timestamp: i * frameDuration, duration: frameDuration });
+    encoder.encode(frame, { keyFrame: i % MOTION_FPS === 0 });
+    frame.close();
+
+    // laisse respirer l'encodeur (et l'interface) pour ne pas saturer la mémoire
+    while (encoder.encodeQueueSize > 4) await new Promise((r) => setTimeout(r, 0));
+    exportMp4Btn.textContent = `Export… ${Math.round(((i + 1) / totalFrames) * 100)} %`;
+  }
+
+  await encoder.flush();
+  if (encodeError) throw encodeError;
+  encoder.close();
+  muxer.finalize();
+
+  const blob = new Blob([muxer.target.buffer], { type: "video/mp4" });
+  downloadBlob(blob, `affiche-${currentFormat}-${w}x${h}-5s.mp4`);
+}
+
+importBtn.addEventListener("click", () => imageInput.click());
+
+imageInput.addEventListener("change", () => {
+  for (const file of imageInput.files) addCardImage(file.name, file);
+  imageInput.value = ""; // permet de réimporter le même fichier
+});
+
+// Ajoute une image à la liste tout de suite (nom visible), puis la charge ;
+// la carte reste noire le temps du chargement. `source` (fichier importé ou
+// chemin) est gardée pour pouvoir recharger l'image en grand dans la 2e frame.
+function addCardImage(name, source) {
+  const entry = { name, bitmap: null, source };
+  cardImages.push(entry);
+  renderImageList();
+  return loadThumbnail(source)
+    .then((bitmap) => { entry.bitmap = bitmap; })
+    .catch((err) => console.error(`Image « ${name} » illisible :`, err));
+}
+
+// Décode une image depuis un fichier importé (Blob) ou un chemin
+async function decodeImage(source) {
+  const url = source instanceof Blob ? URL.createObjectURL(source) : source;
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    return img;
+  } finally {
+    if (source instanceof Blob) URL.revokeObjectURL(url);
+  }
+}
+
+// Les photos importées font souvent plusieurs milliers de px : les réduire à
+// chaque frame, pour chaque carte, saccade dès que MediaPipe occupe aussi le
+// GPU. On les réduit donc une seule fois ici, à une taille suffisante pour une carte.
+const IMAGE_MAX_SIDE = 512;
+
+async function loadThumbnail(source) {
+  const img = await decodeImage(source);
+  const scale = Math.min(1, IMAGE_MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+  const thumb = document.createElement("canvas");
+  thumb.width = Math.round(img.naturalWidth * scale);
+  thumb.height = Math.round(img.naturalHeight * scale);
+  const tctx = thumb.getContext("2d");
+  tctx.imageSmoothingQuality = "high";
+  tctx.drawImage(img, 0, 0, thumb.width, thumb.height);
+  return thumb;
+}
+
+// Images chargées par défaut au démarrage (dossier sources_img), dans cet ordre
+const DEFAULT_IMAGES = ["5619.png", "5622.png", "5623.png", "83528.png", "83529.png", "83530.png", "83531.png"];
+DEFAULT_IMAGES.forEach((file) => addCardImage(file, `sources_img/${file}`));
+
+function renderImageList() {
+  imageList.replaceChildren(...cardImages.map((entry, i) => {
+    const li = document.createElement("li");
+    const name = document.createElement("span");
+    name.textContent = entry.name;
+    name.title = entry.name;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", `Supprimer ${entry.name}`);
+    remove.addEventListener("click", () => removeImage(i));
+    li.append(name, remove);
+    return li;
+  }));
+  imageList.hidden = cardImages.length === 0;
+}
+
+function removeImage(i) {
+  cardImages.splice(i, 1);
+  renderImageList();
+}
+
+renderImageList();
+
+textInputs.forEach((input, i) => {
+  input.addEventListener("input", () => {
+    posterLines[i] = input.value;
+  });
+});
+
+bigTextInput.addEventListener("input", () => {
+  bigText = bigTextInput.value;
+});
+
+fontSizeSlider.addEventListener("input", () => {
+  posterFontSize = Number(fontSizeSlider.value);
+});
+
+lineHeightSlider.addEventListener("input", () => {
+  lineHeightMul = Number(lineHeightSlider.value);
+});
+
+letterSpacingSlider.addEventListener("input", () => {
+  letterSpacingEm = Number(letterSpacingSlider.value);
+});
+
+cardCountSlider.addEventListener("input", () => {
+  manualCardCount = Number(cardCountSlider.value);
+});
+
+radiusSlider.addEventListener("input", () => {
+  manualRadius = Number(radiusSlider.value);
+});
+
+gridToggle.addEventListener("change", () => {
+  showGrid = gridToggle.checked;
+});
+
+// Fond en dégradé : la barre d'aperçu montre le dégradé de gauche (haut) à droite (bas)
+function updateGradientUI() {
+  gradColorInputs.forEach((input, i) => {
+    input.value = gradientColors[i];
+    input.disabled = !gradientOn;
+  });
+  gradientActionButtons.forEach((btn) => { btn.disabled = !gradientOn; });
+  gradientToggle.checked = gradientOn;
+  gradientPreview.style.background = `linear-gradient(to right, ${gradientColors.join(", ")})`;
+  gradientPreview.classList.toggle("off", !gradientOn);
+}
+
+gradientToggle.addEventListener("change", () => {
+  gradientOn = gradientToggle.checked;
+  updateGradientUI();
+});
+
+gradColorInputs.forEach((input, i) => {
+  input.addEventListener("input", () => {
+    gradientColors[i] = input.value;
+    updateGradientUI();
+  });
+});
+
+// Inverser : la couleur du haut passe en bas et inversement
+document.getElementById("gradientReverseBtn").addEventListener("click", () => {
+  gradientColors.reverse();
+  updateGradientUI();
+});
+
+// Négatif : chaque couleur #rrggbb devient sa complémentaire (255 - valeur, par canal)
+const negativeHex = (hex) =>
+  "#" + (0xffffff ^ parseInt(hex.slice(1), 16)).toString(16).padStart(6, "0");
+
+document.getElementById("gradientNegativeBtn").addEventListener("click", () => {
+  gradientColors = gradientColors.map(negativeHex);
+  updateGradientUI();
+});
+
+updateGradientUI();
+
+resetBtn.addEventListener("click", () => {
+  posterLines = [...DEFAULT_TEXTS];
+  textInputs.forEach((input, i) => { input.value = DEFAULT_TEXTS[i]; });
+
+  bigText = DEFAULT_BIG_TEXT;
+  bigTextInput.value = DEFAULT_BIG_TEXT;
+
+  posterFontSize = DEFAULT_FONT_SIZE;
+  fontSizeSlider.value = DEFAULT_FONT_SIZE;
+
+  lineHeightMul = DEFAULT_LINE_HEIGHT;
+  lineHeightSlider.value = DEFAULT_LINE_HEIGHT;
+
+  letterSpacingEm = DEFAULT_LETTER_SPACING;
+  letterSpacingSlider.value = DEFAULT_LETTER_SPACING;
+
+  manualCardCount = DEFAULT_CARD_COUNT;
+  cardCountSlider.value = DEFAULT_CARD_COUNT;
+
+  manualRadius = DEFAULT_RADIUS;
+  radiusSlider.value = DEFAULT_RADIUS;
+
+  showGrid = DEFAULT_SHOW_GRID;
+  gridToggle.checked = DEFAULT_SHOW_GRID;
+
+  gradientOn = DEFAULT_GRADIENT_ON;
+  gradientColors = [...DEFAULT_GRADIENT_COLORS];
+  updateGradientUI();
+});
+
+const privacyDialog = document.getElementById("privacyDialog");
+document.getElementById("privacyBtn").addEventListener("click", () => privacyDialog.showModal());
+
+setMode("image"); // on arrive en mode image, avec l'ouverture de l'anneau jouée une fois
+
+init().catch(err => {
+  statusEl.textContent = "Erreur d'initialisation : " + err.message;
+});
+</script>
+</body>
+</html>
