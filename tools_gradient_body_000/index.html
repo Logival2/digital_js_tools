@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Gradient body</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&display=swap" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Rendu plein écran : l'aura en dégradé laissée par le corps -->
+<canvas id="gl"></canvas>
+
+<!-- Panneau flottant à gauche (paramètres) -->
+<aside id="panel">
+
+  <!-- Caméra : détourage du corps en direct (MediaPipe) -->
+  <div class="section">
+    <h2>Caméra</h2>
+    <label class="check"><input id="mirrorToggle" type="checkbox" checked /> Miroir</label>
+    <p class="hint">Sans caméra, une silhouette de démonstration bouge à l'écran.</p>
+  </div>
+  <div id="bar">
+    <button id="startBtn" type="button">Démarrer la caméra</button>
+    <button id="stopBtn" type="button" hidden>Stop cam</button>
+    <span id="readout"><span class="status" id="status">Démo</span></span>
+  </div>
+  <div id="preview" class="previewBox mirror">
+    <video id="cam" playsinline muted></video>
+  </div>
+
+  <!-- Détourage : ce que MediaPipe voit, après seuil (blanc = corps) -->
+  <div class="section">
+    <h2>Détourage</h2>
+    <div id="maskPreview" class="previewBox mirror">
+      <canvas id="maskCanvas" width="320" height="180"></canvas>
+    </div>
+    <div class="row"><label for="thresholdSlider" title="Plus haut = seules les zones sûres comptent comme corps">Seuil</label><input id="thresholdSlider" type="range" min="0.05" max="0.95" step="0.01" value="0.5" /></div>
+    <div class="row"><label for="softSlider" title="Bord net ou progressif">Douceur</label><input id="softSlider" type="range" min="0" max="0.5" step="0.01" value="0.15" /></div>
+  </div>
+
+  <!-- Aura : la trace du corps qui s'efface, se diffuse et monte -->
+  <div class="section">
+    <h2>Aura</h2>
+    <div class="row"><label for="trailSlider" title="Temps que met la trace à s'effacer (s)">Rémanence</label><input id="trailSlider" type="range" min="0.1" max="8" step="0.05" value="1.6" /></div>
+    <div class="row"><label for="spreadSlider" title="La trace s'étale à chaque image">Diffusion</label><input id="spreadSlider" type="range" min="0" max="3" step="0.01" value="1.2" /></div>
+    <div class="row"><label for="riseSlider" title="La trace monte comme une flamme">Montée</label><input id="riseSlider" type="range" min="-0.3" max="0.3" step="0.005" value="0.03" /></div>
+    <div class="row"><label for="blurSlider" title="Douceur des bords de l'aura">Flou</label><input id="blurSlider" type="range" min="0" max="1" step="0.01" value="0.8" /></div>
+    <div class="row"><label for="haloSlider" title="Grande brume colorée autour de l'aura">Halo</label><input id="haloSlider" type="range" min="0" max="1.5" step="0.01" value="0.55" /></div>
+    <div class="row"><label for="gainSlider" title="Étend les couleurs vers l'extérieur">Intensité</label><input id="gainSlider" type="range" min="0.3" max="3" step="0.01" value="0.95" /></div>
+    <div class="row"><label for="gammaSlider" title="Bandes de couleur plus larges ou plus serrées">Contraste</label><input id="gammaSlider" type="range" min="0.4" max="2.5" step="0.01" value="1.15" /></div>
+  </div>
+
+  <!-- Couleurs : dégradé du fond (0) jusqu'au cœur du corps (1) -->
+  <div class="section">
+    <h2>Couleurs</h2>
+    <div class="row">
+      <label for="presetSelect">Palette</label>
+      <select id="presetSelect">
+        <option value="neon">Néon</option>
+        <option value="thermal">Thermique</option>
+        <option value="nordway" selected>Nordway</option>
+        <option value="mono">Noir et blanc</option>
+      </select>
+    </div>
+    <div id="gradientColors">
+      <input type="color" class="gradColor" id="c0" value="#000000" title="Fond" aria-label="Couleur du fond" />
+      <input type="color" class="gradColor" id="c1" value="#003b0b" title="Bord" aria-label="Couleur du bord" />
+      <input type="color" class="gradColor" id="c2" value="#00ff26" title="Milieu" aria-label="Couleur du milieu" />
+      <input type="color" class="gradColor" id="c3" value="#c8ffd2" title="Clair" aria-label="Couleur claire" />
+      <input type="color" class="gradColor" id="c4" value="#ffffff" title="Cœur" aria-label="Couleur du cœur" />
+    </div>
+    <div id="gradientPreview" aria-hidden="true"></div>
+    <div class="btnRow">
+      <button id="reverseBtn" type="button" title="Le cœur devient le fond et inversement">Inverser</button>
+    </div>
+  </div>
+
+  <!-- Affichage -->
+  <div class="section">
+    <h2>Affichage</h2>
+    <div class="btnRow">
+      <button id="fullscreenBtn" type="button">Plein écran</button>
+      <button id="hidePanelBtn" type="button">Masquer</button>
+    </div>
+    <p class="hint">Touche H : masquer / afficher le panneau. Touche F : plein écran.</p>
+  </div>
+
+  <button id="resetBtn" type="button">Réinitialiser</button>
+  <button id="privacyBtn" type="button">Confidentialité · RGPD</button>
+</aside>
+
+<!-- Au lancement : proposer d'activer la caméra -->
+<dialog id="cameraDialog" class="dialog" aria-labelledby="cameraTitle">
+  <h2 id="cameraTitle">Activer la caméra ?</h2>
+  <p>L'aura suit ta silhouette en direct. La vidéo est analysée uniquement dans ton navigateur :
+  rien n'est enregistré ni envoyé.</p>
+  <div class="dialogActions">
+    <button id="cameraAcceptBtn" type="button">Activer la caméra</button>
+    <button id="cameraLaterBtn" type="button">Continuer sans</button>
+  </div>
+</dialog>
+
+<dialog id="privacyDialog" class="dialog" aria-labelledby="privacyTitle">
+  <h2 id="privacyTitle">Confidentialité · RGPD</h2>
+  <h3>Responsable</h3>
+  <p>Valentin Maynadié — contact : <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
+  <h3>Caméra</h3>
+  <p>La caméra n'est activée que si tu cliques sur « Démarrer la caméra », après autorisation de ton navigateur.
+  Le flux vidéo est analysé uniquement dans ton navigateur pour détourer ta silhouette :
+  aucune image ni vidéo n'est enregistrée, conservée ou envoyée à un serveur.</p>
+  <h3>Cookies et suivi</h3>
+  <p>Ce site n'utilise ni cookies, ni mesure d'audience, ni compte utilisateur.</p>
+  <h3>Services tiers</h3>
+  <ul>
+    <li>Google Fonts — police d'interface ;</li>
+    <li>jsDelivr — détourage du corps (MediaPipe), chargé au démarrage de la caméra ;</li>
+    <li>Google Cloud Storage — modèle de détourage.</li>
+  </ul>
+  <p>Ces services reçoivent ton adresse IP, nécessaire à l'envoi des fichiers.</p>
+  <form method="dialog"><button type="submit">Fermer</button></form>
+</dialog>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+
+// ── Éléments de l'interface ──
+const glCanvas = $("gl");
+const video = $("cam");
+const startBtn = $("startBtn");
+const stopBtn = $("stopBtn");
+const statusEl = $("status");
+const gradColorInputs = Array.from(document.querySelectorAll(".gradColor"));
+
+// Tous les réglages : lus à la volée, remis par défaut avec Réinitialiser
+const controls = {
+  mirror: $("mirrorToggle"),
+  threshold: $("thresholdSlider"),
+  soft: $("softSlider"),
+  trail: $("trailSlider"),
+  spread: $("spreadSlider"),
+  rise: $("riseSlider"),
+  blur: $("blurSlider"),
+  halo: $("haloSlider"),
+  gain: $("gainSlider"),
+  gamma: $("gammaSlider"),
+  preset: $("presetSelect"),
+  c0: $("c0"), c1: $("c1"), c2: $("c2"), c3: $("c3"), c4: $("c4"),
+};
+// Valeurs par défaut lues dans le HTML (au rechargement, le navigateur restaure les anciens réglages)
+function htmlDefault(el) {
+  if (el.type === "checkbox") return el.defaultChecked;
+  if (el.tagName === "SELECT") return (Array.from(el.options).find((o) => o.defaultSelected) ?? el.options[0]).value;
+  return el.defaultValue;
+}
+const DEFAULTS = Object.fromEntries(Object.entries(controls).map(([k, el]) => [k, htmlDefault(el)]));
+function resetControls() {
+  for (const [k, el] of Object.entries(controls)) {
+    if (el.type === "checkbox") el.checked = DEFAULTS[k];
+    else el.value = DEFAULTS[k];
+  }
+}
+resetControls();
+const num = (k) => Number(controls[k].value);
+const on = (k) => controls[k].checked;
+
+// Palettes : 5 couleurs, du fond (0) au cœur du corps (1)
+const PALETTES = {
+  neon:    ["#03051c", "#1238ff", "#ff2bd6", "#ffd6f3", "#18ffc4"],
+  thermal: ["#000000", "#2a00ff", "#ff0040", "#ffb300", "#ffffff"],
+  nordway: ["#000000", "#003b0b", "#00ff26", "#c8ffd2", "#ffffff"],
+  mono:    ["#000000", "#2b2b2b", "#808080", "#d0d0d0", "#ffffff"],
+};
+const STOPS = [0, 0.22, 0.45, 0.62, 0.85]; // position de chaque couleur dans le dégradé
+
+// ═══════════════════════════════════════════════════════════════════
+// WebGL : une « mémoire » du corps (trace) qui s'efface, s'étale et monte,
+// floutée puis passée dans le dégradé de couleurs.
+// ═══════════════════════════════════════════════════════════════════
+const gl = glCanvas.getContext("webgl2", { alpha: false, antialias: false });
+if (!gl || !gl.getExtension("EXT_color_buffer_float")) {
+  statusEl.textContent = "Navigateur incompatible (WebGL2 requis : Chrome ou Edge).";
+  throw new Error("WebGL2 + EXT_color_buffer_float requis");
+}
+
+// Un triangle qui couvre tout le cadre, sans sommets à fournir
+const VS = `#version 300 es
+out vec2 vUV;
+void main() {
+  vec2 p = vec2(float((gl_VertexID & 1) << 2) - 1.0, float((gl_VertexID & 2) << 1) - 1.0);
+  vUV = p * 0.5 + 0.5;
+  gl_Position = vec4(p, 0.0, 1.0);
+}`;
+
+// Trace : max(corps actuel, trace précédente étalée × effacement), décalée vers le haut
+const UPDATE_FS = `#version 300 es
+precision highp float;
+in vec2 vUV;
+uniform sampler2D uPrev, uMask;
+uniform vec2 uTexel, uMaskScale;
+uniform float uDecay, uSpread, uRise, uHasMask, uMirror, uTime, uAspect, uThreshold, uSoft;
+out vec4 outColor;
+
+float segment(vec2 p, vec2 a, vec2 b) {
+  vec2 pa = p - a, ba = b - a;
+  return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0));
+}
+
+// Silhouette de démonstration (sans caméra) : un corps qui se balance et lève le bras
+float demo(vec2 uv) {
+  vec2 p = (uv - 0.5) * vec2(uAspect, 1.0) * 1.3;
+  float sway = 0.18 * sin(uTime * 0.6);
+  vec2 c = vec2(sway, 0.0);
+  float d = length((p - c - vec2(0.0, -0.32)) / vec2(0.2, 0.38));          // torse
+  d = min(d, length(p - c - vec2(0.0, 0.17)) / 0.1);                       // tête
+  float a = 1.2 + 0.9 * sin(uTime * 1.1);                                  // bras levé
+  vec2 shoulder = c + vec2(-0.14, 0.0);
+  vec2 elbow = shoulder + 0.2 * vec2(-cos(a), sin(a));
+  vec2 hand = elbow + 0.18 * vec2(-cos(a * 0.6), sin(a * 1.3));
+  float arm = min(segment(p, shoulder, elbow), segment(p, elbow, hand)) / 0.05;
+  d = min(d, arm);
+  return smoothstep(1.05, 0.95, d);
+}
+
+float body(vec2 uv) {
+  if (uHasMask < 0.5) return demo(uv);
+  // écran (origine en bas) -> image caméra (origine en haut), recadrée pour couvrir l'écran
+  vec2 m = (vec2(uv.x, 1.0 - uv.y) - 0.5) * uMaskScale + 0.5;
+  if (uMirror > 0.5) m.x = 1.0 - m.x;
+  if (any(lessThan(m, vec2(0.0))) || any(greaterThan(m, vec2(1.0)))) return 0.0;
+  return smoothstep(uThreshold - uSoft - 0.001, uThreshold + uSoft, texture(uMask, m).r);
+}
+
+void main() {
+  vec2 src = vUV - vec2(0.0, uRise);       // on lit plus bas : la trace monte
+  vec2 s = uTexel * uSpread;
+  float p = 0.4 * texture(uPrev, src).r
+          + 0.15 * (texture(uPrev, src + vec2(s.x, 0.0)).r + texture(uPrev, src - vec2(s.x, 0.0)).r
+                  + texture(uPrev, src + vec2(0.0, s.y)).r + texture(uPrev, src - vec2(0.0, s.y)).r);
+  outColor = vec4(max(body(vUV), p * uDecay), 0.0, 0.0, 1.0);
+}`;
+
+// Flou gaussien séparable (9 échantillons), dans la direction uDir
+const BLUR_FS = `#version 300 es
+precision highp float;
+in vec2 vUV;
+uniform sampler2D uSrc;
+uniform vec2 uDir;
+out vec4 outColor;
+void main() {
+  float w[5] = float[](0.2270, 0.1945, 0.1216, 0.0541, 0.0162);
+  float v = texture(uSrc, vUV).r * w[0];
+  for (int i = 1; i < 5; i++) {
+    v += texture(uSrc, vUV + uDir * float(i)).r * w[i];
+    v += texture(uSrc, vUV - uDir * float(i)).r * w[i];
+  }
+  outColor = vec4(v, 0.0, 0.0, 1.0);
+}`;
+
+// Affichage : la valeur de la trace choisit une couleur dans le dégradé
+const DISPLAY_FS = `#version 300 es
+precision highp float;
+in vec2 vUV;
+uniform sampler2D uAura, uWide, uRamp;
+uniform float uGain, uGamma, uHalo;
+out vec4 outColor;
+void main() {
+  // aura nette + grand halo diffus (la brume bleue autour)
+  float a = texture(uAura, vUV).r * uGain + texture(uWide, vUV).r * uHalo;
+  float v = pow(clamp(a, 0.0, 1.0), uGamma);
+  outColor = vec4(texture(uRamp, vec2(v, 0.5)).rgb, 1.0);
+}`;
+
+function compile(type, src) {
+  const sh = gl.createShader(type);
+  gl.shaderSource(sh, src);
+  gl.compileShader(sh);
+  if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
+  return sh;
+}
+function program(fs) {
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  const loc = {};
+  const n = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < n; i++) {
+    const name = gl.getActiveUniform(prog, i).name;
+    loc[name] = gl.getUniformLocation(prog, name);
+  }
+  return { prog, loc };
+}
+const updateProg = program(UPDATE_FS);
+const blurProg = program(BLUR_FS);
+const displayProg = program(DISPLAY_FS);
+gl.bindVertexArray(gl.createVertexArray());
+
+function makeTexture(w, h, internal, format, type, filter = gl.LINEAR) {
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, internal, w, h, 0, format, type, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return tex;
+}
+function makeTarget(w, h) {
+  const tex = makeTexture(w, h, gl.R16F, gl.RED, gl.HALF_FLOAT);
+  const fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  return { tex, fb, w, h };
+}
+
+// Masque du corps (envoyé par MediaPipe) et dégradé de couleurs (256 × 1)
+const maskTex = makeTexture(1, 1, gl.R16F, gl.RED, gl.HALF_FLOAT);
+let maskSize = [1, 1];
+const rampCanvas = document.createElement("canvas");
+rampCanvas.width = 256;
+rampCanvas.height = 1;
+const rampCtx = rampCanvas.getContext("2d");
+const rampTex = makeTexture(256, 1, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE);
+
+function updateRamp() {
+  const colors = gradColorInputs.map((i) => i.value);
+  const grad = rampCtx.createLinearGradient(0, 0, 256, 0);
+  colors.forEach((c, i) => grad.addColorStop(STOPS[i], c));
+  grad.addColorStop(1, colors[colors.length - 1]);
+  rampCtx.fillStyle = grad;
+  rampCtx.fillRect(0, 0, 256, 1);
+  gl.bindTexture(gl.TEXTURE_2D, rampTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, rampCanvas);
+  $("gradientPreview").style.background = `linear-gradient(to right, ${colors.map((c, i) => `${c} ${STOPS[i] * 100}%`).join(", ")})`;
+}
+
+// ── Tailles : l'écran entier ; la trace est calculée en plus petit (elle est floue de toute façon) ──
+const TRAIL_SCALE = 0.25;
+let trail = [], blurA = null, blurB = null, wideA = null, wideB = null;
+let cur = 0;
+
+function resize() {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  glCanvas.width = Math.round(window.innerWidth * dpr);
+  glCanvas.height = Math.round(window.innerHeight * dpr);
+  const w = Math.max(64, Math.round(glCanvas.width * TRAIL_SCALE));
+  const h = Math.max(64, Math.round(glCanvas.height * TRAIL_SCALE));
+  for (const t of [...trail, blurA, blurB, wideA, wideB]) if (t) { gl.deleteTexture(t.tex); gl.deleteFramebuffer(t.fb); }
+  trail = [makeTarget(w, h), makeTarget(w, h)];
+  blurA = makeTarget(w, h);
+  blurB = makeTarget(w, h);
+  // le grand halo est calculé 4 fois plus petit : flou très large pour pas cher
+  wideA = makeTarget(Math.ceil(w / 4), Math.ceil(h / 4));
+  wideB = makeTarget(Math.ceil(w / 4), Math.ceil(h / 4));
+  for (const t of [...trail, blurA, blurB, wideA, wideB]) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, t.fb);
+    gl.clearColor(0, 0, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+  }
+}
+window.addEventListener("resize", resize);
+
+function draw(prog, target, setUniforms) {
+  gl.bindFramebuffer(gl.FRAMEBUFFER, target ? target.fb : null);
+  gl.viewport(0, 0, target ? target.w : glCanvas.width, target ? target.h : glCanvas.height);
+  gl.useProgram(prog.prog);
+  setUniforms(prog.loc);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+function bindTex(unit, tex, loc) {
+  gl.activeTexture(gl.TEXTURE0 + unit);
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.uniform1i(loc, unit);
+}
+
+let hasMask = false;
+let time = 0;
+
+function frame(dt) {
+  time += dt;
+  const { w, h } = trail[0];
+  const aspect = glCanvas.width / glCanvas.height;
+  // recadrage « cover » de l'image caméra sur l'écran
+  const videoAspect = maskSize[0] / maskSize[1];
+  const maskScale = aspect > videoAspect ? [1, videoAspect / aspect] : [aspect / videoAspect, 1];
+
+  // 1. trace : effacement selon « Rémanence » (indépendant de la fréquence d'images)
+  const next = 1 - cur;
+  draw(updateProg, trail[next], (L) => {
+    bindTex(0, trail[cur].tex, L.uPrev);
+    bindTex(1, maskTex, L.uMask);
+    gl.uniform2f(L.uTexel, 1 / w, 1 / h);
+    gl.uniform2fv(L.uMaskScale, maskScale);
+    gl.uniform1f(L.uDecay, Math.exp(-dt / num("trail")));
+    gl.uniform1f(L.uSpread, num("spread"));
+    gl.uniform1f(L.uRise, num("rise") * dt);
+    gl.uniform1f(L.uHasMask, hasMask ? 1 : 0);
+    gl.uniform1f(L.uThreshold, num("threshold"));
+    gl.uniform1f(L.uSoft, num("soft"));
+    gl.uniform1f(L.uMirror, on("mirror") ? 1 : 0);
+    gl.uniform1f(L.uTime, time);
+    gl.uniform1f(L.uAspect, aspect);
+  });
+  cur = next;
+
+  // 2. aura : deux passes de flou (horizontal puis vertical), deux fois
+  const blurPasses = (from, a, b, radius) => {
+    let src = from;
+    for (let i = 0; i < 2; i++) {
+      draw(blurProg, a, (L) => { bindTex(0, src.tex, L.uSrc); gl.uniform2f(L.uDir, radius / a.w, 0); });
+      draw(blurProg, b, (L) => { bindTex(0, a.tex, L.uSrc); gl.uniform2f(L.uDir, 0, radius / b.h); });
+      src = b;
+    }
+  };
+  blurPasses(trail[cur], blurA, blurB, 0.5 + num("blur") * 6);
+  // grand halo : le même flou, sur l'image réduite
+  blurPasses(blurB, wideA, wideB, 3);
+
+  // 3. couleurs
+  draw(displayProg, null, (L) => {
+    bindTex(0, blurB.tex, L.uAura);
+    bindTex(1, wideB.tex, L.uWide);
+    bindTex(2, rampTex, L.uRamp);
+    gl.uniform1f(L.uGain, num("gain"));
+    gl.uniform1f(L.uGamma, num("gamma"));
+    gl.uniform1f(L.uHalo, num("halo"));
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Caméra + MediaPipe ImageSegmenter (modèle « selfie ») : masque du corps à chaque image
+// ═══════════════════════════════════════════════════════════════════
+let segmenter = null;
+let running = false;
+let lastVideoTime = -1;
+
+async function loadSegmenter() {
+  if (segmenter) return;
+  statusEl.textContent = "Chargement du modèle…";
+  // import à la demande : sans réseau, l'outil marche quand même (démo)
+  const { ImageSegmenter, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14");
+  const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+  segmenter = await ImageSegmenter.createFromOptions(vision, {
+    baseOptions: {
+      modelAssetPath: "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite",
+      delegate: "GPU",
+    },
+    runningMode: "VIDEO",
+    outputCategoryMask: false,
+    outputConfidenceMasks: true,
+  });
+}
+
+async function startCamera() {
+  startBtn.disabled = true;
+  await loadSegmenter();
+  statusEl.textContent = "Ouverture de la caméra…";
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 360 } },
+    audio: false,
+  });
+  video.srcObject = stream;
+  await video.play();
+  running = true;
+  startBtn.hidden = true;
+  stopBtn.hidden = false;
+  statusEl.textContent = "";
+}
+
+function stopCamera() {
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach((t) => t.stop());
+    video.srcObject = null;
+  }
+  running = false;
+  hasMask = false;
+  lastVideoTime = -1;
+  clearMaskPreview();
+  startBtn.hidden = false;
+  startBtn.disabled = false;
+  stopBtn.hidden = true;
+  statusEl.textContent = "Démo";
+}
+
+function segment(now) {
+  lastVideoTime = video.currentTime;
+  segmenter.segmentForVideo(video, now, (result) => {
+    const masks = result.confidenceMasks;
+    if (!masks || !masks.length) return;
+    // un seul masque = la personne ; plusieurs = le premier est le fond
+    const m = masks[0];
+    const data = m.getAsFloat32Array();
+    if (masks.length > 1) for (let i = 0; i < data.length; i++) data[i] = 1 - data[i];
+    gl.bindTexture(gl.TEXTURE_2D, maskTex);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R16F, m.width, m.height, 0, gl.RED, gl.FLOAT, data);
+    maskSize = [m.width, m.height];
+    hasMask = true;
+    drawMaskPreview(data, m.width, m.height);
+  });
+}
+
+// Vue « Détourage » : le masque de MediaPipe avec le même seuil que le rendu (blanc = corps)
+const maskCanvas = $("maskCanvas");
+const maskCtx = maskCanvas.getContext("2d");
+const maskImage = maskCtx.createImageData(maskCanvas.width, maskCanvas.height);
+const smoothstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+function drawMaskPreview(data, w, h) {
+  const W = maskCanvas.width, H = maskCanvas.height;
+  // recadrage « cover » du masque dans la vignette 16:9
+  const s = Math.min(w / W, h / H);
+  const ox = (w - W * s) / 2, oy = (h - H * s) / 2;
+  const t = num("threshold"), soft = num("soft");
+  const px = maskImage.data;
+  for (let y = 0; y < H; y++) {
+    const row = Math.min(h - 1, Math.floor(oy + y * s)) * w;
+    for (let x = 0; x < W; x++) {
+      const v = smoothstep(t - soft - 0.001, t + soft, data[row + Math.min(w - 1, Math.floor(ox + x * s))]) * 255;
+      const i = (y * W + x) * 4;
+      px[i] = px[i + 1] = px[i + 2] = v;
+      px[i + 3] = 255;
+    }
+  }
+  maskCtx.putImageData(maskImage, 0, 0);
+}
+function clearMaskPreview() {
+  maskCtx.fillStyle = "#000";
+  maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
+}
+clearMaskPreview();
+
+startBtn.addEventListener("click", () => startCamera().catch((err) => {
+  statusEl.textContent = "Erreur caméra : " + err.message;
+  startBtn.disabled = false;
+}));
+stopBtn.addEventListener("click", stopCamera);
+
+// ═══════════════════════════════════════════════════════════════════
+// Réglages
+// ═══════════════════════════════════════════════════════════════════
+const applyMirror = () => document.querySelectorAll(".previewBox").forEach((el) => el.classList.toggle("mirror", on("mirror")));
+controls.mirror.addEventListener("change", applyMirror);
+controls.preset.addEventListener("input", () => {
+  PALETTES[controls.preset.value].forEach((c, i) => (gradColorInputs[i].value = c));
+  updateRamp();
+});
+gradColorInputs.forEach((i) => i.addEventListener("input", updateRamp));
+$("reverseBtn").addEventListener("click", () => {
+  const c = gradColorInputs.map((i) => i.value).reverse();
+  gradColorInputs.forEach((i, k) => (i.value = c[k]));
+  updateRamp();
+});
+
+function toggleFullscreen() {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(() => {});
+}
+const togglePanel = () => document.body.classList.toggle("panel-hidden");
+$("fullscreenBtn").addEventListener("click", toggleFullscreen);
+$("hidePanelBtn").addEventListener("click", togglePanel);
+window.addEventListener("keydown", (e) => {
+  if (e.target.closest("input, select, textarea")) return;
+  if (e.key === "h" || e.key === "H") togglePanel();
+  if (e.key === "f" || e.key === "F") toggleFullscreen();
+});
+
+$("resetBtn").addEventListener("click", () => {
+  resetControls();
+  applyMirror();
+  updateRamp();
+  resize(); // efface la trace
+});
+
+$("privacyBtn").addEventListener("click", () => $("privacyDialog").showModal());
+
+// Fenêtre d'activation de la caméra, ouverte dès le lancement
+const cameraDialog = $("cameraDialog");
+$("cameraAcceptBtn").addEventListener("click", () => {
+  cameraDialog.close();
+  startBtn.click();
+});
+$("cameraLaterBtn").addEventListener("click", () => cameraDialog.close());
+cameraDialog.showModal();
+
+// ── Boucle ──
+let lastTime = performance.now();
+function loop(now) {
+  const dt = Math.min(0.1, Math.max(0, (now - lastTime) / 1000));
+  lastTime = now;
+  if (running && segmenter && video.readyState >= 2 && video.currentTime !== lastVideoTime) segment(now);
+  frame(dt);
+  requestAnimationFrame(loop);
+}
+
+updateRamp();
+resize();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
