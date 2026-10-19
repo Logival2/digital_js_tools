@@ -305,7 +305,7 @@ function rowY(i) {
 // Police "maison" chargée depuis /font, utilisée uniquement pour le titre sur l'affiche
 const posterFace = new FontFace(
   "MingLiU-01",
-  "url('font/MingLiU-01.ttf')"
+  "url('../fonts/MingLiU-01.ttf')"
 );
 posterFace.load().then((loaded) => {
   document.fonts.add(loaded); // la boucle d'animation redessinera au prochain tick
@@ -314,7 +314,7 @@ posterFace.load().then((loaded) => {
 });
 
 // Police du gros titre pleine largeur
-new FontFace("Replica Mono", "url('font/Replica-Mono.otf')").load().then((loaded) => {
+new FontFace("Replica Mono", "url('../fonts/Replica-Mono.otf')").load().then((loaded) => {
   document.fonts.add(loaded);
 }).catch((err) => {
   console.error("Impossible de charger la police Replica Mono :", err);

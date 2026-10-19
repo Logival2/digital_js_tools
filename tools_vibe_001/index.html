@@ -299,7 +299,7 @@ const SCENE_MARGIN = 40;
 const GRID_MARGIN = 10, GRID_GUTTER = 10, GRID_COLS = 5, GRID_ROWS = 10;
 
 // ── Polices ──
-const FONT_FILES = { "Replica Mono": "font/Replica-Mono.otf", "MingLiU-01": "font/MingLiU-01.ttf" };
+const FONT_FILES = { "Replica Mono": "../fonts/Replica-Mono.otf", "MingLiU-01": "../fonts/MingLiU-01.ttf" };
 for (const [name, url] of Object.entries(FONT_FILES)) {
   new FontFace(name, `url('${url}')`).load().then((face) => {
     document.fonts.add(face);

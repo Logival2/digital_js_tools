@@ -206,7 +206,7 @@ function rowY(i) {
 // Police "maison" chargée depuis /font, utilisée uniquement pour le titre sur l'affiche
 const posterFace = new FontFace(
   "Happy Times IKOB",
-  "url('font/happy-times-at-the-ikob.ttf')"
+  "url('../fonts/happy-times-at-the-ikob.ttf')"
 );
 posterFace.load().then((loaded) => {
   document.fonts.add(loaded); // la boucle d'animation redessinera au prochain tick
