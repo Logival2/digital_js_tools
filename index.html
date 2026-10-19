@@ -19,7 +19,8 @@
     color: #000;
     background: #d1d1d1; /* même gris que les outils */
   }
-  body { padding: 16px; }
+  /* page en colonne : la mention reste collée en bas de la fenêtre, même avec peu d'outils */
+  body { padding: 16px; min-height: 100vh; display: flex; flex-direction: column; }
 
   /* nav reprise de valentinmaynadie.com */
   nav {
@@ -74,6 +75,22 @@
   .tool .desc { display: block; margin-top: 6px; color: #777; text-transform: none; letter-spacing: 0; font-size: 13px; }
   .tool:hover { background: #000; color: #fff; }
   .tool:hover .desc { color: #bbb; }
+
+  /* MingLiU allégée (32 Ko) : la mention a la même police que sur les affiches */
+  @font-face {
+    font-family: "MingLiU-01";
+    src: url("fonts/MingLiU-01.ttf") format("truetype");
+    font-display: swap;
+  }
+  #note {
+    font-family: "MingLiU-01", serif;
+    margin: auto 0 0;
+    padding-top: 24px;
+    text-align: center;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 11px;
+  }
 </style>
 </head>
 <body>
@@ -85,6 +102,9 @@
 </nav>
 
 <main id="tools"></main>
+
+<!-- mention, comme sur les affiches -->
+<footer id="note">[For experimental purposes only]</footer>
 
 <script>
 // Pour ajouter un outil : une ligne de plus ici (dossier = nom du dossier dans le dépôt,

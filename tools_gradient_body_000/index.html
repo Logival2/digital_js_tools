@@ -753,6 +753,23 @@ new FontFace("Replica Mono", "url('../fonts/Replica-Mono.otf')").load()
   .then((face) => document.fonts.add(face))
   .catch((err) => console.error("Impossible de charger la police Replica Mono :", err));
 
+// Mention centrée en bas de l'écran, mêmes proportions que dans l'outil Cercle
+// (11 unités et marge de 10 + 6 sur un petit côté de 800), en blanc sur le fond sombre
+new FontFace("MingLiU-01", "url('../fonts/MingLiU-01.ttf')").load()
+  .then((face) => document.fonts.add(face))
+  .catch((err) => console.error("Impossible de charger la police MingLiU-01 :", err));
+function drawFooterNote() {
+  const k = Math.min(overlay.width, overlay.height) / 800;
+  octx.setTransform(1, 0, 0, 1, 0, 0);
+  octx.fillStyle = "#ffffff";
+  octx.font = `${11 * k}px "MingLiU-01", serif`;
+  octx.letterSpacing = "0px";
+  octx.textAlign = "center";
+  octx.textBaseline = "bottom";
+  octx.fillText("[For experimental purposes only]", overlay.width / 2, overlay.height - 16 * k);
+  octx.textAlign = "left";
+}
+
 function drawBlobs(dt) {
   octx.setTransform(1, 0, 0, 1, 0, 0);
   octx.clearRect(0, 0, overlay.width, overlay.height);
@@ -877,6 +894,7 @@ function loop(now) {
   }
   frame(dt);
   drawBlobs(dt);
+  drawFooterNote();
   requestAnimationFrame(loop);
 }
 

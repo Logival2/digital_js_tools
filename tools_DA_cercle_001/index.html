@@ -26,6 +26,16 @@ EXIST TO BE
 CHALLENGED.</textarea>
   </div>
 
+  <!-- Police du texte haut -->
+  <div id="bigFontControl">
+    <label for="bigFontSelect">Police</label>
+    <select id="bigFontSelect">
+      <option value="MingLiU-01">MingLiU</option>
+      <option value="HN Roman">Helvetica Regular</option>
+      <option value="HN Black Extended">Helvetica Black Extended</option>
+    </select>
+  </div>
+
   <!-- Taille de la typo du titre -->
   <div id="fontSizeControl">
     <label for="fontSizeSlider">Font size</label>
@@ -41,7 +51,7 @@ CHALLENGED.</textarea>
   <!-- Interlettrage (en fraction de la taille de police) -->
   <div id="letterSpacingControl">
     <label for="letterSpacingSlider">Letter spacing</label>
-    <input id="letterSpacingSlider" type="range" min="-0.2" max="1" step="0.01" value="-0.04" />
+    <input id="letterSpacingSlider" type="range" min="-0.2" max="1" step="0.01" value="0" />
   </div>
 
   <!-- Fond : dégradé vertical à 3 couleurs (haut, milieu, bas) -->
@@ -235,6 +245,14 @@ const importBtn   = document.getElementById("importBtn");
 const imageInput  = document.getElementById("imageInput");
 const imageList   = document.getElementById("imageList");
 
+// Au rechargement, le navigateur restaure les anciens réglages dans les champs :
+// on repart toujours des valeurs écrites dans le HTML (sinon un nouveau défaut ne s'applique pas)
+document.querySelectorAll("#panel input:not([type=file]), #panel textarea, #panel select").forEach((el) => {
+  if (el.type === "checkbox") el.checked = el.defaultChecked;
+  else if (el.tagName === "SELECT") el.value = (Array.from(el.options).find((o) => o.defaultSelected) ?? el.options[0]).value;
+  else el.value = el.defaultValue;
+});
+
 const DEFAULT_FONT_SIZE = Number(fontSizeSlider.value);
 const DEFAULT_LINE_HEIGHT = Number(lineHeightSlider.value);
 const DEFAULT_LETTER_SPACING = Number(letterSpacingSlider.value);
@@ -317,12 +335,18 @@ posterFace.load().then((loaded) => {
   console.error("Impossible de charger la police MingLiU-01 :", err);
 });
 
-// Police du gros titre pleine largeur
-new FontFace("Replica Mono", "url('../fonts/Replica-Mono.otf')").load().then((loaded) => {
-  document.fonts.add(loaded);
-}).catch((err) => {
-  console.error("Impossible de charger la police Replica Mono :", err);
-});
+// Polices proposées pour le gros titre pleine largeur : MingLiU (plus haut) et deux Helvetica
+const HELVETICA_FILES = {
+  "HN Roman": "../fonts/Helvetica Neue LT Std/HelveticaNeueLTStd-Roman.otf",
+  "HN Black Extended": "../fonts/Helvetica Neue LT Std/HelveticaNeueLTStd-BlkEx.otf",
+};
+for (const [name, url] of Object.entries(HELVETICA_FILES)) {
+  new FontFace(name, `url('${encodeURI(url)}')`).load().then((loaded) => {
+    document.fonts.add(loaded);
+  }).catch((err) => {
+    console.error(`Impossible de charger la police ${name} :`, err);
+  });
+}
 
 // MingLiU n'existe qu'en une graisse fine : on l'épaissit légèrement avec un
 // contour de la même couleur (faux gras), proportionnel à la taille du texte.
@@ -779,14 +803,18 @@ function drawScene() {
   if (showGrid) drawGrid();
 }
 
-// Bloc de texte pleine largeur : centré, en Replica Mono, calé sur la marge du haut. Sa
+// Bloc de texte pleine largeur : centré, dans la police choisie, calé sur la marge du haut. Sa
 // taille est calculée pour que la ligne la plus large occupe exactement la
 // largeur des 5 colonnes (d'une marge à l'autre), d'après le contour réel des
 // lettres (pas la boîte de la police), pour que l'encre touche les marges.
-const BIG_FONT = (size) => `${size}px "Replica Mono", monospace`;
+const bigFontSelect = document.getElementById("bigFontSelect");
+const DEFAULT_BIG_FONT = bigFontSelect.value;
+const BIG_FONT = (size) => `${size}px "${bigFontSelect.value}", "Helvetica Neue", Helvetica, Arial, sans-serif`;
 
 function drawBigText() {
-  const lines = bigText.split("\n");
+  // MingLiU : en capitales, avec le même faux gras arrondi que dans la Typo cinétique 3D
+  const mingliu = bigFontSelect.value === "MingLiU-01";
+  const lines = (mingliu ? bigText.toUpperCase() : bigText).split("\n");
   if (!lines.some((line) => line.trim())) return;
 
   sctx.textAlign = "left";
@@ -818,6 +846,12 @@ function drawBigText() {
     const m = sctx.measureText(line);
     const x = sceneW / 2 - inkWidth(m) / 2 + m.actualBoundingBoxLeft;
     sctx.fillText(line, x, firstBaseline + i * lineH);
+    if (mingliu) {
+      sctx.strokeStyle = "#000000";
+      sctx.lineWidth = size * POSTER_EMBOLDEN; // 2,5 % de la taille, comme MINGLIU_EMBOLDEN
+      sctx.lineJoin = "round";
+      sctx.strokeText(line, x, firstBaseline + i * lineH);
+    }
   });
 }
 
@@ -1261,6 +1295,7 @@ resetBtn.addEventListener("click", () => {
 
   bigText = DEFAULT_BIG_TEXT;
   bigTextInput.value = DEFAULT_BIG_TEXT;
+  bigFontSelect.value = DEFAULT_BIG_FONT;
 
   posterFontSize = DEFAULT_FONT_SIZE;
   fontSizeSlider.value = DEFAULT_FONT_SIZE;

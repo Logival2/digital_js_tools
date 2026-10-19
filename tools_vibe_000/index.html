@@ -726,10 +726,24 @@ function drawGrid(ctx) {
 }
 
 let cursor = null; // { x, y, active, hand } dans le repère de la page
+// Mention centrée en bas de l'affiche, mêmes réglages que dans l'outil Cercle
+// (MingLiU, 11 unités, à 10 + 6 du bas), dans la couleur de la matière
+function drawFooterNote(ctx) {
+  ctx.save();
+  ctx.fillStyle = gradColorInputs[2].value;
+  ctx.font = `11px "MingLiU-01", serif`;
+  ctx.letterSpacing = "0px";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  ctx.fillText("[For experimental purposes only]", sceneW / 2, sceneH - 10 - 6);
+  ctx.restore();
+}
+
 function drawOverlay() {
   octx.setTransform(1, 0, 0, 1, 0, 0);
   octx.clearRect(0, 0, overlay.width, overlay.height);
   octx.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
+  drawFooterNote(octx);
   if (controls.grid.checked) drawGrid(octx);
   if (cursor) {
     octx.save();
@@ -1098,6 +1112,9 @@ function renderPoster() {
   gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, t.pixels);
   t.ctx.setTransform(1, 0, 0, 1, 0, 0);
   t.ctx.putImageData(new ImageData(t.pixels, w, h), 0, 0);
+  t.ctx.setTransform(w / sceneW, 0, 0, h / sceneH, 0, 0);
+  drawFooterNote(t.ctx);
+  t.ctx.setTransform(1, 0, 0, 1, 0, 0);
   return t.canvas;
 }
 

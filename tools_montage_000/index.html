@@ -120,6 +120,11 @@ let t = 0;                                // position dans le montage (s)
 let lastNow = performance.now();
 let durationTouched = false;              // dès que l'utilisateur saisit une durée, on ne l'écrase plus
 
+// Police de la mention en bas de page
+new FontFace("MingLiU-01", "url('../fonts/MingLiU-01.ttf')").load()
+  .then((face) => document.fonts.add(face))
+  .catch((err) => console.error("Impossible de charger la police MingLiU-01 :", err));
+
 // ── Format de sortie ──
 function applyFormat(key) {
   currentFormat = key;
@@ -260,6 +265,16 @@ function drawFrame() {
   ctx.fillRect(fx, fy, fw, fh);
   if (frameVideo.src) drawCover(frameVideo, fx + border, fy + border, vw, vh, 1, "#000");
   else { ctx.fillStyle = "#000"; ctx.fillRect(fx + border, fy + border, vw, vh); } // fond noir par défaut
+
+  // mention centrée en bas de page, mêmes proportions que dans l'outil Cercle
+  // (11 unités et marge de 10 + 6 sur un petit côté de 800)
+  const k = Math.min(W, H) / 800;
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `${11 * k}px "MingLiU-01", serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  ctx.fillText("[For experimental purposes only]", W / 2, H - 16 * k);
+  ctx.textAlign = "left";
 }
 
 // ── Boucle d'affichage ──

@@ -607,6 +607,11 @@ function drawStoreBlocks(ctx, w, h) {
       });
     });
   }
+  // mention centrée en bas de page, mêmes réglages que dans l'outil Cercle
+  ctx.font = `11px "MingLiU-01", serif`;
+  ctx.letterSpacing = "0px";
+  ctx.textBaseline = "bottom";
+  ctx.fillText("[For experimental purposes only]", cx, sceneH - 10 - 6);
 }
 
 // Une texture par taille de rendu (écran, export), refaite si la page ou la police change
