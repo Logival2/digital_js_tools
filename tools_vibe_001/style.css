@@ -343,3 +343,24 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
 }
 #privacyDialog form button:hover { background: #000; color: #fff; }
+
+/* Export + mini bouton carré noir (enregistrement de l'onglet), côte à côte */
+#exportRow {
+  display: flex;
+  gap: 4px;
+  margin-top: auto; /* calé en bas du panneau */
+}
+#exportRow #exportBtn,
+#exportRow #exportMp4Btn { flex: 1; margin-top: 0; }
+#rightPanel #extraBtn {
+  flex: none;
+  width: 27px;          /* = hauteur du bouton d'export : carré */
+  min-width: 27px;
+  padding: 0;
+  border: 1px solid #000;
+  border-radius: 0;
+  background: #000;
+  color: #fff;
+  cursor: pointer;
+}
+#rightPanel #extraBtn:hover { background: #333; }

@@ -199,8 +199,12 @@
     </select>
   </div>
 
-  <button id="exportBtn" type="button">Exporter PNG</button>
-  <button id="exportMp4Btn" type="button" hidden>Exporter MP4</button>
+  <div id="exportRow">
+    <button id="exportBtn" type="button">Exporter PNG</button>
+    <button id="exportMp4Btn" type="button" hidden>Exporter MP4</button>
+    <!-- bouton carré noir, sans libellé : son rôle sera défini plus tard -->
+    <button id="extraBtn" type="button" aria-label="Action"></button>
+  </div>
 </aside>
 
 <script type="module">
@@ -273,7 +277,7 @@ const FORMATS = {
   portrait: { w: 1080, h: 1350 },
   story:    { w: 1080, h: 1920 },
 };
-let currentFormat = "din";
+let currentFormat = "portrait"; // 4:5 Instagram par défaut
 
 // Repère de la page : petit côté = 800 unités, quel que soit le format
 const SCENE_SHORT_SIDE = 800;
@@ -787,7 +791,7 @@ const SHAPES = {
   },
   cone:      { id: 15, len: () => TAU * 0.85, preset: { rows: 5 } },
   cubeIso:   { id: 6, len: () => 4.4, preset: { view: "iso", rows: 4, cull: true } },
-  stairsIso: { id: 7, len: () => 2.4 * (1.4 + num("amp")), isoYaw: 30, preset: { view: "iso", rows: 3, freq: 6, zoom: 1.5 } },
+  stairsIso: { id: 7, len: () => 2.4 * (1.4 + num("amp")), preset: { view: "iso", rows: 3, freq: 6, zoom: 1.5 } },
   floorIso:  { id: 8, len: () => 3.6, preset: { view: "iso", rows: 8 } },
   foldIso: {
     id: 9,
@@ -840,22 +844,35 @@ const M4 = {
 // Saccadé : pose, puis mouvement rapide amorti (4 temps par boucle), façon Studio Dumbar.
 const STEPS = 4;
 const easeInOutQuart = (x) => (x < 0.5 ? 8 * x ** 4 : 1 - (-2 * x + 2) ** 4 / 2);
-function rhythm(t) {
+function rhythm(t, steps = STEPS) {
   switch (controls.rhythm.value) {
     case "smooth": return t;
     case "pingpong": return 0.5 - 0.5 * Math.cos(TAU * t);
     default: {
-      const p = t * STEPS, i = Math.floor(p), f = p - i;
+      const p = t * steps, i = Math.floor(p), f = p - i;
       const k = Math.min(1, Math.max(0, (f - 0.35) / 0.65));
-      return (i + easeInOutQuart(k)) / STEPS;
+      return (i + easeInOutQuart(k)) / steps;
     }
   }
 }
 
+// Rotation « écho » : la forme saute de position en position selon spinPattern
+// (en pas de spinStepDeg), un pas par à-coup, avec le même amorti que le rythme choisi
+function patternSpin(shape, t) {
+  const pat = shape.spinPattern, steps = shape.steps ?? STEPS;
+  const p = t * steps, i = Math.floor(p), f = p - i;
+  const k = controls.rhythm.value === "snap"
+    ? easeInOutQuart(Math.min(1, Math.max(0, (f - 0.35) / 0.65)))
+    : f;
+  const a = pat[i % pat.length], b = pat[(i + 1) % pat.length];
+  return ((a + (b - a) * k) * shape.spinStepDeg * num("spin") * Math.PI) / 180;
+}
+
 // Dessine la scène dans fb (null = l'écran), à la taille w × h, au temps t de la boucle (0 → 1)
 function render(fb, w, h, t) {
-  const e = rhythm(t);
   const shape = SHAPES[controls.shape.value];
+  // nombre d'à-coups par boucle (4 = quarts de tour ; une forme peut en demander d'autres)
+  const e = rhythm(t, shape.steps ?? STEPS);
   const len = shape.len();
   const bandH = num("size");
   const isTunnel = shape.id === 5;
@@ -875,7 +892,7 @@ function render(fb, w, h, t) {
     ? M4.ortho(halfH * aspect, halfH, 0.1, 40)
     : M4.persp(fov, aspect, Math.max(0.005, dist * 0.002), dist + 40);
   const view = M4.trans(0, 0, -dist);
-  const spin = TAU * num("spin") * e;
+  const spin = shape.spinPattern ? patternSpin(shape, t) : TAU * num("spin") * e;
   // vue isométrique : 35,26° d'inclinaison et 45° de rotation (une forme peut en demander une autre) ; « Angle » s'ajoute
   const ISO_YAW = ((shape.isoYaw ?? 45) * Math.PI) / 180;
   const tilt = controls.view.value === "iso" ? Math.atan(1 / Math.SQRT2) : (num("tilt") * Math.PI) / 180;
@@ -1083,7 +1100,7 @@ $("resetBtn").addEventListener("click", () => {
   resetControls();
   lastDuration = loopDuration();
   buildTextTexture();
-  applyFormat("din");
+  applyFormat("portrait");
   setMode("image"); // remet aussi le lecteur au début, en lecture
 });
 
@@ -1215,7 +1232,7 @@ async function exportMP4() {
   const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5/+esm");
   const { w, h } = FORMATS[currentFormat];
   // H.264 High profile, niveau 5.1 : couvre jusqu'au A4 1240×1754
-  const config = { codec: "avc1.640033", width: w, height: h, bitrate: 12_000_000, framerate: FPS };
+  const config = { codec: "avc1.640033", width: w, height: h, bitrate: 12_000_000, framerate: FPS, avc: { format: "avc" } };
   const { supported } = await VideoEncoder.isConfigSupported(config);
   if (!supported) throw new Error(`encodage H.264 ${w}×${h} non supporté par ce navigateur.`);
 
@@ -1252,6 +1269,81 @@ async function exportMP4() {
   downloadBlob(new Blob([muxer.target.buffer], { type: "video/mp4" }), `typo-3d-${currentFormat}-${w}x${h}-${loopDuration()}s.mp4`);
   motionTime = 0;
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// Bouton carré noir : enregistre l'onglet entier (interface + affiche) en vidéo,
+// pendant la « Durée » choisie, l'animation repartant du début.
+// Le navigateur demande l'autorisation de partager l'onglet à chaque fois.
+// ═══════════════════════════════════════════════════════════════════
+let recording = false;
+
+// MP4 si le navigateur sait l'enregistrer (Chrome / Edge récents), sinon WebM
+function recorderType() {
+  const types = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm"];
+  return types.find((t) => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) ?? "";
+}
+
+async function recordWindow() {
+  if (recording) return;
+  if (!navigator.mediaDevices?.getDisplayMedia) throw new Error("ce navigateur ne peut pas filmer l'onglet (utilise Chrome ou Edge).");
+  recording = true;
+  let stream = null;
+  try {
+    stream = await navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: FPS, displaySurface: "browser" },
+      audio: false,
+      preferCurrentTab: true,       // propose directement cet onglet
+      selfBrowserSurface: "include",
+    });
+    // Chrome affiche sa barre « vous partagez cet onglet » et la page se réorganise :
+    // on attend 0,8 s qu'elle soit stable. La vidéo garde la taille affichée (pas de recadrage).
+    await new Promise((r) => setTimeout(r, 800));
+
+    // l'animation est figée sur sa toute première image en attendant que l'enregistrement démarre
+    motionTime = 0;
+    setPlaying(false);
+
+    // lecture du flux capturé : sert à savoir quand une nouvelle image filmée arrive
+    const src = document.createElement("video");
+    src.muted = true;
+    src.srcObject = stream;
+    await src.play();
+    const nextCapturedFrame = () => new Promise((r) => src.requestVideoFrameCallback(() => r()));
+    await nextCapturedFrame(); // l'image 0 est bien affichée et filmée
+
+    const type = recorderType();
+    const recorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 12_000_000 });
+    const chunks = [];
+    recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+    const started = new Promise((resolve) => (recorder.onstart = resolve));
+    const stopped = new Promise((resolve) => (recorder.onstop = resolve));
+    recorder.start();
+    await started;
+    await nextCapturedFrame(); // première image enregistrée = image 0 de la boucle
+
+    // la boucle repart de zéro exactement maintenant, et l'enregistrement dure « Durée »
+    motionTime = 0;
+    setPlaying(true);
+    await new Promise((r) => setTimeout(r, loopDuration() * 1000));
+    recorder.stop();
+    await stopped;
+
+    const ext = type.includes("mp4") ? "mp4" : "webm";
+    downloadBlob(new Blob(chunks, { type: type || "video/webm" }), `typo-3d-ecran-${loopDuration()}s.${ext}`);
+  } finally {
+    stream?.getTracks().forEach((t) => t.stop());
+    setPlaying(true);
+    recording = false;
+  }
+}
+
+$("extraBtn").addEventListener("click", () => {
+  recordWindow().catch((err) => {
+    recording = false;
+    // annuler la fenêtre de partage n'est pas une erreur
+    if (err.name !== "NotAllowedError") alert("Enregistrement impossible : " + err.message);
+  });
+});
 
 // ── Démarrage ──
 buildTextTexture();

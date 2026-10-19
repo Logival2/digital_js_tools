@@ -99,7 +99,7 @@
     <h2>Rendu</h2>
     <div id="gradientColors">
       <input type="color" class="gradColor" value="#ffffff" title="Fond" aria-label="Couleur du fond" />
-      <input type="color" class="gradColor" value="#00ff80" title="Bord" aria-label="Couleur du bord" />
+      <input type="color" class="gradColor" value="#00ff26" title="Bord" aria-label="Couleur du bord" />
       <input type="color" class="gradColor" value="#000000" title="Matière" aria-label="Couleur de la matière" />
     </div>
     <div id="gradientPreview" aria-hidden="true"></div>
@@ -213,8 +213,12 @@
   </div>
   <p id="simInfo"></p>
 
-  <button id="exportBtn" type="button">Exporter PNG</button>
-  <button id="exportMp4Btn" type="button" hidden>Exporter MP4</button>
+  <div id="exportRow">
+    <button id="exportBtn" type="button">Exporter PNG</button>
+    <button id="exportMp4Btn" type="button" hidden>Exporter MP4</button>
+    <!-- bouton carré noir : enregistre l'onglet entier en vidéo -->
+    <button id="extraBtn" type="button" aria-label="Enregistrer l'onglet en vidéo"></button>
+  </div>
 </aside>
 
 <script type="module">
@@ -986,7 +990,7 @@ function drawPreview() {
   if (!video.videoWidth) return;
   pctx.drawImage(video, 0, 0, pcv.width, pcv.height);
   if (!lastLandmarks) return;
-  pctx.fillStyle = "#00e0a4";
+  pctx.fillStyle = "#00ff26";
   for (const p of lastLandmarks) {
     pctx.beginPath();
     pctx.arc(p.x * pcv.width, p.y * pcv.height, 4, 0, Math.PI * 2);
@@ -1211,6 +1215,80 @@ async function exportMP4() {
   downloadBlob(new Blob([muxer.target.buffer], { type: "video/mp4" }), `typo-organique-${currentFormat}-${w}x${h}-${num("duration")}s.mp4`);
   restart();
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// Bouton carré noir : enregistre l'onglet entier (interface + affiche) en vidéo,
+// pendant la durée d'export vidéo, l'animation repartant du début.
+// Le navigateur demande l'autorisation de partager l'onglet à chaque fois.
+// ═══════════════════════════════════════════════════════════════════
+let recording = false;
+
+// MP4 si le navigateur sait l'enregistrer (Chrome / Edge récents), sinon WebM
+function recorderType() {
+  const types = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm"];
+  return types.find((t) => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) ?? "";
+}
+
+async function recordWindow() {
+  if (recording) return;
+  if (!navigator.mediaDevices?.getDisplayMedia) throw new Error("ce navigateur ne peut pas filmer l'onglet (utilise Chrome ou Edge).");
+  recording = true;
+  let stream = null;
+  try {
+    stream = await navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: FPS, displaySurface: "browser" },
+      audio: false,
+      preferCurrentTab: true,       // propose directement cet onglet
+      selfBrowserSurface: "include",
+    });
+    // Chrome affiche sa barre « vous partagez cet onglet » et la page se réorganise :
+    // on attend 0,8 s qu'elle soit stable. La vidéo garde la taille affichée (pas de recadrage).
+    await new Promise((r) => setTimeout(r, 800));
+
+    // l'animation est figée sur sa toute première image en attendant que l'enregistrement démarre
+    restart();
+    setPlaying(false);
+
+    // lecture du flux capturé : sert à savoir quand une nouvelle image filmée arrive
+    const src = document.createElement("video");
+    src.muted = true;
+    src.srcObject = stream;
+    await src.play();
+    const nextCapturedFrame = () => new Promise((r) => src.requestVideoFrameCallback(() => r()));
+    await nextCapturedFrame(); // l'image 0 est bien affichée et filmée
+
+    const type = recorderType();
+    const recorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 12_000_000 });
+    const chunks = [];
+    recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+    const started = new Promise((resolve) => (recorder.onstart = resolve));
+    const stopped = new Promise((resolve) => (recorder.onstop = resolve));
+    recorder.start();
+    await started;
+    await nextCapturedFrame(); // première image enregistrée = image 0 de l'animation
+
+    // l'animation repart exactement maintenant, et l'enregistrement dure la durée d'export vidéo
+    setPlaying(true);
+    await new Promise((r) => setTimeout(r, num("duration") * 1000));
+    recorder.stop();
+    await stopped;
+
+    const ext = type.includes("mp4") ? "mp4" : "webm";
+    downloadBlob(new Blob(chunks, { type: type || "video/webm" }), `typo-organique-ecran-${num("duration")}s.${ext}`);
+  } finally {
+    stream?.getTracks().forEach((t) => t.stop());
+    setPlaying(true);
+    recording = false;
+  }
+}
+
+document.getElementById("extraBtn").addEventListener("click", () => {
+  recordWindow().catch((err) => {
+    recording = false;
+    // annuler la fenêtre de partage n'est pas une erreur
+    if (err.name !== "NotAllowedError") alert("Enregistrement impossible : " + err.message);
+  });
+});
 
 // ── Démarrage ──
 updateGradientPreview();

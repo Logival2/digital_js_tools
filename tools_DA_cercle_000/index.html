@@ -556,7 +556,7 @@ function drawPreview(landmarks) {
   if (!landmarks) return;
   const px = (p) => [p.x * pcv.width, p.y * pcv.height];
 
-  pctx.fillStyle = "#00e0a4";
+  pctx.fillStyle = "#00ff26";
   for (const p of landmarks) {
     const [x, y] = px(p);
     pctx.beginPath();

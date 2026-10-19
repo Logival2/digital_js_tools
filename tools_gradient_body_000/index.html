@@ -13,20 +13,26 @@
 
 <!-- Rendu plein écran : l'aura en dégradé laissée par le corps -->
 <canvas id="gl"></canvas>
+<!-- Premier plan : le blob tracking (boîtes, étiquettes, liens) -->
+<canvas id="overlay"></canvas>
 
 <!-- Panneau flottant à gauche (paramètres) -->
 <aside id="panel">
 
   <!-- Caméra : détourage du corps en direct (MediaPipe) -->
   <div class="section">
-    <h2>Caméra</h2>
+    <h2>Source</h2>
     <label class="check"><input id="mirrorToggle" type="checkbox" checked /> Miroir</label>
-    <p class="hint">Sans caméra, une silhouette de démonstration bouge à l'écran.</p>
+    <p class="hint">Webcam ou vidéo MP4. Sans source, une silhouette de démonstration bouge à l'écran.</p>
   </div>
   <div id="bar">
     <button id="startBtn" type="button">Démarrer la caméra</button>
-    <button id="stopBtn" type="button" hidden>Stop cam</button>
+    <button id="stopBtn" type="button" hidden>Stop</button>
     <span id="readout"><span class="status" id="status">Démo</span></span>
+  </div>
+  <div id="fileRow">
+    <button id="fileBtn" type="button">Charger une vidéo MP4</button>
+    <input id="fileInput" type="file" accept="video/mp4,video/*" hidden />
   </div>
   <div id="preview" class="previewBox mirror">
     <video id="cam" playsinline muted></video>
@@ -40,6 +46,33 @@
     </div>
     <div class="row"><label for="thresholdSlider" title="Plus haut = seules les zones sûres comptent comme corps">Seuil</label><input id="thresholdSlider" type="range" min="0.05" max="0.95" step="0.01" value="0.5" /></div>
     <div class="row"><label for="softSlider" title="Bord net ou progressif">Douceur</label><input id="softSlider" type="range" min="0" max="0.5" step="0.01" value="0.15" /></div>
+  </div>
+
+  <!-- Blob tracking : taches repérées dans l'image RVB de la source, suivies d'une image à l'autre -->
+  <div class="section">
+    <h2>Blob tracking</h2>
+    <label class="check"><input id="blobToggle" type="checkbox" checked /> Afficher</label>
+    <div id="blobPreview" class="previewBox mirror">
+      <canvas id="blobCanvas" width="160" height="90"></canvas>
+    </div>
+    <div class="row">
+      <label for="blobChannelSelect" title="Ce qui fait une tache dans l'image">Couche</label>
+      <select id="blobChannelSelect">
+        <option value="luma">Luminosité</option>
+        <option value="dark">Sombre</option>
+        <option value="r">Rouge</option>
+        <option value="g">Vert</option>
+        <option value="b">Bleu</option>
+        <option value="motion">Mouvement</option>
+      </select>
+    </div>
+    <div class="row"><label for="blobThresholdSlider" title="Plus haut = seules les zones les plus marquées comptent">Seuil</label><input id="blobThresholdSlider" type="range" min="0.02" max="0.98" step="0.01" value="0.6" /></div>
+    <div class="row"><label for="blobMinSlider" title="Taille minimale d'une tache (part de l'image)">Taille min</label><input id="blobMinSlider" type="range" min="0.0005" max="0.05" step="0.0005" value="0.004" /></div>
+    <div class="row"><label for="blobMaxSlider" title="Nombre de taches suivies, les plus grandes d'abord">Nombre max</label><input id="blobMaxSlider" type="range" min="1" max="30" step="1" value="12" /></div>
+    <label class="check"><input id="blobBoxToggle" type="checkbox" checked /> Boîtes</label>
+    <label class="check"><input id="blobLabelToggle" type="checkbox" checked /> Étiquettes</label>
+    <label class="check"><input id="blobLinkToggle" type="checkbox" checked /> Liens</label>
+    <div class="row"><label for="blobColorInput">Couleur</label><input id="blobColorInput" class="swatch" type="color" value="#ffffff" /></div>
   </div>
 
   <!-- Aura : la trace du corps qui s'efface, se diffuse et monte -->
@@ -140,6 +173,15 @@ const controls = {
   mirror: $("mirrorToggle"),
   threshold: $("thresholdSlider"),
   soft: $("softSlider"),
+  blob: $("blobToggle"),
+  blobChannel: $("blobChannelSelect"),
+  blobThreshold: $("blobThresholdSlider"),
+  blobMin: $("blobMinSlider"),
+  blobMax: $("blobMaxSlider"),
+  blobBox: $("blobBoxToggle"),
+  blobLabel: $("blobLabelToggle"),
+  blobLink: $("blobLinkToggle"),
+  blobColor: $("blobColorInput"),
   trail: $("trailSlider"),
   spread: $("spreadSlider"),
   rise: $("riseSlider"),
@@ -348,6 +390,8 @@ function resize() {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   glCanvas.width = Math.round(window.innerWidth * dpr);
   glCanvas.height = Math.round(window.innerHeight * dpr);
+  overlay.width = glCanvas.width;   // premier plan (blob tracking) à la même résolution
+  overlay.height = glCanvas.height;
   const w = Math.max(64, Math.round(glCanvas.width * TRAIL_SCALE));
   const h = Math.max(64, Math.round(glCanvas.height * TRAIL_SCALE));
   for (const t of [...trail, blurA, blurB, wideA, wideB]) if (t) { gl.deleteTexture(t.tex); gl.deleteFramebuffer(t.fb); }
@@ -472,15 +516,43 @@ async function startCamera() {
   statusEl.textContent = "";
 }
 
+// Vidéo MP4 choisie par l'utilisateur : lue en boucle, à la place de la webcam
+let fileUrl = null;
+async function loadVideoFile(file) {
+  stopCamera();
+  startBtn.disabled = true;
+  await loadSegmenter();
+  fileUrl = URL.createObjectURL(file);
+  video.src = fileUrl;
+  video.loop = true;
+  video.muted = true;
+  await video.play();
+  // une vidéo filmée n'est pas une vue selfie : pas de miroir par défaut
+  controls.mirror.checked = false;
+  applyMirror();
+  running = true;
+  startBtn.hidden = true;
+  stopBtn.hidden = false;
+  statusEl.textContent = file.name;
+}
+
 function stopCamera() {
   if (video.srcObject) {
     video.srcObject.getTracks().forEach((t) => t.stop());
     video.srcObject = null;
   }
+  if (fileUrl) {
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+    URL.revokeObjectURL(fileUrl);
+    fileUrl = null;
+  }
   running = false;
   hasMask = false;
   lastVideoTime = -1;
   clearMaskPreview();
+  clearBlobs();
   startBtn.hidden = false;
   startBtn.disabled = false;
   stopBtn.hidden = true;
@@ -534,11 +606,217 @@ function clearMaskPreview() {
 }
 clearMaskPreview();
 
+// ═══════════════════════════════════════════════════════════════════
+// Blob tracking sur l'image RVB de la source :
+// 1. l'image est réduite (160 px de large) et chaque pixel reçoit une valeur selon la « Couche »,
+// 2. les pixels au-dessus du « Seuil » sont regroupés en taches (composantes connexes),
+// 3. chaque tache est associée à la plus proche de l'image précédente : elle garde son numéro.
+// ═══════════════════════════════════════════════════════════════════
+const BLOB_W = 160;                 // largeur d'analyse (px)
+const BLOB_MATCH = 0.15;            // distance max pour reconnaître une tache (part de l'image)
+const BLOB_KEEP = 6;                // images où une tache peut disparaître sans perdre son numéro
+const blobWork = document.createElement("canvas");
+const blobWorkCtx = blobWork.getContext("2d", { willReadFrequently: true });
+const blobCanvas = $("blobCanvas");
+const blobCtx = blobCanvas.getContext("2d");
+let blobBuf = null;                 // tableaux réutilisés d'une image à l'autre
+let blobs = [];                     // taches suivies : { id, x0, y0, x1, y1, cx, cy, area, miss, d* (affichage lissé) }
+let nextBlobId = 1;
+
+function clearBlobs() {
+  blobs = [];
+  nextBlobId = 1;
+  if (blobBuf) blobBuf.prevLum = null;
+  blobCtx.fillStyle = "#000";
+  blobCtx.fillRect(0, 0, blobCanvas.width, blobCanvas.height);
+}
+
+function detectBlobs() {
+  const vw = video.videoWidth, vh = video.videoHeight;
+  if (!vw || !vh) return;
+  const W = BLOB_W, H = Math.max(1, Math.round((BLOB_W * vh) / vw)), n = W * H;
+  if (!blobBuf || blobBuf.n !== n) {
+    blobWork.width = blobCanvas.width = W;
+    blobWork.height = blobCanvas.height = H;
+    blobBuf = {
+      n, prevLum: null,
+      lum: new Float32Array(n), on: new Uint8Array(n),
+      label: new Int32Array(n), parent: new Int32Array(n + 1),
+      preview: blobCtx.createImageData(W, H),
+    };
+  }
+  const B = blobBuf;
+  blobWorkCtx.drawImage(video, 0, 0, W, H);
+  const px = blobWorkCtx.getImageData(0, 0, W, H).data;
+  const channel = controls.blobChannel.value;
+  const thr = num("blobThreshold");
+  const prev = B.prevLum;
+  for (let i = 0, j = 0; i < n; i++, j += 4) {
+    const r = px[j] / 255, g = px[j + 1] / 255, b = px[j + 2] / 255;
+    const l = 0.299 * r + 0.587 * g + 0.114 * b;
+    let v;
+    switch (channel) {
+      case "dark": v = 1 - l; break;
+      case "r": v = r - Math.max(g, b) + 0.5; break;   // rouge dominant
+      case "g": v = g - Math.max(r, b) + 0.5; break;
+      case "b": v = b - Math.max(r, g) + 0.5; break;
+      case "motion": v = prev ? Math.abs(l - prev[i]) * 4 : 0; break;
+      default: v = l;
+    }
+    B.on[i] = v > thr ? 1 : 0;
+    B.lum[i] = l;
+  }
+  B.prevLum = Float32Array.from(B.lum);
+
+  // composantes connexes (voisins gauche / haut), avec fusion des étiquettes
+  const { on, label, parent } = B;
+  const find = (a) => { while (parent[a] !== a) a = parent[a] = parent[parent[a]]; return a; };
+  let count = 0;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      if (!on[i]) { label[i] = 0; continue; }
+      const left = x > 0 ? label[i - 1] : 0;
+      const up = y > 0 ? label[i - W] : 0;
+      if (!left && !up) { label[i] = ++count; parent[count] = count; }
+      else if (left && up) {
+        const a = find(left), c = find(up);
+        label[i] = Math.min(a, c);
+        parent[Math.max(a, c)] = Math.min(a, c);
+      } else label[i] = left || up;
+    }
+  }
+  // mesure de chaque tache : surface, boîte, centre
+  const stats = new Map();
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const l = label[y * W + x];
+      if (!l) continue;
+      const root = find(l);
+      let s = stats.get(root);
+      if (!s) stats.set(root, (s = { area: 0, x0: x, y0: y, x1: x, y1: y, sx: 0, sy: 0 }));
+      s.area++; s.sx += x; s.sy += y;
+      if (x < s.x0) s.x0 = x; if (x > s.x1) s.x1 = x;
+      if (y < s.y0) s.y0 = y; if (y > s.y1) s.y1 = y;
+    }
+  }
+  const minArea = num("blobMin") * n;
+  const found = [...stats.values()]
+    .filter((s) => s.area >= minArea)
+    .sort((a, b) => b.area - a.area)
+    .slice(0, num("blobMax"))
+    .map((s) => ({
+      x0: s.x0 / W, y0: s.y0 / H, x1: (s.x1 + 1) / W, y1: (s.y1 + 1) / H,
+      cx: (s.sx / s.area + 0.5) / W, cy: (s.sy / s.area + 0.5) / H, area: s.area / n,
+    }));
+  trackBlobs(found);
+
+  // vignette : les pixels retenus en blanc, les taches suivies en couleur
+  const out = B.preview.data;
+  for (let i = 0, j = 0; i < n; i++, j += 4) {
+    const v = on[i] ? 255 : 0;
+    out[j] = out[j + 1] = out[j + 2] = v;
+    out[j + 3] = 255;
+  }
+  blobCtx.putImageData(B.preview, 0, 0);
+  blobCtx.strokeStyle = "#ff0050";
+  blobCtx.lineWidth = 1;
+  for (const b of blobs) if (!b.miss) blobCtx.strokeRect(b.x0 * W + 0.5, b.y0 * H + 0.5, (b.x1 - b.x0) * W - 1, (b.y1 - b.y0) * H - 1);
+}
+
+// Association aux taches précédentes : les paires les plus proches d'abord
+function trackBlobs(found) {
+  const pairs = [];
+  blobs.forEach((b, i) => found.forEach((f, j) => {
+    const d = Math.hypot(b.cx - f.cx, b.cy - f.cy);
+    if (d < BLOB_MATCH) pairs.push([d, i, j]);
+  }));
+  pairs.sort((a, b) => a[0] - b[0]);
+  const usedOld = new Set(), usedNew = new Set();
+  for (const [, i, j] of pairs) {
+    if (usedOld.has(i) || usedNew.has(j)) continue;
+    usedOld.add(i); usedNew.add(j);
+    Object.assign(blobs[i], found[j], { miss: 0 });
+  }
+  blobs.forEach((b, i) => { if (!usedOld.has(i)) b.miss++; });
+  blobs = blobs.filter((b) => b.miss <= BLOB_KEEP);
+  found.forEach((f, j) => {
+    if (usedNew.has(j)) return;
+    blobs.push({ ...f, id: nextBlobId++, miss: 0, dx0: f.x0, dy0: f.y0, dx1: f.x1, dy1: f.y1, dcx: f.cx, dcy: f.cy });
+  });
+}
+
+// ── Dessin au premier plan, dans le même cadrage que l'aura ──
+const overlay = $("overlay");
+const octx = overlay.getContext("2d");
+new FontFace("Replica Mono", "url('../fonts/Replica-Mono.otf')").load()
+  .then((face) => document.fonts.add(face))
+  .catch((err) => console.error("Impossible de charger la police Replica Mono :", err));
+
+function drawBlobs(dt) {
+  octx.setTransform(1, 0, 0, 1, 0, 0);
+  octx.clearRect(0, 0, overlay.width, overlay.height);
+  if (!on("blob") || !running || !video.videoWidth) return;
+  const cw = overlay.width, ch = overlay.height;
+  const aspect = cw / ch, va = video.videoWidth / video.videoHeight;
+  const scale = aspect > va ? [1, va / aspect] : [aspect / va, 1];
+  const mirror = on("mirror");
+  // coordonnées image (0 → 1, origine en haut) -> pixels écran, recadrage « cover » + miroir
+  const sx = (u) => (((mirror ? 1 - u : u) - 0.5) / scale[0] + 0.5) * cw;
+  const sy = (v) => ((v - 0.5) / scale[1] + 0.5) * ch;
+  const k = 1 - Math.exp(-dt / 0.06); // lissage de l'affichage
+  const dpr = cw / window.innerWidth;
+  const color = controls.blobColor.value;
+  octx.strokeStyle = octx.fillStyle = color;
+  octx.lineWidth = Math.max(1, dpr);
+  octx.font = `${11 * dpr}px "Replica Mono", monospace`;
+  octx.textBaseline = "bottom";
+
+  const shown = blobs.filter((b) => b.miss === 0).sort((a, b) => a.id - b.id);
+  for (const b of shown) {
+    for (const key of ["x0", "y0", "x1", "y1", "cx", "cy"]) {
+      const d = "d" + key;
+      b[d] += (b[key] - b[d]) * k;
+    }
+  }
+  if (on("blobLink") && shown.length > 1) {
+    octx.beginPath();
+    shown.forEach((b, i) => (i ? octx.lineTo(sx(b.dcx), sy(b.dcy)) : octx.moveTo(sx(b.dcx), sy(b.dcy))));
+    octx.stroke();
+  }
+  for (const b of shown) {
+    const xa = sx(b.dx0), xb = sx(b.dx1);
+    const left = Math.min(xa, xb), top = sy(b.dy0);
+    const w = Math.abs(xb - xa), h = sy(b.dy1) - top;
+    if (on("blobBox")) octx.strokeRect(left, top, w, h);
+    // viseur au centre
+    const cx = sx(b.dcx), cy = sy(b.dcy), r = 5 * dpr;
+    octx.beginPath();
+    octx.moveTo(cx - r, cy); octx.lineTo(cx + r, cy);
+    octx.moveTo(cx, cy - r); octx.lineTo(cx, cy + r);
+    octx.stroke();
+    if (on("blobLabel")) {
+      const txt = `#${String(b.id).padStart(2, "0")} ${b.dcx.toFixed(3)} ${b.dcy.toFixed(3)}`;
+      octx.fillText(txt, left, top - 3 * dpr);
+    }
+  }
+}
+
 startBtn.addEventListener("click", () => startCamera().catch((err) => {
   statusEl.textContent = "Erreur caméra : " + err.message;
   startBtn.disabled = false;
 }));
 stopBtn.addEventListener("click", stopCamera);
+$("fileBtn").addEventListener("click", () => $("fileInput").click());
+$("fileInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  e.target.value = ""; // permet de recharger le même fichier
+  if (!file) return;
+  loadVideoFile(file).catch((err) => {
+    statusEl.textContent = "Vidéo illisible : " + err.message;
+    startBtn.disabled = false;
+  });
+});
 
 // ═══════════════════════════════════════════════════════════════════
 // Réglages
@@ -574,6 +852,7 @@ $("resetBtn").addEventListener("click", () => {
   applyMirror();
   updateRamp();
   resize(); // efface la trace
+  clearBlobs();
 });
 
 $("privacyBtn").addEventListener("click", () => $("privacyDialog").showModal());
@@ -592,8 +871,12 @@ let lastTime = performance.now();
 function loop(now) {
   const dt = Math.min(0.1, Math.max(0, (now - lastTime) / 1000));
   lastTime = now;
-  if (running && segmenter && video.readyState >= 2 && video.currentTime !== lastVideoTime) segment(now);
+  if (running && segmenter && video.readyState >= 2 && video.currentTime !== lastVideoTime) {
+    segment(now);
+    if (on("blob")) detectBlobs();
+  }
   frame(dt);
+  drawBlobs(dt);
   requestAnimationFrame(loop);
 }
 

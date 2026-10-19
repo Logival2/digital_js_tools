@@ -114,7 +114,8 @@ button:disabled { opacity: .4; cursor: default; }
   display: flex;
   gap: 4px;
 }
-.gradColor {
+.gradColor,
+.swatch {
   -webkit-appearance: none;
   appearance: none;
   flex: 1;
@@ -126,9 +127,12 @@ button:disabled { opacity: .4; cursor: default; }
   background: none;
   cursor: pointer;
 }
-.gradColor::-webkit-color-swatch-wrapper { padding: 0; }
-.gradColor::-webkit-color-swatch { border: none; border-radius: 0; }
-.gradColor::-moz-color-swatch { border: none; border-radius: 0; }
+.gradColor::-webkit-color-swatch-wrapper,
+.swatch::-webkit-color-swatch-wrapper { padding: 0; }
+.gradColor::-webkit-color-swatch,
+.swatch::-webkit-color-swatch { border: none; border-radius: 0; }
+.gradColor::-moz-color-swatch,
+.swatch::-moz-color-swatch { border: none; border-radius: 0; }
 #gradientPreview {
   height: 6px;
   margin-top: 4px;
@@ -279,3 +283,20 @@ input[type="range"]::-moz-range-thumb {
 #cameraDialog { width: min(420px, calc(100vw - 32px)); }
 #cameraAcceptBtn { background: #000; color: #fff; }
 #cameraAcceptBtn:hover { background: #fff; color: #000; }
+
+/* Premier plan : blob tracking, au-dessus de l'aura, sous le panneau */
+#overlay {
+  position: fixed;
+  inset: 0;
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+
+/* Chargement d'une vidéo MP4 */
+#fileRow { padding: 0 8px 8px; }
+#fileRow button { width: 100%; }
+
+#blobPreview { margin-bottom: 4px; }
+.previewBox canvas { image-rendering: pixelated; }

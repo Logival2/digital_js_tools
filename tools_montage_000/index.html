@@ -231,9 +231,9 @@ document.querySelectorAll("#transport button").forEach((btn) => btn.addEventList
 }));
 
 // ── Dessin : fond en « cover », cadre 16/9 centré avec marge blanche ──
-function drawCover(video, x, y, w, h, zoom = 1) {
+function drawCover(video, x, y, w, h, zoom = 1, empty = "#d0d0d0") {
   const vw = video.videoWidth, vh = video.videoHeight;
-  if (!vw || !vh) { ctx.fillStyle = "#d0d0d0"; ctx.fillRect(x, y, w, h); return; }
+  if (!vw || !vh) { ctx.fillStyle = empty; ctx.fillRect(x, y, w, h); return; }
   // zoom : on recadre une zone plus petite, centrée, de la vidéo
   const s = Math.max(w / vw, h / vh) * zoom;
   const sw = w / s, sh = h / s;
@@ -258,8 +258,8 @@ function drawFrame() {
   const fx = (W - fw) / 2, fy = (H - fh) / 2;
   ctx.fillStyle = "#fafaf8";
   ctx.fillRect(fx, fy, fw, fh);
-  if (frameVideo.src) drawCover(frameVideo, fx + border, fy + border, vw, vh);
-  else { ctx.fillStyle = "#d0d0d0"; ctx.fillRect(fx + border, fy + border, vw, vh); }
+  if (frameVideo.src) drawCover(frameVideo, fx + border, fy + border, vw, vh, 1, "#000");
+  else { ctx.fillStyle = "#000"; ctx.fillRect(fx + border, fy + border, vw, vh); } // fond noir par défaut
 }
 
 // ── Boucle d'affichage ──

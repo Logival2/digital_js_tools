@@ -51,8 +51,8 @@ CHALLENGED.</textarea>
       Dégradé
     </label>
     <div id="gradientColors">
-      <input type="color" class="gradColor" value="#00ff80" title="Haut" aria-label="Couleur du haut" />
-      <input type="color" class="gradColor" value="#7dffbe" title="Milieu" aria-label="Couleur du milieu" />
+      <input type="color" class="gradColor" value="#00ff26" title="Haut" aria-label="Couleur du haut" />
+      <input type="color" class="gradColor" value="#80ff93" title="Milieu" aria-label="Couleur du milieu" />
       <input type="color" class="gradColor" value="#ffffff" title="Bas" aria-label="Couleur du bas" />
     </div>
     <div id="gradientPreview" aria-hidden="true"></div>
@@ -194,8 +194,12 @@ CHALLENGED.</textarea>
     <p id="motionTimeLabel">0.00 / 5.00 s</p>
   </div>
 
-  <button id="exportBtn" type="button">Exporter PNG</button>
-  <button id="exportMp4Btn" type="button" hidden>Exporter MP4 (5 s)</button>
+  <div id="exportRow">
+    <button id="exportBtn" type="button">Exporter PNG</button>
+    <button id="exportMp4Btn" type="button" hidden>Exporter MP4 (5 s)</button>
+    <!-- bouton carré noir : enregistre l'onglet entier en vidéo -->
+    <button id="extraBtn" type="button" aria-label="Enregistrer l'onglet en vidéo"></button>
+  </div>
 </aside>
 
 <script type="module">
@@ -903,7 +907,7 @@ function drawPreview(landmarks) {
   if (!landmarks) return;
   const px = (p) => [p.x * pcv.width, p.y * pcv.height];
 
-  pctx.fillStyle = "#00e0a4";
+  pctx.fillStyle = "#00ff26";
   for (const p of landmarks) {
     const [x, y] = px(p);
     pctx.beginPath();
@@ -1283,6 +1287,81 @@ resetBtn.addEventListener("click", () => {
 
 const privacyDialog = document.getElementById("privacyDialog");
 document.getElementById("privacyBtn").addEventListener("click", () => privacyDialog.showModal());
+
+// ═══════════════════════════════════════════════════════════════════
+// Bouton carré noir : enregistre l'onglet entier (interface + affiche) en vidéo,
+// pendant la durée d'export vidéo, l'animation repartant du début.
+// Le navigateur demande l'autorisation de partager l'onglet à chaque fois.
+// ═══════════════════════════════════════════════════════════════════
+let recording = false;
+
+// MP4 si le navigateur sait l'enregistrer (Chrome / Edge récents), sinon WebM
+function recorderType() {
+  const types = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm"];
+  return types.find((t) => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) ?? "";
+}
+
+async function recordWindow() {
+  if (recording) return;
+  if (!navigator.mediaDevices?.getDisplayMedia) throw new Error("ce navigateur ne peut pas filmer l'onglet (utilise Chrome ou Edge).");
+  recording = true;
+  let stream = null;
+  try {
+    stream = await navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: MOTION_FPS, displaySurface: "browser" },
+      audio: false,
+      preferCurrentTab: true,       // propose directement cet onglet
+      selfBrowserSurface: "include",
+    });
+    // Chrome affiche sa barre « vous partagez cet onglet » et la page se réorganise :
+    // on attend 0,8 s qu'elle soit stable. La vidéo garde la taille affichée (pas de recadrage).
+    await new Promise((r) => setTimeout(r, 800));
+
+    // l'animation est figée sur sa toute première image en attendant que l'enregistrement démarre
+    motionTime = 0;
+    setMotionPlaying(false);
+
+    // lecture du flux capturé : sert à savoir quand une nouvelle image filmée arrive
+    const src = document.createElement("video");
+    src.muted = true;
+    src.srcObject = stream;
+    await src.play();
+    const nextCapturedFrame = () => new Promise((r) => src.requestVideoFrameCallback(() => r()));
+    await nextCapturedFrame(); // l'image 0 est bien affichée et filmée
+
+    const type = recorderType();
+    const recorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 12_000_000 });
+    const chunks = [];
+    recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+    const started = new Promise((resolve) => (recorder.onstart = resolve));
+    const stopped = new Promise((resolve) => (recorder.onstop = resolve));
+    recorder.start();
+    await started;
+    await nextCapturedFrame(); // première image enregistrée = image 0 de l'animation
+
+    // l'animation repart exactement maintenant, et l'enregistrement dure la durée d'export vidéo
+    motionTime = 0;
+    setMotionPlaying(true);
+    await new Promise((r) => setTimeout(r, MOTION_DURATION * 1000));
+    recorder.stop();
+    await stopped;
+
+    const ext = type.includes("mp4") ? "mp4" : "webm";
+    downloadBlob(new Blob(chunks, { type: type || "video/webm" }), `affiche-ecran-${MOTION_DURATION}s.${ext}`);
+  } finally {
+    stream?.getTracks().forEach((t) => t.stop());
+    setMotionPlaying(true);
+    recording = false;
+  }
+}
+
+document.getElementById("extraBtn").addEventListener("click", () => {
+  recordWindow().catch((err) => {
+    recording = false;
+    // annuler la fenêtre de partage n'est pas une erreur
+    if (err.name !== "NotAllowedError") alert("Enregistrement impossible : " + err.message);
+  });
+});
 
 setMode("image"); // on arrive en mode image, avec l'ouverture de l'anneau jouée une fois
 
