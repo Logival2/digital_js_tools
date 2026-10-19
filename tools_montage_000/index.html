@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Montage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&display=swap" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Panneau latéral : sources, durée, lecture -->
+<aside id="panel">
+
+  <div class="section">
+    <h2>Vidéo de fond</h2>
+    <div class="btnRow">
+      <button id="bgBtn" type="button">Charger un MP4</button>
+      <input id="bgInput" type="file" accept="video/mp4,video/*" hidden />
+    </div>
+    <p id="bgName" class="hint">Aucune vidéo</p>
+    <div class="row"><label for="bgZoomInput">Zoom</label><input id="bgZoomInput" type="range" min="1" max="4" step="0.01" value="1" /></div>
+  </div>
+
+  <div class="section">
+    <h2>Vidéo du cadre</h2>
+    <div class="btnRow">
+      <button id="frameBtn" type="button">Charger un MP4</button>
+      <input id="frameInput" type="file" accept="video/mp4,video/*" hidden />
+    </div>
+    <p id="frameName" class="hint">Aucune vidéo</p>
+    <div class="row"><label for="borderInput" title="Contour blanc autour de la vidéo du cadre">Contour</label><input id="borderInput" type="range" min="0" max="0.08" step="0.001" value="0" /></div>
+  </div>
+
+</aside>
+
+<!-- Zone principale : le format choisi, à l'échelle de l'écran -->
+<div id="main">
+  <canvas id="stage" width="1080" height="1350"></canvas>
+</div>
+
+<!-- Panneau de droite, calé en bas : mode, format, export -->
+<aside id="rightPanel">
+  <div id="modeSwitch" role="group" aria-label="Mode">
+    <button type="button" data-mode="image" aria-pressed="false">Image</button>
+    <button type="button" data-mode="video" aria-pressed="true">Vidéo</button>
+  </div>
+
+  <div id="formatButtons">
+    <button type="button" data-format="din">A4</button>
+    <button type="button" data-format="square">1:1</button>
+    <button type="button" data-format="portrait" class="active">4:5</button>
+    <button type="button" data-format="story">9:16</button>
+  </div>
+  <p id="formatInfo"></p>
+
+  <div class="rpBlock">
+    <div class="row">
+      <label for="durationInput">Durée (s)</label>
+      <input id="durationInput" type="number" min="0.5" max="600" step="0.1" value="5" />
+    </div>
+    <p class="hint">Par défaut : la plus longue des deux vidéos.</p>
+    <div id="transport">
+      <button type="button" data-action="restart" title="Recommencer" aria-label="Recommencer">
+        <svg viewBox="0 0 16 16"><rect x="3" y="3" width="2" height="10"/><polygon points="13,3 13,13 6,8"/></svg>
+      </button>
+      <button type="button" data-action="pause" title="Pause" aria-label="Pause">
+        <svg viewBox="0 0 16 16"><rect x="4" y="3" width="3" height="10"/><rect x="9" y="3" width="3" height="10"/></svg>
+      </button>
+      <button type="button" data-action="play" title="Lecture" aria-label="Lecture">
+        <svg viewBox="0 0 16 16"><polygon points="4,3 4,13 12,8"/></svg>
+      </button>
+    </div>
+    <p id="timeLabel">0.00 / 5.00 s</p>
+  </div>
+
+  <button id="outputBtn" type="button">Dossier OUTPUT</button>
+  <p id="outputLabel" class="hint">Dossier : navigateur seulement</p>
+  <button id="exportBtn" type="button">Exporter PNG</button>
+  <button id="exportMp4Btn" type="button" hidden>Exporter MP4</button>
+</aside>
+
+<!-- Vidéos sources (cachées, lues en arrière-plan par le canvas) -->
+<video id="bgVideo" playsinline muted loop hidden></video>
+<video id="frameVideo" playsinline muted loop hidden></video>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const num = (id) => Number($(id).value);
+
+// Formats d'export (identiques aux autres outils)
+const FORMATS = {
+  din:      { w: 1240, h: 1754 }, // DIN A4 portrait, 150 dpi
+  square:   { w: 1080, h: 1080 },
+  portrait: { w: 1080, h: 1350 },
+  story:    { w: 1080, h: 1920 },
+};
+const FPS = 30;
+const FRAME_W = 0.92;                     // largeur du cadre 16/9, en part de la largeur
+// épaisseur du contour blanc : slider « Contour », en part de la largeur du cadre
+
+let W = 1080, H = 1350;                   // taille du canvas (format courant)
+let currentFormat = "portrait";
+let mode = "video";
+
+const stage = $("stage");
+const ctx = stage.getContext("2d");
+const bgVideo = $("bgVideo");
+const frameVideo = $("frameVideo");
+const durationInput = $("durationInput");
+const timeLabel = $("timeLabel");
+const exportBtn = $("exportBtn");
+const exportMp4Btn = $("exportMp4Btn");
+
+let duration = 5;                         // durée du montage (s)
+let playing = true;
+let t = 0;                                // position dans le montage (s)
+let lastNow = performance.now();
+let durationTouched = false;              // dès que l'utilisateur saisit une durée, on ne l'écrase plus
+
+// ── Format de sortie ──
+function applyFormat(key) {
+  currentFormat = key;
+  W = FORMATS[key].w;
+  H = FORMATS[key].h;
+  stage.width = W;
+  stage.height = H;
+  stage.style.aspectRatio = `${W} / ${H}`;
+  document.querySelectorAll("#formatButtons button").forEach((b) => b.classList.toggle("active", b.dataset.format === key));
+  $("formatInfo").textContent = `${W} × ${H} px`;
+}
+document.querySelectorAll("#formatButtons button").forEach((b) => b.addEventListener("click", () => applyFormat(b.dataset.format)));
+
+// ── Mode Image / Vidéo ──
+document.querySelectorAll("#modeSwitch button").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll("#modeSwitch button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
+  exportBtn.hidden = m === "video";
+  exportMp4Btn.hidden = m !== "video";
+}
+
+// ── Chargement d'une vidéo MP4 ──
+function loadInto(video, file, nameEl) {
+  const url = URL.createObjectURL(file);
+  video.src = url;
+  nameEl.textContent = file.name;
+  video.addEventListener("loadedmetadata", () => {
+    if (!durationTouched) setDuration(Math.max(bgVideo.duration || 0, frameVideo.duration || 0));
+    restart();
+  }, { once: true });
+  video.load();
+}
+
+function setDuration(s) {
+  if (!s || !isFinite(s)) return;
+  duration = Math.max(0.5, Math.round(s * 10) / 10);
+  durationInput.value = duration.toFixed(1);
+}
+
+$("bgBtn").addEventListener("click", () => $("bgInput").click());
+$("bgInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (file) loadInto(bgVideo, file, $("bgName"));
+});
+$("frameBtn").addEventListener("click", () => $("frameInput").click());
+$("frameInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (file) loadInto(frameVideo, file, $("frameName"));
+});
+
+durationInput.addEventListener("input", () => {
+  const v = Number(durationInput.value);
+  if (v > 0) { durationTouched = true; duration = v; }
+});
+
+// ── Lecture : une horloge commune aux deux vidéos, en boucle sur la durée choisie ──
+const loadedVideos = () => [bgVideo, frameVideo].filter((v) => v.src && v.duration);
+let syncing = false;                      // pendant un redémarrage, l'horloge attend
+
+// Redémarrage synchronisé : les deux vidéos sont mises en pause, positionnées à 0,
+// puis relancées ensemble ; l'horloge repart à 0 au même instant.
+async function restart() {
+  syncing = true;
+  const vids = loadedVideos();
+  vids.forEach((v) => v.pause());
+  await Promise.all(vids.map((v) => seek(v, 0)));
+  if (playing) await Promise.all(vids.map((v) => v.play().catch(() => {})));
+  t = 0;
+  lastNow = performance.now();
+  syncing = false;
+}
+
+// Pendant la lecture, chaque vidéo est recalée sur l'horloge commune :
+// petit écart -> on accélère / ralentit légèrement, grand écart -> on repositionne.
+function keepInSync() {
+  for (const v of loadedVideos()) {
+    if (v.seeking) continue;
+    const target = t % v.duration;
+    let diff = v.currentTime - target;
+    if (diff > v.duration / 2) diff -= v.duration;     // passage de boucle
+    if (diff < -v.duration / 2) diff += v.duration;
+    if (Math.abs(diff) > 0.25) { v.currentTime = target; v.playbackRate = 1; }
+    else if (Math.abs(diff) > 0.02) v.playbackRate = 1 - Math.max(-0.1, Math.min(0.1, diff * 2));
+    else v.playbackRate = 1;
+  }
+}
+
+function setPlaying(p) {
+  playing = p;
+  for (const b of document.querySelectorAll("#transport button")) {
+    const a = b.dataset.action;
+    b.classList.toggle("active", (a === "play" && p) || (a === "pause" && !p));
+  }
+  for (const v of loadedVideos()) {
+    if (p) v.play().catch(() => {});
+    else v.pause();
+  }
+}
+
+document.querySelectorAll("#transport button").forEach((btn) => btn.addEventListener("click", () => {
+  switch (btn.dataset.action) {
+    case "restart": restart(); break;
+    case "pause": setPlaying(false); break;
+    case "play": setPlaying(true); break;
+  }
+}));
+
+// ── Dessin : fond en « cover », cadre 16/9 centré avec marge blanche ──
+function drawCover(video, x, y, w, h, zoom = 1) {
+  const vw = video.videoWidth, vh = video.videoHeight;
+  if (!vw || !vh) { ctx.fillStyle = "#d0d0d0"; ctx.fillRect(x, y, w, h); return; }
+  // zoom : on recadre une zone plus petite, centrée, de la vidéo
+  const s = Math.max(w / vw, h / vh) * zoom;
+  const sw = w / s, sh = h / s;
+  ctx.drawImage(video, (vw - sw) / 2, (vh - sh) / 2, sw, sh, x, y, w, h);
+}
+
+function drawFrame() {
+  ctx.fillStyle = "#d1d1d1";
+  ctx.fillRect(0, 0, W, H);
+  if (bgVideo.src) drawCover(bgVideo, 0, 0, W, H, num("bgZoomInput"));
+
+  // cadre : il prend le ratio de la vidéo chargée (16/9 sans vidéo) et tient dans
+  // 92 % de la largeur et de la hauteur ; une vidéo haute (ex. 1040 × 1920) réduit sa largeur
+  const ratio = frameVideo.videoWidth && frameVideo.videoHeight
+    ? frameVideo.videoWidth / frameVideo.videoHeight
+    : 16 / 9;
+  const maxW = W * FRAME_W, maxH = H * FRAME_W;
+  const border = maxW * num("borderInput");          // épaisseur du contour blanc
+  let vw = maxW - border * 2, vh = vw / ratio;
+  if (vh > maxH - border * 2) { vh = maxH - border * 2; vw = vh * ratio; }
+  const fw = vw + border * 2, fh = vh + border * 2;
+  const fx = (W - fw) / 2, fy = (H - fh) / 2;
+  ctx.fillStyle = "#fafaf8";
+  ctx.fillRect(fx, fy, fw, fh);
+  if (frameVideo.src) drawCover(frameVideo, fx + border, fy + border, vw, vh);
+  else { ctx.fillStyle = "#d0d0d0"; ctx.fillRect(fx + border, fy + border, vw, vh); }
+}
+
+// ── Boucle d'affichage ──
+function loop(now) {
+  const dt = Math.min(0.1, Math.max(0, (now - lastNow) / 1000));
+  lastNow = now;
+  if (playing && !exporting && !syncing) {
+    t += dt;
+    // fin de la boucle : les deux vidéos repartent ensemble du début
+    if (t >= duration) { t = 0; restart(); }
+    else keepInSync();
+  }
+  if (!exporting) drawFrame();
+  timeLabel.textContent = `${t.toFixed(2)} / ${duration.toFixed(2)} s`;
+  requestAnimationFrame(loop);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Exports : tout est recalculé à la taille réelle du format
+// ═══════════════════════════════════════════════════════════════════
+let exporting = false;
+
+// ── Dossier de sortie (OUTPUT) : mémorisé dans le navigateur, écrit à chaque export ──
+const dbOpen = () => new Promise((resolve, reject) => {
+  const req = indexedDB.open("montage", 1);
+  req.onupgradeneeded = () => req.result.createObjectStore("kv");
+  req.onsuccess = () => resolve(req.result);
+  req.onerror = () => reject(req.error);
+});
+async function dbGet(key) {
+  const db = await dbOpen();
+  return new Promise((resolve) => {
+    const req = db.transaction("kv").objectStore("kv").get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => resolve(undefined);
+  });
+}
+async function dbSet(key, value) {
+  const db = await dbOpen();
+  return new Promise((resolve) => {
+    const tx = db.transaction("kv", "readwrite");
+    tx.objectStore("kv").put(value, key);
+    tx.oncomplete = () => resolve();
+  });
+}
+
+let outputDir = null;
+const outputLabel = $("outputLabel");
+async function chooseOutput() {
+  if (!window.showDirectoryPicker) throw new Error("ce navigateur ne peut pas écrire dans un dossier (utilise Chrome ou Edge).");
+  outputDir = await showDirectoryPicker({ id: "montage-output", mode: "readwrite" });
+  await dbSet("outputDir", outputDir);
+  outputLabel.textContent = `Dossier : ${outputDir.name}`;
+}
+// Restaure le dossier mémorisé ; la permission est redemandée au premier export si besoin
+async function restoreOutput() {
+  const saved = await dbGet("outputDir").catch(() => undefined);
+  if (saved) { outputDir = saved; outputLabel.textContent = `Dossier : ${saved.name}`; }
+}
+restoreOutput();
+$("outputBtn").addEventListener("click", () => chooseOutput().catch((err) => alert(err.message)));
+
+// Écrit dans le dossier OUTPUT (si choisi) et télécharge aussi depuis le navigateur
+async function saveBlob(blob, filename) {
+  if (outputDir) {
+    try {
+      if ((await outputDir.queryPermission({ mode: "readwrite" })) !== "granted") {
+        if ((await outputDir.requestPermission({ mode: "readwrite" })) !== "granted") throw new Error("accès refusé");
+      }
+      const handle = await outputDir.getFileHandle(filename, { create: true });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+    } catch (err) {
+      console.error("Écriture dans OUTPUT impossible :", err);
+      alert("Export écrit par le navigateur seulement : " + err.message);
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// PNG : l'image au temps courant
+exportBtn.addEventListener("click", () => {
+  drawFrame();
+  stage.toBlob((blob) => saveBlob(blob, `montage-${currentFormat}-${W}x${H}.png`), "image/png");
+});
+
+// Attend qu'une vidéo soit positionnée sur le temps demandé
+function seek(v, time) {
+  return new Promise((resolve) => {
+    if (!v.src || !v.duration) return resolve();
+    const target = time % v.duration;
+    if (Math.abs(v.currentTime - target) < 0.001) return resolve();
+    v.addEventListener("seeked", () => resolve(), { once: true });
+    v.currentTime = target;
+  });
+}
+
+// MP4 : chaque image est positionnée et dessinée à son temps exact, puis encodée
+exportMp4Btn.addEventListener("click", () => {
+  exportMP4().catch((err) => {
+    console.error(err);
+    alert("Export MP4 impossible : " + err.message);
+  }).finally(() => {
+    exportMp4Btn.disabled = false;
+    exportMp4Btn.textContent = "Exporter MP4";
+    exporting = false;
+    setPlaying(true);
+    restart(); // après l'export, les deux vidéos repartent ensemble du début
+  });
+});
+
+async function exportMP4() {
+  if (!("VideoEncoder" in window)) throw new Error("ce navigateur ne gère pas l'encodage vidéo (utilise Chrome ou Edge).");
+  if (!bgVideo.src && !frameVideo.src) throw new Error("charge au moins une vidéo.");
+  exporting = true;
+  exportMp4Btn.disabled = true;
+  exportMp4Btn.textContent = "Export… 0 %";
+  setPlaying(false);
+
+  const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5/+esm");
+  const config = { codec: "avc1.640033", width: W, height: H, bitrate: 12_000_000, framerate: FPS, avc: { format: "avc" } };
+  const { supported } = await VideoEncoder.isConfigSupported(config);
+  if (!supported) throw new Error(`encodage H.264 ${W}×${H} non supporté par ce navigateur.`);
+
+  const muxer = new Muxer({
+    target: new ArrayBufferTarget(),
+    video: { codec: "avc", width: W, height: H, frameRate: FPS },
+    fastStart: "in-memory",
+  });
+  let encodeError = null;
+  const encoder = new VideoEncoder({
+    output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+    error: (e) => { encodeError = e; },
+  });
+  encoder.configure(config);
+
+  const total = Math.round(duration * FPS);
+  const frameDuration = 1e6 / FPS;
+  for (let i = 0; i < total; i++) {
+    if (encodeError) throw encodeError;
+    const time = i / FPS;
+    await Promise.all([seek(bgVideo, time), seek(frameVideo, time)]);
+    drawFrame();
+    const frame = new VideoFrame(stage, { timestamp: i * frameDuration, duration: frameDuration });
+    encoder.encode(frame, { keyFrame: i % FPS === 0 });
+    frame.close();
+    while (encoder.encodeQueueSize > 4) await new Promise((r) => setTimeout(r, 0));
+    exportMp4Btn.textContent = `Export… ${Math.round(((i + 1) / total) * 100)} %`;
+  }
+  await encoder.flush();
+  if (encodeError) throw encodeError;
+  encoder.close();
+  muxer.finalize();
+  saveBlob(new Blob([muxer.target.buffer], { type: "video/mp4" }), `montage-${currentFormat}-${W}x${H}-${duration}s.mp4`);
+}
+
+// ── Démarrage ──
+applyFormat(currentFormat);
+setMode("video");
+setPlaying(true);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
