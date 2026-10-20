@@ -1,0 +1,4127 @@
+{
+ "version": 1,
+ "generated": "2026-10-20T09:47:24+00:00",
+ "source": "ressources.html (version d'origine)",
+ "parts": [
+  {
+   "id": "Inspirations",
+   "title": "Inspirations",
+   "categories": [
+    {
+     "id": "Graphisme_général_&_Actualité",
+     "title": "Graphisme général & Actualité",
+     "links": [
+      {
+       "title": "MOOC Digital Paris",
+       "url": "https://moocdigital.paris/cours/lart-numerique-montreal/lart-programmation",
+       "tags": []
+      },
+      {
+       "title": "Vice Creators Art & Création numérique",
+       "url": "https://www.vice.com/fr/topic/creators",
+       "tags": [
+        "Art & Création numérique"
+       ]
+      },
+      {
+       "title": "Vice Creators Art & Création numérique",
+       "url": "https://www.vice.com/fr/topic/creators",
+       "tags": [
+        "Art & Création numérique"
+       ]
+      },
+      {
+       "title": "BP&O Graphisme print",
+       "url": "https://bpando.org/",
+       "tags": [
+        "Graphisme print"
+       ]
+      },
+      {
+       "title": "Index Grafik Culture Graphique",
+       "url": "http://indexgrafik.fr/",
+       "tags": [
+        "Culture Graphique"
+       ]
+      },
+      {
+       "title": "It's Nice That Actualité,Culture Graphique,image",
+       "url": "https://www.itsnicethat.com/",
+       "tags": [
+        "Actualité",
+        "Culture Graphique",
+        "image"
+       ]
+      },
+      {
+       "title": "LUST Graphisme & Design Interactif",
+       "url": "https://www.lust.nl/",
+       "tags": [
+        "Graphisme & Design Interactif"
+       ]
+      },
+      {
+       "title": "AGI Alliance Graphique Internationale",
+       "url": "https://a-g-i.org/",
+       "tags": [
+        "Alliance Graphique Internationale"
+       ]
+      },
+      {
+       "title": "Another Graphic Affiche,Graphisme print,édition",
+       "url": "https://anothergraphic.org/",
+       "tags": [
+        "Affiche",
+        "Graphisme print",
+        "édition"
+       ]
+      },
+      {
+       "title": "Graphism Graphisme & interactivité",
+       "url": "https://graphism.fr/",
+       "tags": [
+        "Graphisme & interactivité"
+       ]
+      },
+      {
+       "title": "AIGA Eye on Design",
+       "url": "https://eyeondesign.aiga.org/",
+       "tags": []
+      },
+      {
+       "title": ".able Journal Design, intersection of art et sciences",
+       "url": "https://able-journal.org/",
+       "tags": [
+        "Design",
+        "intersection of art et sciences"
+       ]
+      },
+      {
+       "title": "Experiments with Google Créative Technologie",
+       "url": "https://experiments.withgoogle.com/curator-table",
+       "tags": [
+        "Créative Technologie"
+       ]
+      },
+      {
+       "title": "Réel-Virtuel Les normes du numérique",
+       "url": "http://www.reel-virtuel.com/numeros/numero6",
+       "tags": [
+        "Les normes du numérique"
+       ]
+      },
+      {
+       "title": "Fisheye Immersive Arts numériques et immersifs",
+       "url": "https://fisheyeimmersive.com/",
+       "tags": [
+        "Arts numériques et immersifs"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Site_d'inspiration",
+     "title": "Site d'inspiration",
+     "links": [
+      {
+       "title": "Cosmos",
+       "url": "https://www.cosmos.so/",
+       "tags": []
+      },
+      {
+       "title": "Are.na",
+       "url": "https://www.are.na/",
+       "tags": []
+      },
+      {
+       "title": "Toon Rooijmans Are.na",
+       "url": "https://www.are.na/toon-rooijmans/channels",
+       "tags": [
+        "Are.na"
+       ]
+      },
+      {
+       "title": "Anything",
+       "url": "https://anything.io/everything",
+       "tags": []
+      }
+     ]
+    },
+    {
+     "id": "Design_éditorial",
+     "title": "Design éditorial",
+     "links": [
+      {
+       "title": "Learning from Las Vegas Postmodernisme, Book",
+       "url": "https://www.google.com/search?q=Learning+from+Las+Vegas+de+Robert+Venturi+et+Denise+Scott+Brown&client=firefox-b-d&sca_esv=01cba71388b00108&udm=2&biw=2560&bih=1315&ei=QMQ0Z9KBEsuGkdUPzr6UmAc&ved=0ahUKEwjSobi8ztmJAxVLQ6QEHU4fBXMQ4dUDCBA&uact=5&oq=Learning+from+Las+Vegas+de+Robert+Venturi+et+Denise+Scott+Brown&gs_lp=EgNpbWciP0xlYXJuaW5nIGZyb20gTGFzIFZlZ2FzIGRlIFJvYmVydCBWZW50dXJpIGV0IERlbmlzZSBTY290dCBCcm93bkj1CFDzBljzBnABeACQAQCYATGgATGqAQExuAEDyAEA-AEBmAIAoAIAmAMAiAYBkgcAoAct&sclient=img",
+       "tags": [
+        "Postmodernisme",
+        "Book"
+       ]
+      },
+      {
+       "title": "Editorial Grid Edition",
+       "url": "https://www.instagram.com/editorial.grid/",
+       "tags": [
+        "Edition"
+       ]
+      },
+      {
+       "title": "Heimat Handwerk Suisse Book design",
+       "url": "https://www.schweizerkulturpreise.ch/awards/fr/home/design/design-archiv/design-2017/ssb-2017/heimat.html",
+       "tags": [
+        "Suisse Book design"
+       ]
+      },
+      {
+       "title": "Ligature Studio Suisse - Font & édition",
+       "url": "http://ligature.ch/",
+       "tags": [
+        "Studio Suisse - Font & édition"
+       ]
+      },
+      {
+       "title": "Spector Books Book Shop",
+       "url": "http://spectorbooks.com/die-politiker",
+       "tags": [
+        "Book Shop"
+       ]
+      },
+      {
+       "title": "Éditions B42 Thérorie du design",
+       "url": "https://editions-b42.com/",
+       "tags": [
+        "Thérorie du design"
+       ]
+      },
+      {
+       "title": "Revue Faire Revue Graphisme",
+       "url": "https://revue-faire.eu/",
+       "tags": [
+        "Revue Graphisme"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Identité_visuelle_et_logo",
+     "title": "Identité visuelle et logo",
+     "links": [
+      {
+       "title": "Stockholm Design Lab Ericsson Identité visuelle",
+       "url": "https://www.stockholmdesignlab.se/work/ericsson",
+       "tags": [
+        "Ericsson Identité visuelle"
+       ]
+      },
+      {
+       "title": "MIT Media Lab - Pentagram Boston",
+       "url": "https://www.media.mit.edu/",
+       "tags": [
+        "Boston"
+       ]
+      },
+      {
+       "title": "Logo Thorns Logo - Instagram",
+       "url": "https://www.instagram.com/logothorns/",
+       "tags": [
+        "Logo - Instagram"
+       ]
+      },
+      {
+       "title": "LogoArchive Logo - Instagram",
+       "url": "https://www.instagram.com/logoarchive/",
+       "tags": [
+        "Logo - Instagram"
+       ]
+      },
+      {
+       "title": "Typeset In The Future Film - Alien Pictogrammes",
+       "url": "https://typesetinthefuture.com/2014/12/01/alien/",
+       "tags": [
+        "Film - Alien Pictogrammes"
+       ]
+      },
+      {
+       "title": "Grow Deal - Etapes",
+       "url": "https://etapes.com/graphisme-organique-ferme-urbaine-toulousaine-grow-deal/",
+       "tags": []
+      },
+      {
+       "title": "Aiga pictogrammes génératifs",
+       "url": "https://eyeondesign.aiga.org/are-those-shapes-letters-or-patterns-letterform-variations-experiments-with-both/",
+       "tags": [
+        "pictogrammes génératifs"
+       ]
+      },
+      {
+       "title": "Global Brand Database",
+       "url": "https://branddb.wipo.int/en/quicksearch?sort=score%20desc&start=0&rows=30&asStructure=%7B%22boolean%22:%22AND%22,%22bricks%22:%5B%5D%7D&_=1706796628218",
+       "tags": []
+      },
+      {
+       "title": "TYPOGRAPHY | Ohlman Consorti Logo database",
+       "url": "https://www.ohlmanconsorti.com/type/typography",
+       "tags": [
+        "Logo database"
+       ]
+      },
+      {
+       "title": "HAL Typefaces – Bespoke logotype",
+       "url": "https://type.hanli.eu/bespoke/",
+       "tags": [
+        "logotype"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Photographie",
+     "title": "Photographie",
+     "links": [
+      {
+       "title": "Fisheye Magazine Photographie",
+       "url": "https://www.fisheyemagazine.fr/",
+       "tags": [
+        "Photographie"
+       ]
+      },
+      {
+       "title": "Benoit Florençon Architecture and Design, photographie",
+       "url": "https://www.benoitflorencon.com/",
+       "tags": [
+        "Architecture and Design",
+        "photographie"
+       ]
+      },
+      {
+       "title": "Benedict Redgrove NASA - photobook",
+       "url": "http://benedictredgrove.com/nasa-past-and-present-dreams-of-the-future-2/",
+       "tags": [
+        "NASA - photobook"
+       ]
+      },
+      {
+       "title": "Learning from Las Vegas Postmodernisme, Book",
+       "url": "https://www.google.com/search?q=Learning+from+Las+Vegas+de+Robert+Venturi+et+Denise+Scott+Brown&client=firefox-b-d&sca_esv=01cba71388b00108&udm=2&biw=2560&bih=1315&ei=QMQ0Z9KBEsuGkdUPzr6UmAc&ved=0ahUKEwjSobi8ztmJAxVLQ6QEHU4fBXMQ4dUDCBA&uact=5&oq=Learning+from+Las+Vegas+de+Robert+Venturi+et+Denise+Scott+Brown&gs_lp=EgNpbWciP0xlYXJuaW5nIGZyb20gTGFzIFZlZ2FzIGRlIFJvYmVydCBWZW50dXJpIGV0IERlbmlzZSBTY290dCBCcm93bkj1CFDzBljzBnABeACQAQCYATGgATGqAQExuAEDyAEA-AEBmAIAoAIAmAMAiAYBkgcAoAct&sclient=img",
+       "tags": [
+        "Postmodernisme",
+        "Book"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Affiche",
+     "title": "Affiche",
+     "links": [
+      {
+       "title": "Another Graphic - Graphisme Affiche,Graphisme print,édition",
+       "url": "https://anothergraphic.org/",
+       "tags": [
+        "Affiche",
+        "Graphisme print",
+        "édition"
+       ]
+      },
+      {
+       "title": "typographic posters",
+       "url": "https://www.typographicposters.com/",
+       "tags": []
+      },
+      {
+       "title": "Air poster By Des Signes",
+       "url": "http://www.airposter.fr/",
+       "tags": [
+        "By Des Signes"
+       ]
+      },
+      {
+       "title": "AGI Alliance Graphique Internationale",
+       "url": "https://a-g-i.org/",
+       "tags": [
+        "Alliance Graphique Internationale"
+       ]
+      },
+      {
+       "title": "Moving poster Affiche animée",
+       "url": "http://www.latelierdelasardine.fr/wordpress/graphisme-2/moving-poster",
+       "tags": [
+        "Affiche animée"
+       ]
+      },
+      {
+       "title": "Poster Union Instagram",
+       "url": "https://www.instagram.com/posterunion/",
+       "tags": [
+        "Instagram"
+       ]
+      },
+      {
+       "title": "We like to move it Instagram",
+       "url": "https://www.instagram.com/themovingposters/",
+       "tags": [
+        "Instagram"
+       ]
+      },
+      {
+       "title": "XTIAN Instagram",
+       "url": "https://www.instagram.com/xtianmiller/",
+       "tags": [
+        "Instagram"
+       ]
+      },
+      {
+       "title": "Poster Reposter affiche index - Instagram",
+       "url": "https://www.instagram.com/poster.reposter/?hl=fr",
+       "tags": [
+        "affiche index - Instagram"
+       ]
+      },
+      {
+       "title": "Formes de luttes Affiche politique",
+       "url": "http://formesdesluttes.org/",
+       "tags": [
+        "Affiche politique"
+       ]
+      },
+      {
+       "title": "Stratigraphie Index d'affiche",
+       "url": "https://www.stratigraphie.fr/",
+       "tags": [
+        "Index d'affiche"
+       ]
+      },
+      {
+       "title": "Studio Feixen Instagram",
+       "url": "https://www.instagram.com/studiofeixen/",
+       "tags": [
+        "Instagram"
+       ]
+      },
+      {
+       "title": "Certain Instagram",
+       "url": "https://www.instagram.com/certainmagazine/",
+       "tags": [
+        "Instagram"
+       ]
+      },
+      {
+       "title": "@typographicposters",
+       "url": "https://www.instagram.com/typographicposters/",
+       "tags": []
+      },
+      {
+       "title": "Mashcreative Index d'affiche",
+       "url": "https://www.instagram.com/mashcreative/",
+       "tags": [
+        "Index d'affiche"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Webdesign",
+     "title": "Webdesign",
+     "links": [
+      {
+       "title": "SiteInspire",
+       "url": "https://www.siteinspire.com/",
+       "tags": []
+      },
+      {
+       "title": "The FWA",
+       "url": "https://thefwa.com/",
+       "tags": []
+      },
+      {
+       "title": "Zef's Website",
+       "url": "http://zefs.website/",
+       "tags": []
+      },
+      {
+       "title": "USELESS",
+       "url": "https://useless.london/",
+       "tags": []
+      },
+      {
+       "title": "Chris Cyran",
+       "url": "https://www.ccyran.com/",
+       "tags": []
+      },
+      {
+       "title": "Firstborn",
+       "url": "https://www.firstborn.com/",
+       "tags": []
+      },
+      {
+       "title": "Pygar",
+       "url": "https://pygar.co/en",
+       "tags": []
+      },
+      {
+       "title": "Hovercraft",
+       "url": "http://hovercraftstudio.com/",
+       "tags": []
+      },
+      {
+       "title": "Casper Fitzhue",
+       "url": "https://casperfitzhue.com/",
+       "tags": []
+      },
+      {
+       "title": "247studio",
+       "url": "https://247studio.co/",
+       "tags": []
+      },
+      {
+       "title": "Best Website Gallery",
+       "url": "https://bestwebsite.gallery/",
+       "tags": []
+      },
+      {
+       "title": "Forge",
+       "url": "https://forgelife.co/",
+       "tags": []
+      },
+      {
+       "title": "Awwwards",
+       "url": "https://www.awwwards.com/",
+       "tags": []
+      },
+      {
+       "title": "Paul bouigue",
+       "url": "http://tdingsun.github.io/paul/",
+       "tags": []
+      },
+      {
+       "title": "Grids",
+       "url": "https://grids.obys.agency/rectangular_others/",
+       "tags": []
+      },
+      {
+       "title": "Tristan Bagot",
+       "url": "https://www.tristanbagot.com/",
+       "tags": []
+      },
+      {
+       "title": "Brutalist Websites very good",
+       "url": "https://brutalistwebsites.com/",
+       "tags": [
+        "very good"
+       ]
+      },
+      {
+       "title": "we[dot]art Global Directory for Art & Culture",
+       "url": "https://wedotart.com/?utm_campaign=cargo&utm_content=text43&utm_medium=email&utm_source=brevo&utm_term=mon_2025-10-20",
+       "tags": [
+        "Global Directory for Art & Culture"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Motion_Design",
+     "title": "Motion Design",
+     "links": [
+      {
+       "title": "Arrête-moi si tu peux Generique",
+       "url": "https://www.dailymotion.com/video/x2iza90",
+       "tags": [
+        "Generique"
+       ]
+      },
+      {
+       "title": "Xavier Monney kinetic typographie",
+       "url": "https://www.instagram.com/xaviermonney/",
+       "tags": [
+        "kinetic typographie"
+       ]
+      },
+      {
+       "title": "Sacha Beeley Illustration & Motion",
+       "url": "https://www.sachabeeley.com/",
+       "tags": [
+        "Illustration & Motion"
+       ]
+      },
+      {
+       "title": "h q i Instagram",
+       "url": "https://www.instagram.com/_h_q_i_/",
+       "tags": [
+        "Instagram"
+       ]
+      },
+      {
+       "title": "Pause Café - Motion cafe",
+       "url": "https://motion-cafe.com/pausecafe",
+       "tags": []
+      },
+      {
+       "title": "Motion Array - template",
+       "url": "https://motionarray.com/browse/after-effects-templates/",
+       "tags": []
+      },
+      {
+       "title": "Even More Covers on Vimeo",
+       "url": "https://vimeo.com/297671782",
+       "tags": []
+      },
+      {
+       "title": "Mat Voyce - instagram",
+       "url": "https://www.instagram.com/matvoyce/",
+       "tags": []
+      },
+      {
+       "title": "DEMO FESTIVAL Festival Motion Design",
+       "url": "https://demofestival.com/",
+       "tags": [
+        "Festival Motion Design"
+       ]
+      },
+      {
+       "title": "Motion Motion Festival Motion Design",
+       "url": "https://motionmotion.fr/",
+       "tags": [
+        "Festival Motion Design"
+       ]
+      },
+      {
+       "title": "Motion Plus Design Festival Motion Design,Tokyo",
+       "url": "https://motion-plus-design.com/home",
+       "tags": [
+        "Festival Motion Design",
+        "Tokyo"
+       ]
+      },
+      {
+       "title": "Titles Art of the Title (générique)",
+       "url": "https://www.artofthetitle.com/titles/",
+       "tags": [
+        "Art of the Title (générique)"
+       ]
+      },
+      {
+       "title": "Tame Impala Clip",
+       "url": "https://www.youtube.com/watch?v=wycjnCCgUes",
+       "tags": [
+        "Clip"
+       ]
+      },
+      {
+       "title": "Anaïs Mak Générique film a la main",
+       "url": "https://anaismak.com/",
+       "tags": [
+        "Générique film a la main"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Studio_Graphisme",
+     "title": "Studio Graphisme",
+     "links": [
+      {
+       "title": "Cartel Carte des studios & agences en France",
+       "url": "https://moncartel.com/",
+       "tags": [
+        "Carte des studios & agences en France"
+       ]
+      },
+      {
+       "title": "Alliance graphique internationale Liste de studio",
+       "url": "https://a-g-i.org/members/",
+       "tags": [
+        "Liste de studio"
+       ]
+      },
+      {
+       "title": "Filippos Fragkogiannis Athènes",
+       "url": "https://filipposfragkogiannis.com/links/",
+       "tags": [
+        "Athènes"
+       ]
+      },
+      {
+       "title": "Atelier Choque Le Goff",
+       "url": "http://www.choquelegoff.com/",
+       "tags": []
+      },
+      {
+       "title": "G.U.I Hybride numérique print",
+       "url": "https://www.g-u-i.net/",
+       "tags": [
+        "Hybride numérique print"
+       ]
+      },
+      {
+       "title": "NORM Typographie, Graphisme, switzerland",
+       "url": "http://www.norm.to/",
+       "tags": [
+        "Typographie",
+        "Graphisme",
+        "switzerland"
+       ]
+      },
+      {
+       "title": "Atelier trois Design,Direction,Edition",
+       "url": "https://ateliertrois.fr/",
+       "tags": [
+        "Design",
+        "Direction",
+        "Edition"
+       ]
+      },
+      {
+       "title": "Abcdinamo Typographie",
+       "url": "https://abcdinamo.com/",
+       "tags": [
+        "Typographie"
+       ]
+      },
+      {
+       "title": "Ultragramme Art,Design graphique,culture",
+       "url": "http://ultragramme.com/?lang=fr",
+       "tags": [
+        "Art",
+        "Design graphique",
+        "culture"
+       ]
+      },
+      {
+       "title": "Des Signes",
+       "url": "http://www.des-signes.fr/",
+       "tags": []
+      },
+      {
+       "title": "34 studio",
+       "url": "https://34studio.fr/",
+       "tags": []
+      },
+      {
+       "title": "Studio Plastac",
+       "url": "http://studioplastac.fr/",
+       "tags": []
+      },
+      {
+       "title": "My name is",
+       "url": "http://mynameis.fr/#sixpack",
+       "tags": []
+      },
+      {
+       "title": "Epok Design",
+       "url": "https://epok-design.fr/fr/",
+       "tags": []
+      },
+      {
+       "title": "Hirundi",
+       "url": "http://www.hirundi-studio.fr/",
+       "tags": []
+      },
+      {
+       "title": "Les Graphiquants",
+       "url": "http://les-graphiquants.fr/",
+       "tags": []
+      },
+      {
+       "title": "Philippe Apeloig",
+       "url": "https://apeloig.com/",
+       "tags": []
+      },
+      {
+       "title": "ABM Studio",
+       "url": "https://www.abm-studio.com/",
+       "tags": []
+      },
+      {
+       "title": "Atelier Müesli",
+       "url": "http://ateliermuesli.com/",
+       "tags": []
+      },
+      {
+       "title": "Praline",
+       "url": "https://https//designbypraline.com/",
+       "tags": []
+      },
+      {
+       "title": "My name is",
+       "url": "http://mynameis.fr/#marine-dietrich",
+       "tags": []
+      },
+      {
+       "title": "Bizzarri Rodriguez",
+       "url": "http://www.bizzarri-rodriguez.com/",
+       "tags": []
+      },
+      {
+       "title": "Pentagon",
+       "url": "https://pentagon.fr/",
+       "tags": []
+      },
+      {
+       "title": "Salutpublic",
+       "url": "http://www.salutpublic.be/",
+       "tags": []
+      },
+      {
+       "title": "Bureau Kayser",
+       "url": "https://www.bureaukayser.com/",
+       "tags": []
+      },
+      {
+       "title": "Ruedi Baur",
+       "url": "http://irb-paris.eu/",
+       "tags": []
+      },
+      {
+       "title": "Zoo",
+       "url": "http://z-o-o.fr/",
+       "tags": []
+      },
+      {
+       "title": "VLF",
+       "url": "http://vlf-studio.com/",
+       "tags": []
+      },
+      {
+       "title": "Atelier ter Bekke & Behage",
+       "url": "http://terbekke-behage.com/",
+       "tags": []
+      },
+      {
+       "title": "Inthepool",
+       "url": "https://inthepool.fr/",
+       "tags": []
+      },
+      {
+       "title": "RIMASÙU",
+       "url": "http://rimasuu.com/",
+       "tags": []
+      },
+      {
+       "title": "Syndicat",
+       "url": "https://s-y-n-d-i-c-a-t.eu/",
+       "tags": []
+      },
+      {
+       "title": "Helmo",
+       "url": "https://helmo.fr/",
+       "tags": []
+      },
+      {
+       "title": "République Studio",
+       "url": "https://republique.studio/",
+       "tags": []
+      },
+      {
+       "title": "Stéréo bur",
+       "url": "http://stereo-buro.com/",
+       "tags": []
+      },
+      {
+       "title": "Image Format",
+       "url": "http://www.imageformat.fr/",
+       "tags": []
+      },
+      {
+       "title": "Horstaxe",
+       "url": "https://www.horstaxe.fr/",
+       "tags": []
+      },
+      {
+       "title": "Atelier trois",
+       "url": "https://ateliertrois.fr/work/ecole-nationale-superieure-des-arts-decoratifs/",
+       "tags": []
+      },
+      {
+       "title": "BAD STUDIO",
+       "url": "https://badbadbadbad.com/Posters",
+       "tags": []
+      },
+      {
+       "title": "Jérémy Glâtre",
+       "url": "http://www.jeremy-glatre.com/",
+       "tags": []
+      },
+      {
+       "title": "Fons Hickmann m23",
+       "url": "https://fonshickmann.com/#",
+       "tags": []
+      },
+      {
+       "title": "WeShouldDoItAll",
+       "url": "https://wsdia.com/",
+       "tags": []
+      },
+      {
+       "title": "Kendall Henderson Featured Work",
+       "url": "http://kendallhenderson.com/",
+       "tags": []
+      },
+      {
+       "title": "Kimberly Ihre",
+       "url": "http://kimberlyihre.com/work/",
+       "tags": []
+      },
+      {
+       "title": "Alyar Aynetchi",
+       "url": "https://alyaraynetchi.com/",
+       "tags": []
+      },
+      {
+       "title": "Juliane Cordes",
+       "url": "http://julianecordes.com/expositions/",
+       "tags": []
+      },
+      {
+       "title": "Atelier Marge Design",
+       "url": "https://www.atelier-marge.com/",
+       "tags": []
+      },
+      {
+       "title": "DeValence",
+       "url": "https://www.devalence.net/",
+       "tags": []
+      },
+      {
+       "title": "Spassky Fischer",
+       "url": "http://spassky-fischer.fr/fr/",
+       "tags": []
+      },
+      {
+       "title": "Atelier 25",
+       "url": "http://www.atelier-25.com/",
+       "tags": []
+      },
+      {
+       "title": "Studio Mathieu Meyer",
+       "url": "https://mathieumeyer.com/#kitchen-website-19",
+       "tags": []
+      },
+      {
+       "title": "Zone Studio Paris",
+       "url": "http://www.zone-studio.fr/about",
+       "tags": []
+      },
+      {
+       "title": "General Idea",
+       "url": "https://www.generalidea.agency/",
+       "tags": []
+      },
+      {
+       "title": "Pilote Paris",
+       "url": "http://piloteparis.com/",
+       "tags": []
+      },
+      {
+       "title": "Zak Group",
+       "url": "https://www.zak.group/projects",
+       "tags": []
+      },
+      {
+       "title": "Bureau Cool",
+       "url": "https://bureau.cool/",
+       "tags": []
+      },
+      {
+       "title": "OK-RM",
+       "url": "https://www.ok-rm.co.uk/",
+       "tags": []
+      },
+      {
+       "title": "Ill-Studio",
+       "url": "https://www.ill-studio.com/projects",
+       "tags": []
+      },
+      {
+       "title": "Atelier Musli",
+       "url": "https://ateliermuesli.com/project/identite/studio-13-16-prendre-soin",
+       "tags": []
+      },
+      {
+       "title": "Eurogroupe",
+       "url": "https://eurogroupe.org/",
+       "tags": []
+      },
+      {
+       "title": "ACME",
+       "url": "https://acme-paris.com/",
+       "tags": []
+      },
+      {
+       "title": "Makemepulse",
+       "url": "https://www.makemepulse.com/",
+       "tags": []
+      },
+      {
+       "title": "Ultragramme",
+       "url": "http://ultragramme.com/",
+       "tags": []
+      },
+      {
+       "title": "LaPetiteGrosse",
+       "url": "https://www.lapetitegrosse.com/",
+       "tags": []
+      },
+      {
+       "title": "Atelier Choque Le Goff",
+       "url": "https://choquelegoff.com/",
+       "tags": []
+      },
+      {
+       "title": "PanamA5",
+       "url": "http://panama5.com/",
+       "tags": []
+      },
+      {
+       "title": "Gr20",
+       "url": "http://www.gr20paris.com/",
+       "tags": []
+      },
+      {
+       "title": "Embuscade",
+       "url": "http://studio-embuscade.fr/",
+       "tags": []
+      },
+      {
+       "title": "Graphéine",
+       "url": "https://www.grapheine.com/portfolio",
+       "tags": []
+      },
+      {
+       "title": "Stink Studios",
+       "url": "https://www.stinkstudios.com/",
+       "tags": []
+      },
+      {
+       "title": "Be dandy",
+       "url": "https://bedandy.fr/realisations/",
+       "tags": []
+      },
+      {
+       "title": "Building Paris",
+       "url": "http://www.buildingparis.fr/#zenith",
+       "tags": []
+      },
+      {
+       "title": "Studio Frederic Tacer",
+       "url": "https://www.frederictacer.net/",
+       "tags": []
+      },
+      {
+       "title": "Élise Gay & Kévin Donnot",
+       "url": "http://e-k.fr/",
+       "tags": []
+      },
+      {
+       "title": "Fanette Mellier",
+       "url": "https://fanettemellier.com/",
+       "tags": []
+      },
+      {
+       "title": "Baldinger•vu-huu",
+       "url": "http://www.baldingervuhuu.com/",
+       "tags": []
+      },
+      {
+       "title": "social design",
+       "url": "https://plateforme-socialdesign.net/fr/publication/en-quete-de-design-social-recits-et-cartographies-de-projets-0",
+       "tags": []
+      },
+      {
+       "title": "arcane atelier",
+       "url": "http://arcane-atelier.com/",
+       "tags": []
+      },
+      {
+       "title": "Paper! Tiger! — Design graphique",
+       "url": "https://papertiger.fr/",
+       "tags": []
+      },
+      {
+       "title": "SearchSystem™",
+       "url": "https://www.searchsystem.co/",
+       "tags": []
+      },
+      {
+       "title": "zerozoro",
+       "url": "https://zerozoro.com/",
+       "tags": []
+      },
+      {
+       "title": "MOUTHWASH Studio",
+       "url": "https://www.instagram.com/mouthwash.studio/",
+       "tags": []
+      },
+      {
+       "title": "Passages",
+       "url": "https://passages.site/",
+       "tags": []
+      },
+      {
+       "title": "LMpolymago",
+       "url": "https://lmpolymago.fr/",
+       "tags": []
+      },
+      {
+       "title": "Pierre Pierre",
+       "url": "http://pierre-pierre.com/",
+       "tags": []
+      },
+      {
+       "title": "RVB Books",
+       "url": "https://rvb-books.com/fr",
+       "tags": []
+      },
+      {
+       "title": "CiaranBirch",
+       "url": "https://ciaranbirch.co.uk/",
+       "tags": []
+      },
+      {
+       "title": "Pierre Vanni",
+       "url": "https://pierrevanni.info/",
+       "tags": []
+      },
+      {
+       "title": "Maximage",
+       "url": "https://maximage.biz/",
+       "tags": []
+      },
+      {
+       "title": "WA75",
+       "url": "http://www.wa75.com/",
+       "tags": []
+      },
+      {
+       "title": "Praticable",
+       "url": "https://www.instagram.com/praticablecoop/",
+       "tags": []
+      },
+      {
+       "title": "Kiösk",
+       "url": "https://studiokiosk.fr/",
+       "tags": []
+      },
+      {
+       "title": "MA+Creative",
+       "url": "https://creative.maworldgroup.com/creative/bureau-cool",
+       "tags": []
+      },
+      {
+       "title": "DVTK",
+       "url": "https://dvtk.us/",
+       "tags": []
+      },
+      {
+       "title": "Studio Triple",
+       "url": "http://studiotriple.fr/",
+       "tags": []
+      },
+      {
+       "title": "Melvin Ghandour",
+       "url": "https://www.melvinghandour.com/",
+       "tags": []
+      },
+      {
+       "title": "Developments.media",
+       "url": "http://developments.media/",
+       "tags": []
+      },
+      {
+       "title": "Stefano Falconi Studio",
+       "url": "https://www.stefanofalconi.com/",
+       "tags": []
+      },
+      {
+       "title": "BUREAU BORSCHE",
+       "url": "https://bureauborsche.com/",
+       "tags": []
+      },
+      {
+       "title": "Systems Studio",
+       "url": "https://systems-studio.com/work/selected/sound-advice--advanced-transmissions-union/",
+       "tags": []
+      },
+      {
+       "title": "Studio des formes",
+       "url": "https://www.instagram.com/studiodesformes/",
+       "tags": []
+      },
+      {
+       "title": "Some Days",
+       "url": "https://www.somedays.co/",
+       "tags": []
+      },
+      {
+       "title": "g.u.i. Design graphique,interactif,éditorial",
+       "url": "https://g-u-i.net/",
+       "tags": [
+        "Design graphique",
+        "interactif",
+        "éditorial"
+       ]
+      },
+      {
+       "title": "trafik",
+       "url": "https://trafik.fr/",
+       "tags": []
+      },
+      {
+       "title": "LÉO IMBERT",
+       "url": "https://www.leoimbert.com/graphic-design/",
+       "tags": []
+      },
+      {
+       "title": "aletheia.works",
+       "url": "https://www.instagram.com/aletheia.works/",
+       "tags": []
+      },
+      {
+       "title": "PORTO ROCHA",
+       "url": "https://portorocha.com/",
+       "tags": []
+      },
+      {
+       "title": "Basile Fournier",
+       "url": "https://basilefournier.com/",
+       "tags": []
+      },
+      {
+       "title": "lezedh DA image",
+       "url": "https://www.lezedh.com/",
+       "tags": [
+        "DA image"
+       ]
+      },
+      {
+       "title": "Studio FORMAT",
+       "url": "https://www.studioformat.fr/",
+       "tags": []
+      },
+      {
+       "title": "pommeCpommeV Pub",
+       "url": "https://pommecpommev.com/",
+       "tags": [
+        "Pub"
+       ]
+      },
+      {
+       "title": "Hey Studio",
+       "url": "https://heystudio.es/work/",
+       "tags": []
+      },
+      {
+       "title": "Atelier Santos Lemarchand",
+       "url": "https://santoslemarchand.com/",
+       "tags": []
+      },
+      {
+       "title": "RAM",
+       "url": "https://ram.studio/",
+       "tags": []
+      },
+      {
+       "title": "Non-Objective",
+       "url": "https://www.non-objective.works/",
+       "tags": []
+      },
+      {
+       "title": "F451",
+       "url": "https://f451.studio/projects",
+       "tags": []
+      },
+      {
+       "title": "Atelier Baudelaire",
+       "url": "https://www.atelierbaudelaire.com/fr#projects-section",
+       "tags": []
+      },
+      {
+       "title": "Arp is Arp",
+       "url": "https://www.instagram.com/arp_is_arp/",
+       "tags": []
+      }
+     ]
+    },
+    {
+     "id": "Studio_Motion_Design_CGI",
+     "title": "Studio Motion Design / CGI",
+     "links": [
+      {
+       "title": "Hugo Richel",
+       "url": "https://www.hugorichel.fr/",
+       "tags": []
+      },
+      {
+       "title": "Spin - studio UK motion/IDV",
+       "url": "https://spin.co.uk/work",
+       "tags": []
+      },
+      {
+       "title": "DEMO FESTIVAL Festival Motion Design",
+       "url": "https://demofestival.com/",
+       "tags": [
+        "Festival Motion Design"
+       ]
+      },
+      {
+       "title": "DIA Studio",
+       "url": "https://dia.tv/",
+       "tags": []
+      },
+      {
+       "title": "Services Généraux",
+       "url": "https://generaux.services/",
+       "tags": []
+      },
+      {
+       "title": "Tomorrow Bureau Speculative. Digital. Realitie",
+       "url": "https://www.tomorrowbureau.io/",
+       "tags": [
+        "Speculative. Digital. Realitie"
+       ]
+      },
+      {
+       "title": "Builders Club",
+       "url": "https://builders-club.com/",
+       "tags": []
+      },
+      {
+       "title": "Uncanny Valley Studio",
+       "url": "https://uncannyvalley.studio/",
+       "tags": []
+      },
+      {
+       "title": "NDA",
+       "url": "http://nda-paris.com/",
+       "tags": []
+      },
+      {
+       "title": "Offshore Studio",
+       "url": "http://www.offshorestudio.ch/",
+       "tags": []
+      },
+      {
+       "title": "247 Studio Pologne",
+       "url": "https://www.247studio.co/",
+       "tags": [
+        "Pologne"
+       ]
+      },
+      {
+       "title": "Tristan Bagot",
+       "url": "https://www.tristanbagot.com/",
+       "tags": []
+      },
+      {
+       "title": "Datagif - Webdesign",
+       "url": "https://datagif.fr/projets/",
+       "tags": []
+      },
+      {
+       "title": "screen-club Studio",
+       "url": "https://www.screen-club.com/",
+       "tags": [
+        "Studio"
+       ]
+      },
+      {
+       "title": "BUTT STUDIO",
+       "url": "http://butt-studio.com/",
+       "tags": []
+      },
+      {
+       "title": "Hovercraft",
+       "url": "https://hovercraftstudio.com/",
+       "tags": []
+      },
+      {
+       "title": "Thomas Hervé - Webdesign",
+       "url": "https://www.hervethomas.com/",
+       "tags": []
+      },
+      {
+       "title": "Atelier Daruma - AR Art studio",
+       "url": "https://www.atelierdaruma.com/",
+       "tags": []
+      },
+      {
+       "title": "Random Studio Interactive et Space design",
+       "url": "https://random.studio/",
+       "tags": [
+        "Interactive et Space design"
+       ]
+      },
+      {
+       "title": "Atelier Müesli",
+       "url": "http://ateliermuesli.com/",
+       "tags": []
+      },
+      {
+       "title": "G.U.I Hybride numérique print",
+       "url": "https://www.g-u-i.net/",
+       "tags": [
+        "Hybride numérique print"
+       ]
+      },
+      {
+       "title": "Accept & Proceed",
+       "url": "https://www.acceptandproceed.com/",
+       "tags": []
+      },
+      {
+       "title": "ALT Creative, Inc.",
+       "url": "https://www.altcinc.com/",
+       "tags": []
+      },
+      {
+       "title": "vincent schwenk",
+       "url": "https://vincentschwenk.de/",
+       "tags": []
+      },
+      {
+       "title": "Vitaly Grossmann",
+       "url": "https://www.vitalygrossmann.com/",
+       "tags": []
+      },
+      {
+       "title": "Nikita Iziev - Londres",
+       "url": "https://nikitaiziev.com/",
+       "tags": []
+      },
+      {
+       "title": "Abject Studio",
+       "url": "http://abjectstudio.fr/",
+       "tags": []
+      },
+      {
+       "title": "Studio Dumbar",
+       "url": "https://studiodumbar.com/",
+       "tags": []
+      },
+      {
+       "title": "Doze Studio",
+       "url": "https://doze.studio/fr/",
+       "tags": []
+      },
+      {
+       "title": "TMRRW Branding,Design & Film Studio,Motion",
+       "url": "https://www.tmrrw.com.sg/",
+       "tags": [
+        "Branding",
+        "Design & Film Studio",
+        "Motion"
+       ]
+      },
+      {
+       "title": "studio nowhere",
+       "url": "http://studionowhere.com/works/",
+       "tags": []
+      },
+      {
+       "title": "Golgotha",
+       "url": "https://glgth.com/",
+       "tags": []
+      },
+      {
+       "title": "frederikheyman",
+       "url": "https://frederikheyman.com/",
+       "tags": []
+      },
+      {
+       "title": "New Format",
+       "url": "https://newformat.io/",
+       "tags": []
+      },
+      {
+       "title": "Accept & Proceed",
+       "url": "https://www.acceptandproceed.com/",
+       "tags": []
+      },
+      {
+       "title": "AKQA",
+       "url": "https://www.akqa.com/work/nike-football/strike-night/",
+       "tags": []
+      },
+      {
+       "title": "ROYALCLUB Creative Studio",
+       "url": "https://www.royalclub.sh/",
+       "tags": []
+      },
+      {
+       "title": "XK studio",
+       "url": "https://xk.studio/LSO-24-25",
+       "tags": []
+      },
+      {
+       "title": "Le studio – Alien le studio",
+       "url": "https://www.alienlestudio.com/le-studio/",
+       "tags": []
+      },
+      {
+       "title": "Studio BK - Innovate. Create. Inspire.",
+       "url": "https://studio-bk.com/",
+       "tags": []
+      },
+      {
+       "title": "Accueil - AADN",
+       "url": "https://www.aadn.org/",
+       "tags": []
+      },
+      {
+       "title": "Works - Jean-Baptiste Krauss",
+       "url": "https://krauss.fr/",
+       "tags": []
+      },
+      {
+       "title": "Unknown, Untitled – Home",
+       "url": "https://unknown-untitled.com/en",
+       "tags": []
+      },
+      {
+       "title": "Movement paris",
+       "url": "https://www.movement.paris/",
+       "tags": []
+      },
+      {
+       "title": "JTM",
+       "url": "https://www.jtttmm.com/",
+       "tags": []
+      },
+      {
+       "title": "Period",
+       "url": "https://period.paris/",
+       "tags": []
+      },
+      {
+       "title": "SUPERBIEN",
+       "url": "https://www.superbien.studio/fr/accueil",
+       "tags": []
+      },
+      {
+       "title": "Ouchhh",
+       "url": "https://ouchhh.tv/",
+       "tags": []
+      },
+      {
+       "title": "Studio Indice",
+       "url": "https://indice.studio/projects",
+       "tags": []
+      },
+      {
+       "title": "Doze Studio",
+       "url": "https://doze.studio/fr/",
+       "tags": []
+      },
+      {
+       "title": "modem.works",
+       "url": "https://www.instagram.com/modem.works/",
+       "tags": []
+      },
+      {
+       "title": "Studio Matière Noire",
+       "url": "https://www.studiomatierenoire.com/",
+       "tags": []
+      }
+     ]
+    },
+    {
+     "id": "Studio_Design_d'Expérience",
+     "title": "Studio Design d'Expérience",
+     "links": [
+      {
+       "title": "Random Studio Interactive et Space design",
+       "url": "https://random.studio/",
+       "tags": [
+        "Interactive et Space design"
+       ]
+      },
+      {
+       "title": "Louis Eveillard",
+       "url": "https://louiseveillard.com/",
+       "tags": []
+      },
+      {
+       "title": "Chevalvert",
+       "url": "https://chevalvert.fr/fr",
+       "tags": []
+      },
+      {
+       "title": "DIA Studio",
+       "url": "https://dia.tv/",
+       "tags": []
+      },
+      {
+       "title": "Tristan Bagot",
+       "url": "https://www.tristanbagot.com/",
+       "tags": []
+      },
+      {
+       "title": "AC3 Studio Creative technologists",
+       "url": "https://ac3-studio.com/works",
+       "tags": [
+        "Creative technologists"
+       ]
+      },
+      {
+       "title": "Perimetre Studio",
+       "url": "https://www.perimetre.studio/",
+       "tags": []
+      },
+      {
+       "title": "Blair Cooper Nike LBJ",
+       "url": "https://www.blair--cooper.com/lebronxx",
+       "tags": [
+        "Nike LBJ"
+       ]
+      },
+      {
+       "title": "3D Virtual Production — Pôle Nord Studio",
+       "url": "https://www.polenord.studio/",
+       "tags": []
+      },
+      {
+       "title": "TMRRW Branding,Design & Film Studio,Motion",
+       "url": "https://www.tmrrw.com.sg/",
+       "tags": [
+        "Branding",
+        "Design & Film Studio",
+        "Motion"
+       ]
+      },
+      {
+       "title": "Accept & Proceed",
+       "url": "https://www.acceptandproceed.com/",
+       "tags": []
+      },
+      {
+       "title": "SUPERBIEN",
+       "url": "https://www.superbien.studio/fr/accueil",
+       "tags": []
+      },
+      {
+       "title": "Moment Factory",
+       "url": "https://momentfactory.com/fr",
+       "tags": []
+      },
+      {
+       "title": "Studio Matière Noire",
+       "url": "https://www.studiomatierenoire.com/",
+       "tags": []
+      },
+      {
+       "title": "Uncanny Valley Studio",
+       "url": "https://uncannyvalley.studio/",
+       "tags": []
+      },
+      {
+       "title": "Immersive Garden",
+       "url": "https://immersive-g.com/",
+       "tags": []
+      },
+      {
+       "title": "Ines Alpha",
+       "url": "https://inesalpha.com/",
+       "tags": []
+      },
+      {
+       "title": "Holymage",
+       "url": "https://www.holymage.com/",
+       "tags": []
+      },
+      {
+       "title": "Zach lieberman Instagram",
+       "url": "https://www.instagram.com/zach.lieberman/",
+       "tags": [
+        "Instagram"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "DA_Image",
+     "title": "DA Image",
+     "links": [
+      {
+       "title": "Victor Clavelly DA fashion",
+       "url": "https://www.instagram.com/victorclavelly/?hl=fr",
+       "tags": [
+        "DA fashion"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Agences",
+     "title": "Agences",
+     "links": [
+      {
+       "title": "Cartel Carte des studios & agences en France",
+       "url": "https://moncartel.com/",
+       "tags": [
+        "Carte des studios & agences en France"
+       ]
+      },
+      {
+       "title": "La Liste des Agences à Paris",
+       "url": "https://www.webmarketing-conseil.fr/agences-paris/",
+       "tags": []
+      },
+      {
+       "title": "Reciproque Graphismes d’exposition",
+       "url": "https://www.reciproque.com/references?s=interface",
+       "tags": [
+        "Graphismes d’exposition"
+       ]
+      },
+      {
+       "title": "Agence Sisso Graphismes d’exposition",
+       "url": "http://sisso.fr/",
+       "tags": [
+        "Graphismes d’exposition"
+       ]
+      },
+      {
+       "title": "Dagobert",
+       "url": "https://www.dagobert.com/",
+       "tags": []
+      },
+      {
+       "title": "Studio Meta",
+       "url": "https://www.studiometa.fr/",
+       "tags": []
+      },
+      {
+       "title": "LMpolymago Graphismes d’exposition",
+       "url": "https://lmpolymago.fr/projets",
+       "tags": [
+        "Graphismes d’exposition"
+       ]
+      },
+      {
+       "title": "Maybe - Info",
+       "url": "https://maybe-paris.com/info",
+       "tags": []
+      },
+      {
+       "title": "Ability Stratégie et de design numérique",
+       "url": "https://ability.paris/",
+       "tags": [
+        "Stratégie et de design numérique"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Art_numérique_et_design_interactif",
+     "title": "Art numérique et design interactif",
+     "links": [
+      {
+       "title": "Visual System Art,Lumière,installation",
+       "url": "https://visualsystem.org/",
+       "tags": [
+        "Art",
+        "Lumière",
+        "installation"
+       ]
+      },
+      {
+       "title": "U2P050 Collectif",
+       "url": "https://www.u2p050.com/",
+       "tags": [
+        "Collectif"
+       ]
+      },
+      {
+       "title": "FF Series - Telcosystems",
+       "url": "https://telcosystems.net/works/ff-series/",
+       "tags": []
+      },
+      {
+       "title": "Interactive Architecture Lab",
+       "url": "http://www.interactivearchitecture.org/",
+       "tags": []
+      },
+      {
+       "title": "Guy de Cointet Typographie système",
+       "url": "http://indexgrafik.fr/guy-de-cointet-langages-codes/",
+       "tags": [
+        "Typographie système"
+       ]
+      },
+      {
+       "title": "Zach lieberman Instagram",
+       "url": "https://www.instagram.com/zach.lieberman/",
+       "tags": [
+        "Instagram"
+       ]
+      },
+      {
+       "title": "Ryoji ikeda Art Numérique,data et son",
+       "url": "https://www.ryojiikeda.com/",
+       "tags": [
+        "Art Numérique",
+        "data et son"
+       ]
+      },
+      {
+       "title": "Forensic Architecture",
+       "url": "https://forensic-architecture.org/",
+       "tags": []
+      },
+      {
+       "title": "Chevalvert - Studio",
+       "url": "https://chevalvert.fr/fr",
+       "tags": []
+      },
+      {
+       "title": "Bitnik Artistes",
+       "url": "https://wwwwwwwwwwwwwwwwwwwwww.bitnik.org/",
+       "tags": [
+        "Artistes"
+       ]
+      },
+      {
+       "title": "Solimán López - Artiste",
+       "url": "https://solimanlopez.com/portfolio/high-meshes/",
+       "tags": []
+      },
+      {
+       "title": "Data as Culture Art that uses data as a material",
+       "url": "http://culture.theodi.org/",
+       "tags": [
+        "Art that uses data as a material"
+       ]
+      },
+      {
+       "title": "404.zero Collectif",
+       "url": "http://www.404zero.com/",
+       "tags": [
+        "Collectif"
+       ]
+      },
+      {
+       "title": "screen-club Studio",
+       "url": "https://www.screen-club.com/",
+       "tags": [
+        "Studio"
+       ]
+      },
+      {
+       "title": "MOOC Digital Paris",
+       "url": "https://moocdigital.paris/cours/lart-numerique-montreal/lart-programmation",
+       "tags": []
+      },
+      {
+       "title": "Hyperbinary QED projet",
+       "url": "https://vimeo.com/282685581",
+       "tags": [
+        "QED projet"
+       ]
+      },
+      {
+       "title": "AC3 Studio Creative technologists",
+       "url": "https://ac3-studio.com/",
+       "tags": [
+        "Creative technologists"
+       ]
+      },
+      {
+       "title": "Samuel Bianchini Dispotheque",
+       "url": "https://dispotheque.org/",
+       "tags": [
+        "Dispotheque"
+       ]
+      },
+      {
+       "title": "Projects - Rémy Bourçois",
+       "url": "https://remybourcois.fr/",
+       "tags": []
+      },
+      {
+       "title": "36 degrés Art Numérique,Collectif",
+       "url": "https://www.36degres.art/",
+       "tags": [
+        "Art Numérique",
+        "Collectif"
+       ]
+      },
+      {
+       "title": "Tomas Saraceno Artiste",
+       "url": "https://studiotomassaraceno.org/projects/",
+       "tags": [
+        "Artiste"
+       ]
+      },
+      {
+       "title": "Gregory Chatonsky Artificial imagination",
+       "url": "https://chatonsky.net/",
+       "tags": [
+        "Artificial imagination"
+       ]
+      },
+      {
+       "title": "Hyperbinary",
+       "url": "https://hyperbinary.net/",
+       "tags": []
+      },
+      {
+       "title": "Stefan Tiefengraber Artiste",
+       "url": "http://www.stefantiefengraber.com/",
+       "tags": [
+        "Artiste"
+       ]
+      },
+      {
+       "title": "AntiVJ Vijing visual label",
+       "url": "https://www.antivj.com/",
+       "tags": [
+        "Vijing visual label"
+       ]
+      },
+      {
+       "title": "Adrien M & Claire B Artiste",
+       "url": "https://www.am-cb.net/",
+       "tags": [
+        "Artiste"
+       ]
+      },
+      {
+       "title": "ENTER.black - Enter black",
+       "url": "https://enter.black/",
+       "tags": []
+      },
+      {
+       "title": "Vincent Houze Art interactive",
+       "url": "https://vincenthouze.com/about/",
+       "tags": [
+        "Art interactive"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Instagram",
+     "title": "Instagram",
+     "links": [
+      {
+       "title": "SearchSystem Tech",
+       "url": "https://www.instagram.com/searchsystem/",
+       "tags": [
+        "Tech"
+       ]
+      },
+      {
+       "title": "Type Swiss Typographie",
+       "url": "https://www.instagram.com/typeswiss.ch/",
+       "tags": [
+        "Typographie"
+       ]
+      },
+      {
+       "title": "graphic index Graphisme & Design Interactif",
+       "url": "https://www.instagram.com/graphic.index/",
+       "tags": [
+        "Graphisme & Design Interactif"
+       ]
+      },
+      {
+       "title": "swissgraphic Graphisme,Suisse",
+       "url": "https://www.instagram.com/swissgraphic/?igshid=15nic3b53hwoq",
+       "tags": [
+        "Graphisme",
+        "Suisse"
+       ]
+      },
+      {
+       "title": "Curatory Graphisme",
+       "url": "https://www.instagram.com/curatory__/",
+       "tags": [
+        "Graphisme"
+       ]
+      },
+      {
+       "title": "Editorial Grid Edition",
+       "url": "https://www.instagram.com/editorial.grid/",
+       "tags": [
+        "Edition"
+       ]
+      },
+      {
+       "title": "mosoma archives Edition",
+       "url": "https://www.instagram.com/mosomabooks/",
+       "tags": [
+        "Edition"
+       ]
+      },
+      {
+       "title": "Recordsruinthelandscape Musique",
+       "url": "https://www.instagram.com/infosrecordsruinthelandscape/?igshid=99uwp10we73l",
+       "tags": [
+        "Musique"
+       ]
+      },
+      {
+       "title": "@cargoworld Webdesign",
+       "url": "https://www.instagram.com/cargoworld/",
+       "tags": [
+        "Webdesign"
+       ]
+      },
+      {
+       "title": "F%NT Typographie",
+       "url": "https://www.instagram.com/modulofont/",
+       "tags": [
+        "Typographie"
+       ]
+      },
+      {
+       "title": "Mindsparkle Mag",
+       "url": "https://www.instagram.com/mindsparklemagazine/",
+       "tags": []
+      },
+      {
+       "title": "@morrre.dsgn Graphismen branding",
+       "url": "https://www.instagram.com/morrre.dsgn/?hl=fr",
+       "tags": [
+        "Graphismen branding"
+       ]
+      },
+      {
+       "title": "@contemporarytype Graphisme,Typographie",
+       "url": "https://www.instagram.com/contemporarytype/",
+       "tags": [
+        "Graphisme",
+        "Typographie"
+       ]
+      },
+      {
+       "title": "Semiotik Design Agency",
+       "url": "https://www.instagram.com/semiotik_design/",
+       "tags": []
+      },
+      {
+       "title": "Peter Korsman Graphisme",
+       "url": "https://www.instagram.com/autograph__/",
+       "tags": [
+        "Graphisme"
+       ]
+      },
+      {
+       "title": "Biennale Internationale de Design Graphique Festival",
+       "url": "https://www.instagram.com/biennale.design.graphique/",
+       "tags": [
+        "Festival"
+       ]
+      },
+      {
+       "title": "Multi Form",
+       "url": "https://www.instagram.com/multi.form.office/",
+       "tags": []
+      },
+      {
+       "title": "modem.works",
+       "url": "https://www.instagram.com/modem.works/",
+       "tags": []
+      },
+      {
+       "title": "Basile Fournier CGI,Graphisme",
+       "url": "https://www.instagram.com/basilefournier/",
+       "tags": [
+        "CGI",
+        "Graphisme"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Artiste",
+     "title": "Artiste",
+     "links": [
+      {
+       "title": "Vincent Houze Art interactive",
+       "url": "https://vincenthouze.com/about/",
+       "tags": [
+        "Art interactive"
+       ]
+      },
+      {
+       "title": "U2P050 - Collectif Collectif",
+       "url": "https://www.u2p050.com/",
+       "tags": [
+        "Collectif"
+       ]
+      },
+      {
+       "title": "Galerie Claude Bernard - Accueil",
+       "url": "https://www.claude-bernard.com/",
+       "tags": []
+      },
+      {
+       "title": "Michael Sedbon bio-algorythmic,politics",
+       "url": "https://michaelsedbon.com/",
+       "tags": [
+        "bio-algorythmic",
+        "politics"
+       ]
+      },
+      {
+       "title": "Ian Cheng Artiste,Jeux vidéo,MOMA",
+       "url": "https://www.google.com/search?q=ian+cheng&source=lmns&bih=1025&biw=1963&client=firefox-b-d&hl=fr&sa=X&ved=2ahUKEwiYxe3VvqbvAhUU_xoKHd1CDrkQ_AUoAHoECAEQAA",
+       "tags": [
+        "Artiste",
+        "Jeux vidéo",
+        "MOMA"
+       ]
+      },
+      {
+       "title": "Thibault Brunet Artiste",
+       "url": "https://thibaultbrunet.fr/fr",
+       "tags": [
+        "Artiste"
+       ]
+      },
+      {
+       "title": "alva noto - Artiste,Son",
+       "url": "http://www.alvanoto.com/?a1=discography&a2=album",
+       "tags": [
+        "Artiste",
+        "Son"
+       ]
+      },
+      {
+       "title": "RYOICHI KUROKAWA",
+       "url": "http://www.ryoichikurokawa.com/",
+       "tags": []
+      },
+      {
+       "title": "Soliman Lopez",
+       "url": "https://solimanlopez.com/portfolio/high-meshes/",
+       "tags": []
+      },
+      {
+       "title": "Ismaël Joffroy Chandoutis Experimental,Vidéo",
+       "url": "https://vimeo.com/user4983240",
+       "tags": [
+        "Experimental",
+        "Vidéo"
+       ]
+      },
+      {
+       "title": "Visual System Art,Lumière,installation",
+       "url": "https://visualsystem.org/",
+       "tags": [
+        "Art",
+        "Lumière",
+        "installation"
+       ]
+      },
+      {
+       "title": "Collectif Scale",
+       "url": "https://www.collectifscale.com/",
+       "tags": []
+      },
+      {
+       "title": "Alain Thibault Montreal",
+       "url": "http://alainthibault.com/",
+       "tags": [
+        "Montreal"
+       ]
+      },
+      {
+       "title": "Numen Palais de Tokyo,Scotch",
+       "url": "http://www.numen.eu/installations/tape/des-moines/",
+       "tags": [
+        "Palais de Tokyo",
+        "Scotch"
+       ]
+      },
+      {
+       "title": "Virgile Fraisse Parc Saint Léger",
+       "url": "http://www.parcsaintleger.fr/portfolio/virgile-fraisse/",
+       "tags": [
+        "Parc Saint Léger"
+       ]
+      },
+      {
+       "title": "Robert Henke",
+       "url": "https://roberthenke.com/",
+       "tags": []
+      },
+      {
+       "title": "Rama Zllen",
+       "url": "https://rama-allen.com/WORKING",
+       "tags": []
+      },
+      {
+       "title": "Forensic Architecture",
+       "url": "https://forensic-architecture.org/",
+       "tags": []
+      },
+      {
+       "title": "Jean-Baptiste Fastrez",
+       "url": "http://www.jeanbaptistefastrez.com/",
+       "tags": []
+      },
+      {
+       "title": "Romain Tardy",
+       "url": "https://romaintardy.com/",
+       "tags": []
+      },
+      {
+       "title": "Vincent Houze",
+       "url": "https://vincenthouze.com/",
+       "tags": []
+      },
+      {
+       "title": "Richard Mosse Broken Spectr",
+       "url": "https://www.richardmosse.com/",
+       "tags": [
+        "Broken Spectr"
+       ]
+      },
+      {
+       "title": "Nicolas MICHEL",
+       "url": "https://www.milkorva.com/portfolio/isthisnotreal/",
+       "tags": []
+      },
+      {
+       "title": "Oskar Fischinger",
+       "url": "https://www.google.com/search?client=firefox-b-d&q=oskar+fischinger",
+       "tags": []
+      }
+     ]
+    },
+    {
+     "id": "Galerie",
+     "title": "Galerie",
+     "links": [
+      {
+       "title": "Paris Gallery Map Index galerie Paris",
+       "url": "https://www.parisgallerymap.com/",
+       "tags": [
+        "Index galerie Paris"
+       ]
+      },
+      {
+       "title": "Galerie Charlot Art Numérique",
+       "url": "https://www.galeriecharlot.com/",
+       "tags": [
+        "Art Numérique"
+       ]
+      },
+      {
+       "title": "Galerie Denise René Art Cinétique",
+       "url": "https://www.deniserene.fr/",
+       "tags": [
+        "Art Cinétique"
+       ]
+      },
+      {
+       "title": "Galerie Templon",
+       "url": "https://www.templon.com/new/current.php?la=en",
+       "tags": []
+      },
+      {
+       "title": "Galerie waltman",
+       "url": "https://galeriewaltman.com/",
+       "tags": []
+      },
+      {
+       "title": "Galerie Marian Goodman Art contemporain",
+       "url": "https://www.mariangoodman.com/",
+       "tags": [
+        "Art contemporain"
+       ]
+      },
+      {
+       "title": "Galerie 22,48m2 Art contemporain et pratique numérique",
+       "url": "https://www.2248m2.com/",
+       "tags": [
+        "Art contemporain et pratique numérique"
+       ]
+      },
+      {
+       "title": "l'avant galerie vossen Art contemporain et pratique numérique",
+       "url": "https://avant-galerie.com/",
+       "tags": [
+        "Art contemporain et pratique numérique"
+       ]
+      },
+      {
+       "title": "Serpentine Galleries",
+       "url": "https://www.serpentinegalleries.org/",
+       "tags": []
+      },
+      {
+       "title": "Plateforme Paris",
+       "url": "https://www.plateforme-paris.com/",
+       "tags": []
+      },
+      {
+       "title": "Artazart - La librairie Galerie dédiée à l'Image",
+       "url": "https://artazart.com/?v=11aedd0e4327",
+       "tags": [
+        "Galerie dédiée à l'Image"
+       ]
+      },
+      {
+       "title": "Mennour",
+       "url": "https://mennour.com/",
+       "tags": []
+      },
+      {
+       "title": "CONFORT MENTAL Epace d'exposition",
+       "url": "http://www.confortmental.com/",
+       "tags": [
+        "Epace d'exposition"
+       ]
+      },
+      {
+       "title": "GALERIE DATA Art Numérique",
+       "url": "https://www.galeriedata.com/",
+       "tags": [
+        "Art Numérique"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Critique_et_théorie_du_design",
+     "title": "Critique et théorie du design",
+     "links": [
+      {
+       "title": "Alain Damasio",
+       "url": "https://fr.wikipedia.org/wiki/Alain_Damasio",
+       "tags": []
+      },
+      {
+       "title": "Yves Citton",
+       "url": "https://fr.wikipedia.org/wiki/Yves_Citton",
+       "tags": []
+      },
+      {
+       "title": "Anthony Masure",
+       "url": "https://www.anthonymasure.com/",
+       "tags": []
+      },
+      {
+       "title": "Samuel Bianchini ENSAD lab",
+       "url": "https://dispotheque.org/fr",
+       "tags": [
+        "ENSAD lab"
+       ]
+      },
+      {
+       "title": "Dominique Moulon Critique d'Art & Curateur",
+       "url": "https://www.dominiquemoulon.com/fr/",
+       "tags": [
+        "Critique d'Art & Curateur"
+       ]
+      },
+      {
+       "title": "Back Office - Revue",
+       "url": "http://www.revue-backoffice.com/",
+       "tags": []
+      },
+      {
+       "title": "Éditions B42 Thérorie du design",
+       "url": "https://editions-b42.com/",
+       "tags": [
+        "Thérorie du design"
+       ]
+      },
+      {
+       "title": "Mnémosyne Conférence ESAD amiens",
+       "url": "https://mnemosyne.esad-amiens.fr/#",
+       "tags": [
+        "Conférence ESAD amiens"
+       ]
+      },
+      {
+       "title": "Peter Weibel Ars Electronica,ZKM",
+       "url": "https://fr.wikipedia.org/wiki/Peter_Weibel",
+       "tags": [
+        "Ars Electronica",
+        "ZKM"
+       ]
+      },
+      {
+       "title": "Donato Ricci médialab Sciences Po",
+       "url": "https://medialab.sciencespo.fr/equipe/donato-ricci/",
+       "tags": [
+        "médialab Sciences Po"
+       ]
+      },
+      {
+       "title": "Gregory Chatonsky",
+       "url": "https://chatonsky.net/tag/espace-latent/",
+       "tags": []
+      },
+      {
+       "title": "Pierre-Damien Huyghe",
+       "url": "https://fr.wikipedia.org/wiki/Pierre-Damien_Huyghe",
+       "tags": []
+      },
+      {
+       "title": "Gilles Alvarez Directeur de la Biennale Némo",
+       "url": "https://www.institutfrancais.com/fr/magazine/portrait/gilles-alvarez-directeur-de-la-biennale-nemo",
+       "tags": [
+        "Directeur de la Biennale Némo"
+       ]
+      },
+      {
+       "title": "Kim Departe",
+       "url": "https://medium.com/@kim.departe",
+       "tags": []
+      },
+      {
+       "title": "Donna Haraway Cybernétique",
+       "url": "https://fr.wikipedia.org/wiki/Donna_Haraway",
+       "tags": [
+        "Cybernétique"
+       ]
+      },
+      {
+       "title": "Hortense Boulais-Ifrene Archéologie des métavers",
+       "url": "https://www.radiofrance.fr/franceculture/podcasts/l-entretien-archeologique/archeologie-des-metavers-dans-les-ruines-des-mondes-virtuels-7179780",
+       "tags": [
+        "Archéologie des métavers"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Festival_et_biennale",
+     "title": "Festival et biennale",
+     "links": [
+      {
+       "title": "VR Arles festival Les Rencontres d'Arles,VR",
+       "url": "https://www.rencontres-arles.com/fr/expositions/view/801/vr-arles-festival",
+       "tags": [
+        "Les Rencontres d'Arles",
+        "VR"
+       ]
+      },
+      {
+       "title": "DEMO FESTIVAL Festival Motion Design",
+       "url": "https://demofestival.com/",
+       "tags": [
+        "Festival Motion Design"
+       ]
+      },
+      {
+       "title": "Arts Electronica Art Numérique,Linz",
+       "url": "https://ars.electronica.art/news/en/",
+       "tags": [
+        "Art Numérique",
+        "Linz"
+       ]
+      },
+      {
+       "title": "Nemo Art Numérique,Paris",
+       "url": "https://www.biennalenemo.fr/",
+       "tags": [
+        "Art Numérique",
+        "Paris"
+       ]
+      },
+      {
+       "title": "Elektra Art Numérique,Montréal",
+       "url": "https://www.elektramontreal.ca/bian?lang=fr",
+       "tags": [
+        "Art Numérique",
+        "Montréal"
+       ]
+      },
+      {
+       "title": "Festival liste by Dominique Moulon",
+       "url": "https://www.mediaartdesign.net/indexEN.html",
+       "tags": [
+        "by Dominique Moulon"
+       ]
+      },
+      {
+       "title": "ShortFilmDepot Multi-festival index,Vidéo",
+       "url": "https://www.shortfilmdepot.com/fr",
+       "tags": [
+        "Multi-festival index",
+        "Vidéo"
+       ]
+      },
+      {
+       "title": "Le graphisme à Chaumont",
+       "url": "http://www.ville-chaumont.fr/Decouvrir-Chaumont/Le-graphisme-a-Chaumont",
+       "tags": []
+      },
+      {
+       "title": "Centrenational du graphisme chaumont",
+       "url": "http://centrenationaldugraphisme.fr/",
+       "tags": []
+      },
+      {
+       "title": "Mois du graphisme Echirolles",
+       "url": "https://echirolles-centredugraphisme.com/mois-du-graphisme",
+       "tags": []
+      },
+      {
+       "title": "Chroniques Biennale des imaginaires numériques",
+       "url": "https://chroniques.org/",
+       "tags": [
+        "Biennale des imaginaires numériques"
+       ]
+      },
+      {
+       "title": "Motion Motion Festival Motion Design",
+       "url": "https://motionmotion.fr/",
+       "tags": [
+        "Festival Motion Design"
+       ]
+      },
+      {
+       "title": "Motion Plus Design Festival Motion Design,Tokyo",
+       "url": "https://motion-plus-design.com/home",
+       "tags": [
+        "Festival Motion Design",
+        "Tokyo"
+       ]
+      },
+      {
+       "title": "Les Puces Typo Campus Fonderie de l'Image",
+       "url": "https://www.campusfonderiedelimage.org/les-puces-typo-13/",
+       "tags": [
+        "Campus Fonderie de l'Image"
+       ]
+      },
+      {
+       "title": "Le Motion Club Motion,Toulouse",
+       "url": "https://www.ulysseluque.com/project/lemotionclub",
+       "tags": [
+        "Motion",
+        "Toulouse"
+       ]
+      },
+      {
+       "title": "Mofest Montpellier,Motion",
+       "url": "https://mofest.fr/",
+       "tags": [
+        "Montpellier",
+        "Motion"
+       ]
+      },
+      {
+       "title": "Elektra Montréal",
+       "url": "https://www.elektramontreal.ca/?lang=fr",
+       "tags": [
+        "Montréal"
+       ]
+      },
+      {
+       "title": "Centre PHI Montréal",
+       "url": "https://phi.ca/fr/centre/",
+       "tags": [
+        "Montréal"
+       ]
+      },
+      {
+       "title": "interstice Art Numérique,Caen",
+       "url": "https://festival-interstice.net/",
+       "tags": [
+        "Art Numérique",
+        "Caen"
+       ]
+      },
+      {
+       "title": "Elektra Montréal",
+       "url": "https://www.elektramontreal.ca/",
+       "tags": [
+        "Montréal"
+       ]
+      },
+      {
+       "title": "Kikk Festival",
+       "url": "https://www.kikk.be/fr/",
+       "tags": []
+      },
+      {
+       "title": "Les Rencontres internationales de Lure Graphism",
+       "url": "https://delure.org/",
+       "tags": [
+        "Graphism"
+       ]
+      },
+      {
+       "title": "Biennale Internationale de Design Graphique Festival",
+       "url": "https://www.instagram.com/biennale.design.graphique/",
+       "tags": [
+        "Festival"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "École_et_laboratoire",
+     "title": "École et laboratoire",
+     "links": [
+      {
+       "title": "ANRT Atelier National de Recherche Typo",
+       "url": "https://anrt-nancy.fr/journal/k-knuth/",
+       "tags": [
+        "Atelier National de Recherche Typo"
+       ]
+      },
+      {
+       "title": "MIT Media Lab Boston",
+       "url": "https://www.media.mit.edu/",
+       "tags": [
+        "Boston"
+       ]
+      },
+      {
+       "title": "ArTec Paris 8",
+       "url": "https://eur-artec.fr/",
+       "tags": [
+        "Paris 8"
+       ]
+      },
+      {
+       "title": "Chaos Computer Club Hacker space - Berlin",
+       "url": "https://www.ccc.de/en/",
+       "tags": [
+        "Hacker space - Berlin"
+       ]
+      },
+      {
+       "title": "Ircam Labo acoustique/musique",
+       "url": "https://www.ircam.fr/",
+       "tags": [
+        "Labo acoustique/musique"
+       ]
+      },
+      {
+       "title": "EnsadLab",
+       "url": "https://www.ensadlab.fr/fr/",
+       "tags": []
+      },
+      {
+       "title": "EPFL+ECAL LAB",
+       "url": "https://www.ecal.ch/fr/1473/ecal/epfl-ecal-lab/descriptif",
+       "tags": []
+      },
+      {
+       "title": "médialab Sciences Po",
+       "url": "https://medialab.sciencespo.fr/",
+       "tags": []
+      },
+      {
+       "title": "Home ~ D-Crit",
+       "url": "https://designresearch.sva.edu/",
+       "tags": []
+      },
+      {
+       "title": "Cité du design, Post Master Post-master Recherche graphisme Azimuts",
+       "url": "https://www.citedudesign.com/fr/a/post-master-recherche-graphisme-azimuts-3145",
+       "tags": [
+        "Post-master Recherche graphisme Azimuts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Design_d'objet",
+     "title": "Design d’objet",
+     "links": [
+      {
+       "title": "Teenage engineering",
+       "url": "https://teenage.engineering/",
+       "tags": []
+      },
+      {
+       "title": "Jean-Baptiste Fastrez",
+       "url": "http://www.jeanbaptistefastrez.com/",
+       "tags": []
+      },
+      {
+       "title": "studio 5.5",
+       "url": "https://www.5-5.paris/fr/",
+       "tags": []
+      },
+      {
+       "title": "Nothing tech",
+       "url": "https://fr.nothing.tech/",
+       "tags": []
+      }
+     ]
+    },
+    {
+     "id": "Photogrammétrie",
+     "title": "Photogrammétrie",
+     "links": [
+      {
+       "title": "Nuages Photogrammétrie",
+       "url": "https://www.inoxy.fr/15_nuages.html",
+       "tags": [
+        "Photogrammétrie"
+       ]
+      },
+      {
+       "title": "matthiaspasquet",
+       "url": "https://cargocollective.com/matthias_pasquet",
+       "tags": []
+      },
+      {
+       "title": "U2P050 Collectif",
+       "url": "https://www.u2p050.com/",
+       "tags": [
+        "Collectif"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Centre_culturel",
+     "title": "Centre culturel",
+     "links": [
+      {
+       "title": "Le Lavoir Numérique",
+       "url": "https://lavoirnumerique.grandorlyseinebievre.fr/",
+       "tags": []
+      },
+      {
+       "title": "La Gaîté Lyrique",
+       "url": "https://gaite-lyrique.net/",
+       "tags": []
+      },
+      {
+       "title": "ZKM Museum Allemagne,Karlsruhe",
+       "url": "https://zkm.de/en/zkm-museum-of-contemporary-art",
+       "tags": [
+        "Allemagne",
+        "Karlsruhe"
+       ]
+      },
+      {
+       "title": "L'Atelier des Lumières Immersif,Paris",
+       "url": "https://www.atelier-lumieres.com/",
+       "tags": [
+        "Immersif",
+        "Paris"
+       ]
+      },
+      {
+       "title": "Le CENTQUATRE-PARIS",
+       "url": "https://www.104.fr/",
+       "tags": []
+      }
+     ]
+    },
+    {
+     "id": "Podcast_&_Conférence",
+     "title": "Podcast & Conférence",
+     "links": [
+      {
+       "title": "Graphic Matter Graphisme",
+       "url": "https://www.instagram.com/graphicmatterpodcast?igshid=OGQ5ZDc2ODk2ZA%3D%3D",
+       "tags": [
+        "Graphisme"
+       ]
+      },
+      {
+       "title": "Comment achever une oeuvre? France Culture",
+       "url": "https://www.radiofrance.fr/franceculture/podcasts/les-cours-du-college-de-france/comment-achever-une-oeuvre-suite-introduction-4550080",
+       "tags": [
+        "France Culture"
+       ]
+      },
+      {
+       "title": "MOOC DIGITAL Dominique Moulon",
+       "url": "https://www.youtube.com/@moocdigitalparis/videos",
+       "tags": [
+        "Dominique Moulon"
+       ]
+      },
+      {
+       "title": "Information Landscapes: Muriel Cooper TED5 Conference",
+       "url": "https://www.youtube.com/watch?v=BhrZHkdc2rU&t=2s",
+       "tags": [
+        "TED5 Conference"
+       ]
+      },
+      {
+       "title": "Endless Vital Activity",
+       "url": "https://www.acceptandproceed.com/endless-vital-activity",
+       "tags": []
+      },
+      {
+       "title": "SANS-TITRE",
+       "url": "https://www.youtube.com/@sanstitrecast",
+       "tags": []
+      },
+      {
+       "title": "Mnémosyne Conférence ESAD amiens",
+       "url": "https://mnemosyne.esad-amiens.fr/#",
+       "tags": [
+        "Conférence ESAD amiens"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Enseignement",
+     "title": "Enseignement",
+     "links": [
+      {
+       "title": "A *New* Program for Graphic Design",
+       "url": "https://a-new-program-for-graphic-design.org/",
+       "tags": []
+      },
+      {
+       "title": "John Maeda - Code de création",
+       "url": "https://www.amazon.fr/Code-cr%C3%A9ation-John-Maeda/dp/2878112466",
+       "tags": []
+      }
+     ]
+    },
+    {
+     "id": "Résidence_d'artistes",
+     "title": "Résidence d'artistes",
+     "links": [
+      {
+       "title": "Arts en résidence Réseau National (index)",
+       "url": "https://www.artsenresidence.fr/",
+       "tags": [
+        "Réseau National (index)"
+       ]
+      },
+      {
+       "title": "CIPAC Appels à candidatures",
+       "url": "https://cipac.net/annonces/appels",
+       "tags": [
+        "Appels à candidatures"
+       ]
+      },
+      {
+       "title": "Cnap Appels à candidatures",
+       "url": "https://www.cnap.fr/annonces?f%5B0%5D=annonce_type%3A163658",
+       "tags": [
+        "Appels à candidatures"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "Ressources_Outils",
+   "title": "Ressources & Outils",
+   "categories": [
+    {
+     "id": "Logiciel_3D_et_Interactif",
+     "title": "Logiciel 3D et Interactif",
+     "links": [
+      {
+       "title": "Touchdesigner Nodal interactive design",
+       "url": "https://derivative.ca/",
+       "tags": [
+        "Nodal interactive design"
+       ]
+      },
+      {
+       "title": "Metashape PC,Photogrammétrie",
+       "url": "https://www.agisoft.com/",
+       "tags": [
+        "PC",
+        "Photogrammétrie"
+       ]
+      },
+      {
+       "title": "3DF Zephyr Photogrametrie",
+       "url": "https://www.3dflow.net/3df-zephyr-photogrammetry-software/",
+       "tags": [
+        "Photogrametrie"
+       ]
+      },
+      {
+       "title": "Unity Jeux vidéo",
+       "url": "https://unity.com/fr",
+       "tags": [
+        "Jeux vidéo"
+       ]
+      },
+      {
+       "title": "Unreal Engine Jeux vidéo",
+       "url": "https://www.unrealengine.com/en-US/?sessionInvalidated=true",
+       "tags": [
+        "Jeux vidéo"
+       ]
+      },
+      {
+       "title": "Blender 3D",
+       "url": "https://www.blender.org/",
+       "tags": [
+        "3D"
+       ]
+      },
+      {
+       "title": "Chataign Machine pour les arts numériques,kinect",
+       "url": "https://benjamin.kuperberg.fr/chataigne/fr#about",
+       "tags": [
+        "Machine pour les arts numériques",
+        "kinect"
+       ]
+      },
+      {
+       "title": "Record3D 3D Videos and Point Cloud,IOS",
+       "url": "https://record3d.app/",
+       "tags": [
+        "3D Videos and Point Cloud",
+        "IOS"
+       ]
+      },
+      {
+       "title": "SculptGL WebGL sculpting app",
+       "url": "https://stephaneginier.com/sculptgl/",
+       "tags": [
+        "WebGL sculpting app"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Ressource_3D",
+     "title": "Ressource 3D",
+     "links": [
+      {
+       "title": "Texture Haven Free texture",
+       "url": "https://texturehaven.com/textures/",
+       "tags": [
+        "Free texture"
+       ]
+      },
+      {
+       "title": "Quixel Librairie d'objet Gratuit",
+       "url": "https://quixel.com/",
+       "tags": [
+        "Librairie d'objet Gratuit"
+       ]
+      },
+      {
+       "title": "free3d Librairie d'objet Gratuit",
+       "url": "https://free3d.com/fr/",
+       "tags": [
+        "Librairie d'objet Gratuit"
+       ]
+      },
+      {
+       "title": "Blend Swap Librairie d'objet Gratuit",
+       "url": "https://www.blendswap.com/blends",
+       "tags": [
+        "Librairie d'objet Gratuit"
+       ]
+      },
+      {
+       "title": "3D Bay Librairie d'objet Gratuit",
+       "url": "https://clouddevs.com/3dbay/",
+       "tags": [
+        "Librairie d'objet Gratuit"
+       ]
+      },
+      {
+       "title": "GrabCAD Librairie d'objet Gratuit",
+       "url": "https://grabcad.com/library/imac-24-m1-2021-1",
+       "tags": [
+        "Librairie d'objet Gratuit"
+       ]
+      },
+      {
+       "title": "CG Persia Librairie d'objet Gratuit",
+       "url": "https://cgpersia.com/category/download/cg/3d/models/page/2",
+       "tags": [
+        "Librairie d'objet Gratuit"
+       ]
+      },
+      {
+       "title": "Sketchfab Librairie d'objet Gratuit",
+       "url": "https://sketchfab.com/",
+       "tags": [
+        "Librairie d'objet Gratuit"
+       ]
+      },
+      {
+       "title": "Catacombes",
+       "url": "https://sketchfab.com/KaaKta/collections/catacombes",
+       "tags": []
+      },
+      {
+       "title": "Polycam Texture Générator",
+       "url": "https://poly.cam/material-generator",
+       "tags": []
+      },
+      {
+       "title": "CGTrader Bridge 3D Models,Free texture",
+       "url": "https://www.cgtrader.com/search?free=1&keywords=bridge",
+       "tags": [
+        "Bridge 3D Models",
+        "Free texture"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Creative_coding",
+     "title": "Creative coding",
+     "links": [
+      {
+       "title": "JSFiddle Éditeur HTML en ligne",
+       "url": "https://jsfiddle.net/",
+       "tags": [
+        "Éditeur HTML en ligne"
+       ]
+      },
+      {
+       "title": "Blasze IP Logger Traking IP",
+       "url": "https://blasze.com/",
+       "tags": [
+        "Traking IP"
+       ]
+      },
+      {
+       "title": "CSS Cheat Sheet",
+       "url": "https://nerdcave.com/tailwind-cheat-sheet?ref=bestwebsite.gallery",
+       "tags": []
+      },
+      {
+       "title": "Deep voice Real time voice cloning",
+       "url": "https://github.com/CorentinJ/Real-Time-Voice-Cloning",
+       "tags": [
+        "Real time voice cloning"
+       ]
+      },
+      {
+       "title": "GPT2 local tutoriel",
+       "url": "https://medium.com/@ngwaifoong92/beginners-guide-to-retrain-gpt-2-117m-to-generate-custom-text-content-8bb5363d8b7f",
+       "tags": [
+        "tutoriel"
+       ]
+      },
+      {
+       "title": "Deep voice",
+       "url": "https://medium.com/syncedreview/build-realistic-human-speech-animations-with-the-new-voca-model-and-4d-face-dataset-d26ebca37bb7",
+       "tags": []
+      },
+      {
+       "title": "Deep fake Real time image annimation",
+       "url": "https://github.com/anandpawara/Real_Time_Image_Animation",
+       "tags": [
+        "Real time image annimation"
+       ]
+      },
+      {
+       "title": "CSS Tricks CSS,HTML",
+       "url": "https://css-tricks.com/",
+       "tags": [
+        "CSS",
+        "HTML"
+       ]
+      },
+      {
+       "title": "Mapbox Map pour HTML",
+       "url": "https://www.mapbox.com/",
+       "tags": [
+        "Map pour HTML"
+       ]
+      },
+      {
+       "title": "Latex Latex,métafont",
+       "url": "http://metafont.tutorial.free.fr/",
+       "tags": [
+        "Latex",
+        "métafont"
+       ]
+      },
+      {
+       "title": "P5.js librairie javascript",
+       "url": "https://p5js.org/",
+       "tags": [
+        "librairie javascript"
+       ]
+      },
+      {
+       "title": "Processing génératif code",
+       "url": "https://processing.org/",
+       "tags": [
+        "génératif code"
+       ]
+      },
+      {
+       "title": "Gooogle MediaPipe google librairie Recognition",
+       "url": "https://mediapipe-studio.webapps.google.com/home",
+       "tags": [
+        "google librairie Recognition"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Image_stock_&_Pictogramme",
+     "title": "Images stocks & Pictogrammes",
+     "links": [
+      {
+       "title": "Pexels Photos gratuites",
+       "url": "https://www.pexels.com/fr-fr/chercher/immeuble/",
+       "tags": [
+        "Photos gratuites"
+       ]
+      },
+      {
+       "title": "Palms Illustrations Illustration.Gratuite",
+       "url": "https://palms.casa/",
+       "tags": [
+        "Illustration.Gratuite"
+       ]
+      },
+      {
+       "title": "Palms Illustrations Illustration Gratuite",
+       "url": "https://palms.casa/",
+       "tags": [
+        "Illustration Gratuite"
+       ]
+      },
+      {
+       "title": "Icons - Material Design",
+       "url": "https://material.io/tools/icons/?style=sharp",
+       "tags": []
+      },
+      {
+       "title": "Transit Pictograms",
+       "url": "https://www.behance.net/gallery/36226537/FF-Transit-Pictograms-Specimen-Poster",
+       "tags": []
+      },
+      {
+       "title": "Radix Icons open source icons",
+       "url": "https://siecledigital.fr/2020/10/29/radix-icons-set-icones-gratuit-open-source/",
+       "tags": [
+        "open source icons"
+       ]
+      },
+      {
+       "title": "Noun Project Free Icons",
+       "url": "https://thenounproject.com/",
+       "tags": [
+        "Free Icons"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Outils_collaboratifs",
+     "title": "Outils collaboratifs",
+     "links": [
+      {
+       "title": "Miro Tableau Collaboratif",
+       "url": "https://miro.com/",
+       "tags": [
+        "Tableau Collaboratif"
+       ]
+      },
+      {
+       "title": "Figma Tableau Collaboratif,UX UI",
+       "url": "https://www.figma.com/files/recent?fuid=953599852027264200",
+       "tags": [
+        "Tableau Collaboratif",
+        "UX UI"
+       ]
+      },
+      {
+       "title": "Framasoft",
+       "url": "https://framasoft.org/fr/",
+       "tags": []
+      },
+      {
+       "title": "Slack",
+       "url": "https://slack.com/intl/fr-fr/",
+       "tags": []
+      },
+      {
+       "title": "Trello",
+       "url": "https://trello.com/fr",
+       "tags": []
+      },
+      {
+       "title": "Milanote",
+       "url": "https://milanote.com/",
+       "tags": []
+      },
+      {
+       "title": "Notion and databases,full notes,tasks,wikis",
+       "url": "https://www.notion.so/product?fredir=1",
+       "tags": [
+        "and databases",
+        "full notes",
+        "tasks",
+        "wikis"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Droit_du_graphisme",
+     "title": "Droit du graphisme",
+     "links": [
+      {
+       "title": "Kit de survie du créatif",
+       "url": "https://kitdesurvie.metiers-graphiques.fr/",
+       "tags": []
+      },
+      {
+       "title": "Maze",
+       "url": "https://www.youtube.com/channel/UCq7pni9qpB-6jQSCE_KAZPw/videos",
+       "tags": []
+      },
+      {
+       "title": "Facture",
+       "url": "https://www.economie.gouv.fr/entreprises/factures-mentions-obligatoires?xtor=ES-29-%5BBIE_277_20210923%5D-20210923-",
+       "tags": []
+      },
+      {
+       "title": "ADAGP Pour le droit des artistes",
+       "url": "https://www.adagp.fr/",
+       "tags": [
+        "Pour le droit des artistes"
+       ]
+      },
+      {
+       "title": "Florian CHARPENTIER - La Micro by Flo La Micro Entreprise",
+       "url": "https://www.lamicrobyflo.fr/auteurs/florian/",
+       "tags": [
+        "La Micro Entreprise"
+       ]
+      },
+      {
+       "title": "SAIF Socété des Auteur",
+       "url": "https://www.saif.fr/",
+       "tags": [
+        "Socété des Auteur"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Typographie_et_fonderie",
+     "title": "Typographie et fonderie",
+     "links": [
+      {
+       "title": "Pousse ta fonte Liste de site de Freefont",
+       "url": "https://poussetafonte.com/",
+       "tags": [
+        "Liste de site de Freefont"
+       ]
+      },
+      {
+       "title": "Google Fonts Gratuit",
+       "url": "https://fonts.google.com/",
+       "tags": [
+        "Gratuit"
+       ]
+      },
+      {
+       "title": "Velvetryn Libre",
+       "url": "https://www.velvetyne.fr/",
+       "tags": [
+        "Libre"
+       ]
+      },
+      {
+       "title": "Font Use & Modify Gratuit",
+       "url": "https://usemodify.com/",
+       "tags": [
+        "Gratuit"
+       ]
+      },
+      {
+       "title": "Collletttivo Gratuit",
+       "url": "http://collletttivo.it/",
+       "tags": [
+        "Gratuit"
+       ]
+      },
+      {
+       "title": "Typothèque intersitces Gratuit",
+       "url": "http://typotheque.interstices.io/",
+       "tags": [
+        "Gratuit"
+       ]
+      },
+      {
+       "title": "Free Font Library Gratuit",
+       "url": "http://typotheque.luuse.io/",
+       "tags": [
+        "Gratuit"
+       ]
+      },
+      {
+       "title": "Hershey Noailles Gratuit",
+       "url": "http://hershey-noailles.luuse.io/www/",
+       "tags": [
+        "Gratuit"
+       ]
+      },
+      {
+       "title": "black foundry",
+       "url": "https://black-foundry.com/",
+       "tags": []
+      },
+      {
+       "title": "Lineto",
+       "url": "https://lineto.com/typefaces/riforma#bold",
+       "tags": []
+      },
+      {
+       "title": "Production Type Fonderie",
+       "url": "https://www.productiontype.com/",
+       "tags": [
+        "Fonderie"
+       ]
+      },
+      {
+       "title": "Storm Type Fonderie",
+       "url": "https://www.stormtype.com/",
+       "tags": [
+        "Fonderie"
+       ]
+      },
+      {
+       "title": "Type.today Fonderie",
+       "url": "https://type.today/en",
+       "tags": [
+        "Fonderie"
+       ]
+      },
+      {
+       "title": "Lineto Fonderie",
+       "url": "https://lineto.com/typefaces/replica",
+       "tags": [
+        "Fonderie"
+       ]
+      },
+      {
+       "title": "Swiss Typefaces - Fondrie",
+       "url": "https://www.swisstypefaces.com/fonts/suisse/#font",
+       "tags": []
+      },
+      {
+       "title": "Identifont Crack",
+       "url": "http://www.identifont.com/",
+       "tags": [
+        "Crack"
+       ]
+      },
+      {
+       "title": "Glyphr Studio - Logiciel de Dessin",
+       "url": "http://www.glyphrstudio.com/online/",
+       "tags": []
+      },
+      {
+       "title": "Munken Sans Gratuit",
+       "url": "https://colab.munken.com/munken-sans?fbclid=IwAR2qXPzx2Z_8wPYwjcvBODzYCfS_8PkgD938u9lIa_9tr_o6OSBUsih2aV4",
+       "tags": [
+        "Gratuit"
+       ]
+      },
+      {
+       "title": "Metafont Language de programation typo",
+       "url": "https://www.google.com/search?q=Metafont&rlz=1C1VDKB_frFR928FR928&oq=Metafont&aqs=chrome..69i57j0l3j0i30j0i30i395l5.219j1j7&sourceid=chrome&ie=UTF-8",
+       "tags": [
+        "Language de programation typo"
+       ]
+      },
+      {
+       "title": "metafont - tutorial Latex,métafont",
+       "url": "http://metafont.tutorial.free.fr/",
+       "tags": [
+        "Latex",
+        "métafont"
+       ]
+      },
+      {
+       "title": "kufique carré",
+       "url": "https://fr.accentsconagua.com/articles/design/creative-arabic-calligraphy-square-kufic.html",
+       "tags": []
+      },
+      {
+       "title": "Whtt Gratuit",
+       "url": "https://wehtt.am/fonts/",
+       "tags": [
+        "Gratuit"
+       ]
+      },
+      {
+       "title": "Uncut Gratuit",
+       "url": "https://uncut.wtf/",
+       "tags": [
+        "Gratuit"
+       ]
+      },
+      {
+       "title": "Open Foundry Gratuit",
+       "url": "https://open-foundry.com/fonts",
+       "tags": [
+        "Gratuit"
+       ]
+      },
+      {
+       "title": "Dotcolon Gratuit",
+       "url": "https://dotcolon.net/",
+       "tags": [
+        "Gratuit"
+       ]
+      },
+      {
+       "title": "BOEM",
+       "url": "http://boem.fr/",
+       "tags": []
+      },
+      {
+       "title": "ANRT Gratuit",
+       "url": "https://anrt-nancy.fr/en/fonts-en/",
+       "tags": [
+        "Gratuit"
+       ]
+      },
+      {
+       "title": "Brownfox - Fonderie",
+       "url": "https://brownfox.org/",
+       "tags": []
+      },
+      {
+       "title": "Fonts In Use",
+       "url": "https://fontsinuse.com/",
+       "tags": []
+      },
+      {
+       "title": "Typothèque Bye Bye Binary Gratuit,inclusive",
+       "url": "http://typotheque.genderfluid.space/",
+       "tags": [
+        "Gratuit",
+        "inclusive"
+       ]
+      },
+      {
+       "title": "Prototypo - Design custom fonts that perfectly fit your needs",
+       "url": "https://www.prototypo.io/",
+       "tags": []
+      },
+      {
+       "title": "v-fonts - Variable Fonts - Index",
+       "url": "https://v-fonts.com/",
+       "tags": []
+      },
+      {
+       "title": "Studio Feixen Fonts - outils",
+       "url": "https://fonts.studiofeixen.ch/editor/",
+       "tags": []
+      },
+      {
+       "title": "FontSpace Gratuit",
+       "url": "https://www.fontspace.com/",
+       "tags": [
+        "Gratuit"
+       ]
+      },
+      {
+       "title": "ANA & YVY",
+       "url": "https://anayvy.shop/collections/fonts",
+       "tags": []
+      },
+      {
+       "title": "Displaay Type Foundry",
+       "url": "https://displaay.net/",
+       "tags": []
+      },
+      {
+       "title": "VTF libre friends · GitLab",
+       "url": "https://gitlab.com/velvetyne/vtf-libre-friends/-/blob/main/README.md",
+       "tags": []
+      },
+      {
+       "title": "Beržulis",
+       "url": "https://berzulis.com/",
+       "tags": []
+      },
+      {
+       "title": "Fontshare: Quality Fonts. Free.",
+       "url": "https://www.fontshare.com/",
+       "tags": []
+      },
+      {
+       "title": "indestructible type*",
+       "url": "https://indestructibletype.com/Home.html",
+       "tags": []
+      },
+      {
+       "title": "manufacturaind · GitLab",
+       "url": "https://gitlab.com/manufacturaind/",
+       "tags": []
+      },
+      {
+       "title": "Typothèque Esa Septantecinq",
+       "url": "https://typotheque.le75.be/",
+       "tags": []
+      },
+      {
+       "title": "OSP (Open Source Publishing)",
+       "url": "http://osp.kitchen/foundry/",
+       "tags": []
+      },
+      {
+       "title": "X Cicéro",
+       "url": "https://xcicero.esad-gv.net/",
+       "tags": []
+      },
+      {
+       "title": "U+270D | Projets",
+       "url": "https://u270d.eesab.fr/",
+       "tags": []
+      },
+      {
+       "title": "SUVA Type Foundry",
+       "url": "https://www.suvatypefoundry.ee/",
+       "tags": []
+      },
+      {
+       "title": "Swiss Typefaces",
+       "url": "https://www.swisstypefaces.com/",
+       "tags": []
+      },
+      {
+       "title": "Geist Font",
+       "url": "https://vercel.com/font",
+       "tags": []
+      },
+      {
+       "title": "Beasts of England",
+       "url": "https://beastsofengland.co/",
+       "tags": []
+      },
+      {
+       "title": "Herzberg Design Co",
+       "url": "https://www.herzbergdesign.com/",
+       "tags": []
+      },
+      {
+       "title": "OH no Type Company",
+       "url": "https://ohnotype.co/",
+       "tags": []
+      },
+      {
+       "title": "Glyph Drawing Club",
+       "url": "https://glyphdrawing.club/",
+       "tags": []
+      },
+      {
+       "title": "Fonts In Use",
+       "url": "https://fontsinuse.com/?page=4",
+       "tags": []
+      }
+     ]
+    },
+    {
+     "id": "Imprimeur",
+     "title": "Imprimeur",
+     "links": [
+      {
+       "title": "Scriptlaser",
+       "url": "http://www.scriptlaser.com/cgi/pub.cgi/homepage",
+       "tags": []
+      },
+      {
+       "title": "Carte de visite moo",
+       "url": "https://www.moo.com/fr/design-templates/business-cards/?finishingOption=square_corners&origPaperType=super&paperType=super&productType=businesscard",
+       "tags": []
+      },
+      {
+       "title": "Imprimerie du Marais",
+       "url": "https://imprimeriedumarais.fr/",
+       "tags": []
+      },
+      {
+       "title": "Paris Print Club Serigraphie",
+       "url": "http://parisprintclub.com/serigraphie/",
+       "tags": [
+        "Serigraphie"
+       ]
+      },
+      {
+       "title": "STIPA Montreuil Offset",
+       "url": "https://www.stipa.fr/",
+       "tags": [
+        "Montreuil Offset"
+       ]
+      },
+      {
+       "title": "Atelier Bulk",
+       "url": "https://www.atelierbulk.com/",
+       "tags": []
+      },
+      {
+       "title": "Les Deux Ponts",
+       "url": "https://www.deux-ponts.fr/actualites/",
+       "tags": []
+      },
+      {
+       "title": "Ott Imprimeurs",
+       "url": "https://www.ott-imprimeurs.fr/",
+       "tags": []
+      },
+      {
+       "title": "Frazier",
+       "url": "https://www.frazier.fr/contact/",
+       "tags": []
+      },
+      {
+       "title": "RAJA",
+       "url": "https://www.raja.fr/emballages-boutiques/sac-papier-kraft_C2311.html",
+       "tags": []
+      },
+      {
+       "title": "Imprimerie du Marais",
+       "url": "https://imprimeriedumarais.com/fr/contact",
+       "tags": []
+      },
+      {
+       "title": "Lézard Graphique Serigraphie Alsace",
+       "url": "https://www.lezard-graphique.com/",
+       "tags": [
+        "Serigraphie Alsace"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "AR_VR",
+     "title": "AR / VR",
+     "links": [
+      {
+       "title": "Artivive outil affiche interactive",
+       "url": "https://artivive.com/",
+       "tags": [
+        "outil affiche interactive"
+       ]
+      },
+      {
+       "title": "Tuto - How to Teleport in VR & Oculus",
+       "url": "https://www.youtube.com/watch?v=r1kF0PhwQ8E",
+       "tags": []
+      },
+      {
+       "title": "Tuto - Unity VR Oculus GO",
+       "url": "https://www.youtube.com/watch?v=VEzJaDuzx1g",
+       "tags": []
+      }
+     ]
+    },
+    {
+     "id": "Couleurs",
+     "title": "Couleurs",
+     "links": [
+      {
+       "title": "Adobe color",
+       "url": "https://color.adobe.com/fr/create",
+       "tags": []
+      },
+      {
+       "title": "Color sinspo",
+       "url": "https://colorsinspo.com/",
+       "tags": []
+      },
+      {
+       "title": "Coolors",
+       "url": "https://coolors.co/344966-b4cded-221e22-f0f4ef-bfcc94",
+       "tags": []
+      }
+     ]
+    },
+    {
+     "id": "Web_&_CMS_-_Visual_Composeur",
+     "title": "Web & CMS - Visual composer",
+     "links": [
+      {
+       "title": "Squarespace CMS Book",
+       "url": "https://fr.squarespace.com/",
+       "tags": [
+        "CMS Book"
+       ]
+      },
+      {
+       "title": "Wix CMS builder",
+       "url": "https://fr.wix.com/",
+       "tags": [
+        "CMS builder"
+       ]
+      },
+      {
+       "title": "Kirby CMS Book",
+       "url": "https://getkirby.com/",
+       "tags": [
+        "CMS Book"
+       ]
+      },
+      {
+       "title": "Bootstrap Themes Builder",
+       "url": "https://themes.getbootstrap.com/",
+       "tags": [
+        "Themes Builder"
+       ]
+      },
+      {
+       "title": "Webflow CMS builder",
+       "url": "https://webflow.com/",
+       "tags": [
+        "CMS builder"
+       ]
+      },
+      {
+       "title": "Lay Theme WordPress builder",
+       "url": "https://laytheme.com/",
+       "tags": [
+        "WordPress builder"
+       ]
+      },
+      {
+       "title": "Standards CMS Book",
+       "url": "https://standards.site/",
+       "tags": [
+        "CMS Book"
+       ]
+      },
+      {
+       "title": "Jimdo CMS bulider",
+       "url": "https://www.jimdo.com/fr/",
+       "tags": [
+        "CMS bulider"
+       ]
+      },
+      {
+       "title": "Bootstrap HTML/CSS template",
+       "url": "https://getbootstrap.com/",
+       "tags": [
+        "HTML/CSS template"
+       ]
+      },
+      {
+       "title": "Code Beautify and Code Formatter For Developers",
+       "url": "https://codebeautify.org/",
+       "tags": []
+      },
+      {
+       "title": "TMS Core 2.0",
+       "url": "https://the-brandidentity.com/store/product/tms-core-20-presentation-template",
+       "tags": []
+      },
+      {
+       "title": "Cargo CMS Book",
+       "url": "https://cargo.site/",
+       "tags": [
+        "CMS Book"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Machine_Deep_Learning_&_AI",
+     "title": "Machine / Deep Learning & AI",
+     "links": [
+      {
+       "title": "PyTorch Librairie machine learning python",
+       "url": "https://pytorch.org/",
+       "tags": [
+        "Librairie machine learning python"
+       ]
+      },
+      {
+       "title": "TensorFlow Machine learing",
+       "url": "https://www.tensorflow.org/?hl=fr",
+       "tags": [
+        "Machine learing"
+       ]
+      },
+      {
+       "title": "Artbreeder Service payant GAN",
+       "url": "https://www.artbreeder.com/",
+       "tags": [
+        "Service payant GAN"
+       ]
+      },
+      {
+       "title": "Runway ML vidéo IA",
+       "url": "https://runwayml.com/",
+       "tags": [
+        "vidéo IA"
+       ]
+      },
+      {
+       "title": "Midjourney IA imae",
+       "url": "https://www.midjourney.com/home/",
+       "tags": [
+        "IA imae"
+       ]
+      },
+      {
+       "title": "DALL·E 3 IA image",
+       "url": "https://openai.com/fr-FR/index/dall-e-3/",
+       "tags": [
+        "IA image"
+       ]
+      },
+      {
+       "title": "Kaedim - 3D",
+       "url": "https://www.kaedim3d.com/",
+       "tags": []
+      },
+      {
+       "title": "AIArtists IA image",
+       "url": "https://aiartists.org/ai-generated-art-tools",
+       "tags": [
+        "IA image"
+       ]
+      },
+      {
+       "title": "Stable diffusion local PC IA image",
+       "url": "https://www.google.com/search?client=firefox-b-d&q=stable+diffusion",
+       "tags": [
+        "local PC IA image"
+       ]
+      },
+      {
+       "title": "Public Prompts",
+       "url": "https://publicprompts.art/",
+       "tags": []
+      },
+      {
+       "title": "Lexica",
+       "url": "https://lexica.art/",
+       "tags": []
+      },
+      {
+       "title": "Midjourney Reference Sheets",
+       "url": "https://docs.google.com/spreadsheets/d/1MsX0NYYqhv4ZhZ7-50cXH1gvYE2FKLixLBvAkI40ha0/edit#gid=1382021670",
+       "tags": []
+      },
+      {
+       "title": "Stability AI",
+       "url": "https://beta.dreamstudio.ai/generate",
+       "tags": []
+      },
+      {
+       "title": "Lose the Very",
+       "url": "https://www.losethevery.com/",
+       "tags": []
+      },
+      {
+       "title": "DiffusionBee Stable Diffusion for MACOS",
+       "url": "https://diffusionbee.com/",
+       "tags": [
+        "Stable Diffusion for MACOS"
+       ]
+      },
+      {
+       "title": "Microsoft Designer IA image",
+       "url": "https://www.bing.com/images/create",
+       "tags": [
+        "IA image"
+       ]
+      },
+      {
+       "title": "TripoSR 3D IA",
+       "url": "https://stability.ai/news/triposr-3d-generation",
+       "tags": [
+        "3D IA"
+       ]
+      },
+      {
+       "title": "Galileo AI UX UI IA",
+       "url": "https://www.usegalileo.ai/explore",
+       "tags": [
+        "UX UI IA"
+       ]
+      },
+      {
+       "title": "Jasper Son IA",
+       "url": "https://www.jasper.ai/",
+       "tags": [
+        "Son IA"
+       ]
+      },
+      {
+       "title": "AI CAD 3D IA",
+       "url": "https://zoo.dev/text-to-cad",
+       "tags": [
+        "3D IA"
+       ]
+      },
+      {
+       "title": "Tripo AI 3D IA",
+       "url": "https://www.tripo3d.ai/",
+       "tags": [
+        "3D IA"
+       ]
+      },
+      {
+       "title": "Focal vidéo IA",
+       "url": "https://focalml.com/",
+       "tags": [
+        "vidéo IA"
+       ]
+      },
+      {
+       "title": "Suno",
+       "url": "https://suno.com/home",
+       "tags": []
+      },
+      {
+       "title": "Civitai: Lora image IA",
+       "url": "https://civitai.com/",
+       "tags": [
+        "image IA"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Vidéo",
+     "title": "Vidéo",
+     "links": [
+      {
+       "title": "FFmpeg Traitement de flux audio ou vidéo",
+       "url": "https://www.ffmpeg.org/",
+       "tags": [
+        "Traitement de flux audio ou vidéo"
+       ]
+      },
+      {
+       "title": "HandBrake Open Source Video Transcoder",
+       "url": "https://handbrake.fr/",
+       "tags": [
+        "Open Source Video Transcoder"
+       ]
+      },
+      {
+       "title": "Clipchamp Montage sur navigateur",
+       "url": "https://clipchamp.com/en/unsupported-browser/",
+       "tags": [
+        "Montage sur navigateur"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Crypto_Crypto_Art_NFT",
+     "title": "Crypto - Crypto Art - NFTe",
+     "links": [
+      {
+       "title": "Rarible NTF",
+       "url": "https://rarible.com/",
+       "tags": [
+        "NTF"
+       ]
+      },
+      {
+       "title": "SuperRare NTF",
+       "url": "https://superrare.co/",
+       "tags": [
+        "NTF"
+       ]
+      },
+      {
+       "title": "Larva Labs NTF",
+       "url": "https://www.larvalabs.com/",
+       "tags": [
+        "NTF"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Outils_image",
+     "title": "Outils image",
+     "links": [
+      {
+       "title": "Icon8 AI Image Upscaler",
+       "url": "https://icons8.com/upscaler",
+       "tags": [
+        "AI Image Upscaler"
+       ]
+      },
+      {
+       "title": "Remove.bg Supprimez l'arrière-plan d'une image",
+       "url": "https://www.remove.bg/fr/upload",
+       "tags": [
+        "Supprimez l'arrière-plan d'une image"
+       ]
+      },
+      {
+       "title": "Textturing",
+       "url": "http://ivan-murit.fr/works.php?w=texturing&p=download.htm",
+       "tags": []
+      },
+      {
+       "title": "Vvvv Vsual live-programming environment",
+       "url": "https://vvvv.org/",
+       "tags": [
+        "Vsual live-programming environment"
+       ]
+      },
+      {
+       "title": "oTranscribe speech to text",
+       "url": "https://otranscribe.com/",
+       "tags": [
+        "speech to text"
+       ]
+      },
+      {
+       "title": "Stochaster - Tram",
+       "url": "http://www.stochaster.org/",
+       "tags": []
+      },
+      {
+       "title": "PhotoMosh - Glitch générator",
+       "url": "https://photomosh.com/",
+       "tags": [
+        "Glitch générator"
+       ]
+      },
+      {
+       "title": "Remove Bg",
+       "url": "https://removal.ai/?utm_source=bdmtools&utm_medium=siteweb&utm_campaign=removal-ai",
+       "tags": []
+      },
+      {
+       "title": "XnConvert Conversion d'images en lot",
+       "url": "https://www.xnview.com/fr/xnconvert/#downloads",
+       "tags": [
+        "Conversion d'images en lot"
+       ]
+      },
+      {
+       "title": "Photopea Online Photo Editor,copie de photoshop",
+       "url": "https://www.photopea.com/",
+       "tags": [
+        "Online Photo Editor",
+        "copie de photoshop"
+       ]
+      },
+      {
+       "title": "Piskel Pixel art web editor",
+       "url": "https://www.piskelapp.com/",
+       "tags": [
+        "Pixel art web editor"
+       ]
+      },
+      {
+       "title": "Affinity Alternative Adobe CC",
+       "url": "https://affinity.serif.com/fr/",
+       "tags": [
+        "Alternative Adobe CC"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Mockup",
+     "title": "Mockup",
+     "links": [
+      {
+       "title": "Mockup Maison",
+       "url": "https://www.mockup.maison/",
+       "tags": []
+      },
+      {
+       "title": "the templates",
+       "url": "https://the-templates.com/collections/all",
+       "tags": []
+      },
+      {
+       "title": "unblast",
+       "url": "https://unblast.com/mockups/",
+       "tags": []
+      },
+      {
+       "title": "Supply Family",
+       "url": "https://supply.family/",
+       "tags": []
+      },
+      {
+       "title": "Posters & Pictures Archives",
+       "url": "https://www.mockupworld.co/free/category/posters-pictures/",
+       "tags": []
+      },
+      {
+       "title": "The Best Free Mockups",
+       "url": "https://mockuptree.com/",
+       "tags": []
+      },
+      {
+       "title": "kipet",
+       "url": "https://kipet.gumroad.com/",
+       "tags": []
+      },
+      {
+       "title": "Art Directed Mockups",
+       "url": "https://artdirected.design/",
+       "tags": []
+      },
+      {
+       "title": "The Pangram Pangram",
+       "url": "https://pangrampangram.com/products/fsp?fbclid=PAAaY_oOeAH3zx01uxMJvXJwreiTy13U-TF_bhiBMSbI_3OfEotyCfadcTw-Y_aem_th_ARlJwh_em5K047-ubQEmUfTxAmlNdIrGm6kD1su3rrz007_WNnvn5a0wkljqGF5B3cuPbrjkHJDnkMYZyi90YgWP",
+       "tags": []
+      },
+      {
+       "title": "Mockups Digital Index,gratuit parfois",
+       "url": "https://mockups.digital/creators",
+       "tags": [
+        "Index",
+        "gratuit parfois"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Motion_Design",
+     "title": "Motion Design",
+     "links": [
+      {
+       "title": "space type générator js kinetic tols",
+       "url": "https://spacetypegenerator.com/",
+       "tags": [
+        "js kinetic tols"
+       ]
+      },
+      {
+       "title": "Cavalry Powerful 2D Animation like After",
+       "url": "https://cavalry.scenegroup.co/",
+       "tags": [
+        "Powerful 2D Animation like After"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "Outils_typo",
+     "title": "Outils typo",
+     "links": [
+      {
+       "title": "ModuloFont",
+       "url": "https://f-nt.eu/fr/gallery",
+       "tags": []
+      },
+      {
+       "title": "Prototypo",
+       "url": "https://devvv.prototypo.io/",
+       "tags": []
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
