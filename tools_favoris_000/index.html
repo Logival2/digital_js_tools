@@ -413,7 +413,7 @@ function buildPage() {
     .catch((err) => console.warn("Ressources : version de la page conservée.", err));
 })();`;
   return `<!doctype html>
-<!-- Code by Valentin Maynadié 2025 · liens générés par tools_favoris_000 le ${new Date().toLocaleString("fr-FR")} -->
+<\!-- Code by Valentin Maynadié 2025 · liens générés par tools_favoris_000 le ${new Date().toLocaleString("fr-FR")} -->
 <html lang="fr">
   <head>
     <meta charset="utf-8">
@@ -421,9 +421,9 @@ function buildPage() {
     <link rel="icon" type="image/png" href="images/xxxxxxx.png">
     <meta name="description" content="Enseignement Post Diplôme Digital Média Lab">
     <meta name="keywords" content="médias numériques, Design Graphic, Communication visuelle, technologies créatives, Art Numérique, Motion Design, CGI, EPSAA, Enseignement Post Diplôme Digital Média Lab">
-    <!-- Config tags -->
+    <\!-- Config tags -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- styles & JS -->
+    <\!-- styles & JS -->
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -445,7 +445,7 @@ function buildPage() {
         <div id="marge_index" class="bloc_gauche">
           <h2>INDEX</h2>
         </div>
-        <!-- sommaire : régénéré par le script ; display: contents = sans effet sur la mise en page -->
+        <\!-- sommaire : régénéré par le script ; display: contents = sans effet sur la mise en page -->
         <div id="ressources-index" style="display: contents">
 ${index}
         </div>
@@ -455,7 +455,7 @@ ${liste}
       </div>
     </div>
     <script>${script}
-    </script>
+    <\/script>
   </body>
 </html>
 `;
