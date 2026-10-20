@@ -6,7 +6,7 @@
 <title>Favoris → Ressources</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -14,56 +14,67 @@
 <!-- Panneau latéral : les étapes, de haut en bas -->
 <aside id="panel">
 
-  <!-- 1. Export Firefox : lu dans le navigateur, jamais envoyé (toute la section accepte le glisser-déposer) -->
-  <div class="section" id="dropZone">
-    <h2><span class="step">1</span>Export Firefox</h2>
-    <button id="fileBtn" type="button" class="link">Glisser ou choisir le fichier .html</button>
-    <input id="fileInput" type="file" accept=".html,text/html" hidden />
-    <p id="fileName" class="hint">Firefox › Bibliothèque › Exporter au format HTML</p>
+  <!-- 1. Export Firefox : lu dans le navigateur, jamais envoyé -->
+  <div class="section">
+    <h2><span class="step">1</span> Export Firefox</h2>
+    <div id="dropZone">
+      <p>Glisse ici l'export de tes favoris (.html)</p>
+      <button id="fileBtn" type="button">Choisir le fichier</button>
+      <input id="fileInput" type="file" accept=".html,text/html" hidden />
+    </div>
+    <p id="fileName" class="hint">Firefox › Bibliothèque › Importation et sauvegarde › Exporter les marque-pages au format HTML.</p>
   </div>
 
   <!-- 2. Les deux dossiers gardés : tout le reste des favoris est ignoré -->
   <div class="section">
-    <h2><span class="step">2</span>Dossiers</h2>
-    <div class="field"><label for="inspiSelect">Inspirations</label><select id="inspiSelect" disabled><option>—</option></select></div>
-    <div class="field"><label for="ressSelect">Ressources & Outils</label><select id="ressSelect" disabled><option>—</option></select></div>
-    <p class="hint">Sous-dossiers = catégories, étiquettes = tags.</p>
+    <h2><span class="step">2</span> Dossiers</h2>
+    <div class="row">
+      <label for="inspiSelect">Inspirations</label>
+      <select id="inspiSelect" disabled><option>—</option></select>
+    </div>
+    <div class="row">
+      <label for="ressSelect">Ressources & Outils</label>
+      <select id="ressSelect" disabled><option>—</option></select>
+    </div>
+    <p class="hint">Chaque sous-dossier devient une catégorie, les étiquettes Firefox deviennent les tags. Seuls ces deux dossiers sont lus.</p>
   </div>
 
   <!-- 3. Token GitHub : chiffré dans ce navigateur avec ton mot de passe -->
   <div class="section">
-    <h2><span class="step">3</span>Token GitHub</h2>
+    <h2><span class="step">3</span> Token GitHub</h2>
     <div id="tokenNew">
-      <div class="field"><label for="tokenInput">Token</label><input id="tokenInput" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" /></div>
+      <div class="field"><label for="tokenInput">Token (fine-grained)</label><input id="tokenInput" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" /></div>
       <div class="field"><label for="newPassInput">Mot de passe</label><input id="newPassInput" type="password" autocomplete="new-password" /></div>
       <div class="field"><label for="newPass2Input">Confirmer</label><input id="newPass2Input" type="password" autocomplete="new-password" /></div>
-      <button id="saveTokenBtn" type="button" class="link">Chiffrer et enregistrer</button>
+      <button id="saveTokenBtn" type="button">Chiffrer et enregistrer</button>
     </div>
     <div id="tokenSaved" hidden>
-      <p class="ok">Enregistré, chiffré dans ce navigateur.</p>
-      <button id="forgetTokenBtn" type="button" class="link">Oublier le token</button>
+      <p class="ok">Token enregistré, chiffré (AES-GCM).</p>
+      <button id="forgetTokenBtn" type="button">Oublier le token</button>
     </div>
+    <p class="hint">Le token n'est jamais écrit en clair : seul un bloc chiffré reste dans ce navigateur. Le mot de passe n'est stocké nulle part.</p>
   </div>
 
-  <!-- 4. Envoi du ressources.json dans le dépôt : la seule action principale -->
+  <!-- 4. Envoi du ressources.json dans le dépôt -->
   <div class="section">
-    <h2><span class="step">4</span>Envoi</h2>
+    <h2><span class="step">4</span> Envoi</h2>
     <div class="field"><label for="passInput">Mot de passe</label><input id="passInput" type="password" autocomplete="current-password" /></div>
     <button id="sendBtn" type="button" class="primary" disabled>Envoyer ressources.json</button>
-    <p id="sendStatus" class="hint">Vers tools_favoris_000/data/</p>
+    <p id="sendStatus" class="hint">Fichier envoyé : tools_favoris_000/data/ressources.json</p>
   </div>
 
   <!-- Fichiers à télécharger : JSON de secours et page HTML complète pour OVH -->
   <div class="section">
     <h2>Télécharger</h2>
-    <div class="field"><label for="pageNameInput">Nom de la page</label><input id="pageNameInput" type="text" value="ressources_001.html" spellcheck="false" /></div>
     <div class="btnRow">
-      <button id="dlPageBtn" type="button" class="link" disabled>Page HTML</button>
-      <button id="dlJsonBtn" type="button" class="link" disabled>ressources.json</button>
+      <button id="dlJsonBtn" type="button" disabled>ressources.json</button>
+      <button id="dlPageBtn" type="button" disabled>Page HTML</button>
     </div>
+    <div class="field"><label for="pageNameInput">Nom de la page</label><input id="pageNameInput" type="text" value="ressources_001.html" spellcheck="false" /></div>
+    <p class="hint">La page HTML contient les liens écrits en dur (lus par Google) et le script qui les met à jour depuis GitHub.</p>
   </div>
 
-  <button id="privacyBtn" type="button" class="link">Confidentialité · Sécurité</button>
+  <button id="privacyBtn" type="button">Confidentialité · Sécurité</button>
 </aside>
 
 <dialog id="privacyDialog" class="dialog" aria-labelledby="privacyTitle">
@@ -86,7 +97,7 @@
 <!-- Zone principale : aperçu, dans la structure de la page ressources -->
 <main id="main">
   <header id="hero">
-    <h1>Favoris<br />→ Ressources</h1>
+    <h1>Favoris → Ressources</h1>
     <div id="stats">
       <div><span id="statLinks">—</span><small>liens</small></div>
       <div><span id="statCats">—</span><small>catégories</small></div>

@@ -33,195 +33,207 @@ body {
   flex-direction: row;
 }
 
-/* ── Panneau latéral : minimaliste, sans cadres — l'espace sépare les étapes ── */
+/* ── Panneau latéral : les étapes ── */
 #panel {
   flex: 0 0 18vw;
   width: 18vw;
   min-width: 260px;
   margin: 8px;
-  padding: 20px 18px 16px;
+  border: 1px solid #000;
   background: #fff;
   display: flex;
   flex-direction: column;
-  gap: 22px;
   font-size: 0.85em;
-  line-height: 1.4;
-  text-transform: none;
   overflow-y: auto;
 }
 
-.section { padding: 0; }
+.section {
+  padding: 8px;
+  border-top: 1px solid #000;
+}
+.section:first-child { border-top: none; }
 .section h2 {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin: 0 0 8px;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
   font-size: 1em;
   font-weight: 500;
-  text-transform: uppercase;
 }
-/* numéro d'étape : simple chiffre gris */
-.step { color: #767676; }
-
-/* champ : libellé gris au-dessus, saisie soulignée */
-.field { margin: 0 0 8px; }
-.field label {
-  display: block;
-  margin-bottom: 2px;
-  color: #6b6b6b;
-}
-.field input,
-.field select {
-  display: block;
-  width: 100%;
-  padding: 4px 0;
-  font: inherit;
-  border: none;
-  border-bottom: 1px solid #000;
-  border-radius: 0;
-  background: transparent;
-  color: #000;
-  outline: none;
-}
-.field select { cursor: pointer; }
-.field input:focus,
-.field select:focus { border-bottom-width: 2px; padding-bottom: 3px; }
-.field select:disabled { color: #767676; border-bottom-color: #c4c4c4; cursor: default; }
-::placeholder { color: #767676; }
-
-#panel button {
-  font: inherit;
-  border: none;
-  border-radius: 0;
-  background: none;
-  color: #000;
-  cursor: pointer;
-}
-/* action secondaire : un lien souligné */
-#panel button.link {
-  display: block;
-  padding: 2px 0;
-  text-align: left;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-#panel button.link:hover:not(:disabled) { text-decoration-thickness: 2px; }
-/* action principale : un seul bloc noir */
-#panel button.primary {
-  width: 100%;
-  margin-top: 4px;
-  padding: 9px 10px;
-  text-align: left;
+/* numéro d'étape : carré noir */
+.step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
   background: #000;
   color: #fff;
 }
-#panel button.primary:hover:not(:disabled) { background: #00ff26; color: #000; }
-#panel button:focus-visible { outline: 2px solid #000; outline-offset: 2px; }
-button:disabled { opacity: .35; cursor: default; }
 
-.btnRow { display: flex; gap: 18px; }
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 3px 0;
+}
+.row label {
+  flex: 0 0 42%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row select { flex: 1; min-width: 0; }
+
+/* champ : libellé au-dessus, saisie pleine largeur */
+.field { margin: 4px 0; }
+.field label { display: block; margin-bottom: 2px; }
+.field input {
+  width: 100%;
+  padding: 4px 6px;
+  font: inherit;
+  text-transform: none;
+  border: 1px solid #000;
+  border-radius: 0;
+  background: #fff;
+  color: #000;
+}
+
+select {
+  padding: 2px 4px;
+  font: inherit;
+  text-transform: none;
+  border: 1px solid #000;
+  border-radius: 0;
+  background: #fff;
+  color: #000;
+}
+
+#panel button {
+  width: 100%;
+  margin-top: 4px;
+  padding: 5px 6px;
+  font: inherit;
+  border: 1px solid #000;
+  border-radius: 0;
+  background: #fff;
+  color: #000;
+  cursor: pointer;
+}
+#panel button:hover:not(:disabled) { background: #000; color: #fff; }
+#panel button.primary { background: #000; color: #fff; }
+#panel button.primary:hover:not(:disabled) { background: #00ff26; color: #000; }
+button:disabled { opacity: .4; cursor: default; }
+
+.btnRow { display: flex; gap: 4px; }
+.btnRow button { flex: 1; }
 
 .hint {
-  margin: 6px 0 0;
-  color: #6b6b6b;
+  margin: 4px 0 0;
+  font-size: 1em;
+  text-transform: none;
+  color: #555;
 }
 .hint a { color: #000; }
-.ok { margin: 0 0 4px; }
+.ok { margin: 0; }
 
-/* toute l'étape 1 accepte le fichier glissé */
-#dropZone { transition: background-color .15s ease-out; }
-#dropZone.over { background: #00ff26; outline: 8px solid #00ff26; }
+/* zone de dépôt du fichier */
+#dropZone {
+  padding: 10px 8px;
+  border: 1px dashed #000;
+  text-align: center;
+}
+#dropZone p { margin: 0 0 4px; text-transform: none; }
+#dropZone.over { background: #00ff26; }
 
-#privacyBtn { margin-top: auto; color: #6b6b6b !important; }
+#privacyBtn {
+  width: auto !important;
+  margin: auto 8px 8px !important;
+  padding: 0 !important;
+  font-size: 1em !important;
+  text-align: left;
+  text-decoration: underline;
+  border: none !important;
+  background: none !important;
+  color: #000 !important;
+}
 
-/* ── Zone principale : typographie forte, grille ── */
+/* ── Zone principale : aperçu minimaliste — Roboto Mono Regular, deux tailles seulement ── */
 #main {
+  --t1: clamp(22px, 1.9vw, 30px);  /* niveau 1 : titre, parties */
+  --t2: 13px;                      /* niveau 2 : tout le reste */
   flex: 1;
   min-width: 0;
   overflow-y: auto;
-  padding: 8px 8px 8px 0;
+  margin: 8px 8px 8px 0;
+  padding: 20px 24px 12px;
   display: flex;
   flex-direction: column;
+  background: #fff;
+  font-size: var(--t2);
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 #hero {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 8px;
-  align-items: end;
-  padding: 16px;
-  border: 1px solid #000;
-  background: #00ff26;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #000;
 }
 #hero h1 {
   margin: 0;
-  font-family: "HN Black Extended", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: clamp(36px, 5.5vw, 96px);
-  line-height: 0.9;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
+  font-size: var(--t1);
+  font-weight: 400;
+  line-height: 1.1;
 }
-#stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-#stats div {
-  display: flex;
-  flex-direction: column;
-  border-top: 1px solid #000;
-  padding-top: 4px;
-}
-#stats span {
-  font-family: "HN Black Extended", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: clamp(20px, 2.4vw, 40px);
-  line-height: 1;
-  overflow-wrap: anywhere;
-}
-#stats small { font-size: 0.75em; }
+#stats { display: flex; gap: 24px; }
+#stats div { display: flex; gap: 6px; }
+#stats small { font-size: inherit; color: #6b6b6b; }
 
 /* aperçu : même structure que la page ressources (sommaire à gauche, liste à droite) */
 #preview {
   display: grid;
-  grid-template-columns: minmax(200px, 1fr) 3fr;
-  gap: 8px;
-  margin-top: 8px;
+  grid-template-columns: minmax(180px, 1fr) 3fr;
+  gap: 32px;
+  margin-top: 24px;
   align-items: start;
 }
 #preview .col1 { position: sticky; top: 0; }
 #preview .tableau {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 8px;
-  background: #fff;
-  border: 1px solid #000;
-  font-size: 0.85em;
+  margin-bottom: 32px;
 }
 #preview caption {
   caption-side: top;
   text-align: left;
-  padding: 10px 8px;
-  font-family: "HN Black Extended", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 1.8em;
-  background: #000;
-  color: #fff;
+  padding: 0 0 12px;
+  font-size: var(--t1);
+  line-height: 1.1;
 }
 #preview th {
   text-align: left;
-  padding: 6px 8px;
-  background: #00ff26;
+  font-weight: 400;
+  padding: 18px 0 6px;
+  text-transform: uppercase;
   border-bottom: 1px solid #000;
 }
+#preview .col1 th { padding-top: 0; }
 #preview td {
-  padding: 3px 8px;
-  border-bottom: 1px solid #e3e3e3;
-  text-transform: none;
+  padding: 3px 12px 3px 0;
   vertical-align: top;
 }
-#preview td:nth-child(2) { color: #555; width: 45%; }
-#preview tr.spacer td { padding: 0; border: none; height: 6px; }
+#preview td:nth-child(2) { color: #6b6b6b; width: 45%; }
+#preview .col1 td { padding: 2px 0; }
+#preview tr.spacer td { padding: 0; height: 0; }
 #preview a { color: #000; text-decoration: none; }
-#preview a:hover { text-decoration: underline; }
+#preview a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 #note {
   margin-top: auto;
