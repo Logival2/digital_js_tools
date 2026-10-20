@@ -70,7 +70,7 @@
       <button id="dlJsonBtn" type="button" disabled>ressources.json</button>
       <button id="dlPageBtn" type="button" disabled>Page HTML</button>
     </div>
-    <div class="field"><label for="pageNameInput">Nom de la page</label><input id="pageNameInput" type="text" value="ressources_001.html" spellcheck="false" /></div>
+    <div class="field"><label for="pageNameInput">Nom de la page</label><input id="pageNameInput" type="text" value="ressources.html" spellcheck="false" /></div>
     <p class="hint">La page HTML contient les liens écrits en dur (lus par Google) et le script qui les met à jour depuis GitHub.</p>
   </div>
 
@@ -462,7 +462,7 @@ ${liste}
 }
 
 $("dlPageBtn").addEventListener("click", () => {
-  const name = $("pageNameInput").value.trim() || "ressources_001.html";
+  const name = $("pageNameInput").value.trim() || "ressources.html";
   download(buildPage(), name, "text/html");
 });
 
