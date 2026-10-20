@@ -33,130 +33,106 @@ body {
   flex-direction: row;
 }
 
-/* ── Panneau latéral : les étapes ── */
+/* ── Panneau latéral : minimaliste, sans cadres — l'espace sépare les étapes ── */
 #panel {
   flex: 0 0 18vw;
   width: 18vw;
   min-width: 260px;
   margin: 8px;
-  border: 1px solid #000;
+  padding: 20px 18px 16px;
   background: #fff;
   display: flex;
   flex-direction: column;
+  gap: 22px;
   font-size: 0.85em;
+  line-height: 1.4;
+  text-transform: none;
   overflow-y: auto;
 }
 
-.section {
-  padding: 8px;
-  border-top: 1px solid #000;
-}
-.section:first-child { border-top: none; }
+.section { padding: 0; }
 .section h2 {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 6px;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 8px;
   font-size: 1em;
   font-weight: 500;
+  text-transform: uppercase;
 }
-/* numéro d'étape : carré noir */
-.step {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  background: #000;
-  color: #fff;
-}
+/* numéro d'étape : simple chiffre gris */
+.step { color: #767676; }
 
-.row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 3px 0;
+/* champ : libellé gris au-dessus, saisie soulignée */
+.field { margin: 0 0 8px; }
+.field label {
+  display: block;
+  margin-bottom: 2px;
+  color: #6b6b6b;
 }
-.row label {
-  flex: 0 0 42%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.row select { flex: 1; min-width: 0; }
-
-/* champ : libellé au-dessus, saisie pleine largeur */
-.field { margin: 4px 0; }
-.field label { display: block; margin-bottom: 2px; }
-.field input {
+.field input,
+.field select {
+  display: block;
   width: 100%;
-  padding: 4px 6px;
+  padding: 4px 0;
   font: inherit;
-  text-transform: none;
-  border: 1px solid #000;
+  border: none;
+  border-bottom: 1px solid #000;
   border-radius: 0;
-  background: #fff;
+  background: transparent;
   color: #000;
+  outline: none;
 }
-
-select {
-  padding: 2px 4px;
-  font: inherit;
-  text-transform: none;
-  border: 1px solid #000;
-  border-radius: 0;
-  background: #fff;
-  color: #000;
-}
+.field select { cursor: pointer; }
+.field input:focus,
+.field select:focus { border-bottom-width: 2px; padding-bottom: 3px; }
+.field select:disabled { color: #767676; border-bottom-color: #c4c4c4; cursor: default; }
+::placeholder { color: #767676; }
 
 #panel button {
-  width: 100%;
-  margin-top: 4px;
-  padding: 5px 6px;
   font: inherit;
-  border: 1px solid #000;
+  border: none;
   border-radius: 0;
-  background: #fff;
+  background: none;
   color: #000;
   cursor: pointer;
 }
-#panel button:hover:not(:disabled) { background: #000; color: #fff; }
-#panel button.primary { background: #000; color: #fff; }
-#panel button.primary:hover:not(:disabled) { background: #00ff26; color: #000; }
-button:disabled { opacity: .4; cursor: default; }
-
-.btnRow { display: flex; gap: 4px; }
-.btnRow button { flex: 1; }
-
-.hint {
-  margin: 4px 0 0;
-  font-size: 1em;
-  text-transform: none;
-  color: #555;
-}
-.hint a { color: #000; }
-.ok { margin: 0; }
-
-/* zone de dépôt du fichier */
-#dropZone {
-  padding: 10px 8px;
-  border: 1px dashed #000;
-  text-align: center;
-}
-#dropZone p { margin: 0 0 4px; text-transform: none; }
-#dropZone.over { background: #00ff26; }
-
-#privacyBtn {
-  width: auto !important;
-  margin: auto 8px 8px !important;
-  padding: 0 !important;
-  font-size: 1em !important;
+/* action secondaire : un lien souligné */
+#panel button.link {
+  display: block;
+  padding: 2px 0;
   text-align: left;
   text-decoration: underline;
-  border: none !important;
-  background: none !important;
-  color: #000 !important;
+  text-underline-offset: 3px;
 }
+#panel button.link:hover:not(:disabled) { text-decoration-thickness: 2px; }
+/* action principale : un seul bloc noir */
+#panel button.primary {
+  width: 100%;
+  margin-top: 4px;
+  padding: 9px 10px;
+  text-align: left;
+  background: #000;
+  color: #fff;
+}
+#panel button.primary:hover:not(:disabled) { background: #00ff26; color: #000; }
+#panel button:focus-visible { outline: 2px solid #000; outline-offset: 2px; }
+button:disabled { opacity: .35; cursor: default; }
+
+.btnRow { display: flex; gap: 18px; }
+
+.hint {
+  margin: 6px 0 0;
+  color: #6b6b6b;
+}
+.hint a { color: #000; }
+.ok { margin: 0 0 4px; }
+
+/* toute l'étape 1 accepte le fichier glissé */
+#dropZone { transition: background-color .15s ease-out; }
+#dropZone.over { background: #00ff26; outline: 8px solid #00ff26; }
+
+#privacyBtn { margin-top: auto; color: #6b6b6b !important; }
 
 /* ── Zone principale : typographie forte, grille ── */
 #main {
