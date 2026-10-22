@@ -1,12 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Gradient body</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&display=swap" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -16,146 +13,155 @@
 <!-- Premier plan : le blob tracking (boîtes, étiquettes, liens) -->
 <canvas id="overlay"></canvas>
 
-<!-- Panneau flottant à gauche (paramètres) -->
+<!-- Panneau flottant à gauche, construit comme une fiche produit -->
 <aside id="panel">
 
+  <!-- En-tête : catégorie, badge, numéro de l'outil -->
+  <header id="panelHead">
+    <p class="eyebrow"><span>Digital tool</span><span class="badge">Experimental</span></p>
+    <!-- Titre en MingLiU avec faux gras arrondi (comme l'outil 3D kinetic typo) : SVG pour arrondir les jointures du contour -->
+    <h1 id="title">
+      <span class="visuallyHidden">Gradient body</span>
+      <svg aria-hidden="true"><text x="0" y="0.8em">GRAD<tspan dx="-0.06em">I</tspan><tspan dx="-0.06em">ENT</tspan></text><text x="0" y="1.68em">BODY</text></svg>
+    </h1>
+  </header>
+
+  <!-- Action principale : la source -->
+  <div id="cta">
+    <div id="bar">
+      <button id="startBtn" class="primary" type="button"><span>Start camera</span><span aria-hidden="true">→</span></button>
+      <button id="stopBtn" class="primary" type="button" hidden><span>Stop</span><span aria-hidden="true">■</span></button>
+    </div>
+    <div id="fileRow">
+      <button id="fileBtn" class="block" type="button"><span>Load an MP4 video</span></button>
+      <input id="fileInput" type="file" accept="video/mp4,video/*" hidden />
+    </div>
+    <!-- messages de chargement / erreur seulement, caché quand il n'y a rien à dire -->
+    <p id="readout"><span class="status" id="status"></span></p>
+  </div>
+
   <!-- Caméra : détourage du corps en direct (MediaPipe) -->
-  <div class="section">
-    <h2>Source</h2>
-    <label class="check"><input id="mirrorToggle" type="checkbox" checked /> Miroir</label>
-    <p class="hint">Webcam ou vidéo MP4. Sans source, une silhouette de démonstration bouge à l'écran.</p>
-  </div>
-  <div id="bar">
-    <button id="startBtn" type="button">Démarrer la caméra</button>
-    <button id="stopBtn" type="button" hidden>Stop</button>
-    <span id="readout"><span class="status" id="status">Démo</span></span>
-  </div>
-  <div id="fileRow">
-    <button id="fileBtn" type="button">Charger une vidéo MP4</button>
-    <input id="fileInput" type="file" accept="video/mp4,video/*" hidden />
-  </div>
-  <div id="preview" class="previewBox mirror">
-    <video id="cam" playsinline muted></video>
-  </div>
+  <details class="section" open>
+    <summary>Source</summary>
+    <div class="sectionBody">
+      <div id="preview" class="previewBox mirror">
+        <video id="cam" playsinline muted></video>
+      </div>
+      <label class="check"><input id="mirrorToggle" type="checkbox" checked /> Mirror</label>
+      <p class="hint">Webcam or MP4 video. Without a source, a demo silhouette moves on screen.</p>
+    </div>
+  </details>
 
   <!-- Détourage : ce que MediaPipe voit, après seuil (blanc = corps) -->
-  <div class="section">
-    <h2>Détourage</h2>
-    <div id="maskPreview" class="previewBox mirror">
-      <canvas id="maskCanvas" width="320" height="180"></canvas>
+  <details class="section">
+    <summary>Cutout</summary>
+    <div class="sectionBody">
+      <div id="maskPreview" class="previewBox mirror">
+        <canvas id="maskCanvas" width="320" height="180"></canvas>
+      </div>
+      <div class="row"><label for="thresholdSlider" title="Higher = only confident areas count as body">Threshold</label><input id="thresholdSlider" type="range" min="0.05" max="0.95" step="0.01" value="0.5" /></div>
+      <div class="row"><label for="softSlider" title="Sharp or soft edge">Softness</label><input id="softSlider" type="range" min="0" max="0.5" step="0.01" value="0.15" /></div>
     </div>
-    <div class="row"><label for="thresholdSlider" title="Plus haut = seules les zones sûres comptent comme corps">Seuil</label><input id="thresholdSlider" type="range" min="0.05" max="0.95" step="0.01" value="0.5" /></div>
-    <div class="row"><label for="softSlider" title="Bord net ou progressif">Douceur</label><input id="softSlider" type="range" min="0" max="0.5" step="0.01" value="0.15" /></div>
-  </div>
+  </details>
 
   <!-- Blob tracking : taches repérées dans l'image RVB de la source, suivies d'une image à l'autre -->
-  <div class="section">
-    <h2>Blob tracking</h2>
-    <label class="check"><input id="blobToggle" type="checkbox" checked /> Afficher</label>
-    <div id="blobPreview" class="previewBox mirror">
-      <canvas id="blobCanvas" width="160" height="90"></canvas>
+  <details class="section">
+    <summary>Blob tracking</summary>
+    <div class="sectionBody">
+      <label class="check"><input id="blobToggle" type="checkbox" checked /> Show</label>
+      <div id="blobPreview" class="previewBox mirror">
+        <canvas id="blobCanvas" width="160" height="90"></canvas>
+      </div>
+      <div class="row">
+        <label for="blobChannelSelect" title="What makes a blob in the image">Channel</label>
+        <select id="blobChannelSelect" class="chips">
+          <option value="luma">Brightness</option>
+          <option value="dark">Dark</option>
+          <option value="r">Red</option>
+          <option value="g">Green</option>
+          <option value="b">Blue</option>
+          <option value="motion">Motion</option>
+        </select>
+      </div>
+      <div class="row"><label for="blobThresholdSlider" title="Higher = only the strongest areas count">Threshold</label><input id="blobThresholdSlider" type="range" min="0.02" max="0.98" step="0.01" value="0.6" /></div>
+      <div class="row"><label for="blobMinSlider" title="Minimum blob size (share of the image)">Min size</label><input id="blobMinSlider" type="range" min="0.0005" max="0.05" step="0.0005" value="0.004" /></div>
+      <div class="row"><label for="blobMaxSlider" title="Number of tracked blobs, largest first">Max count</label><input id="blobMaxSlider" type="range" min="1" max="30" step="1" value="12" /></div>
+      <label class="check"><input id="blobBoxToggle" type="checkbox" checked /> Boxes</label>
+      <label class="check"><input id="blobLabelToggle" type="checkbox" checked /> Labels</label>
+      <label class="check"><input id="blobLinkToggle" type="checkbox" checked /> Links</label>
+      <label class="check"><input id="blobColorInput" class="swatch" type="color" value="#ffffff" /> Colour</label>
     </div>
-    <div class="row">
-      <label for="blobChannelSelect" title="Ce qui fait une tache dans l'image">Couche</label>
-      <select id="blobChannelSelect">
-        <option value="luma">Luminosité</option>
-        <option value="dark">Sombre</option>
-        <option value="r">Rouge</option>
-        <option value="g">Vert</option>
-        <option value="b">Bleu</option>
-        <option value="motion">Mouvement</option>
-      </select>
-    </div>
-    <div class="row"><label for="blobThresholdSlider" title="Plus haut = seules les zones les plus marquées comptent">Seuil</label><input id="blobThresholdSlider" type="range" min="0.02" max="0.98" step="0.01" value="0.6" /></div>
-    <div class="row"><label for="blobMinSlider" title="Taille minimale d'une tache (part de l'image)">Taille min</label><input id="blobMinSlider" type="range" min="0.0005" max="0.05" step="0.0005" value="0.004" /></div>
-    <div class="row"><label for="blobMaxSlider" title="Nombre de taches suivies, les plus grandes d'abord">Nombre max</label><input id="blobMaxSlider" type="range" min="1" max="30" step="1" value="12" /></div>
-    <label class="check"><input id="blobBoxToggle" type="checkbox" checked /> Boîtes</label>
-    <label class="check"><input id="blobLabelToggle" type="checkbox" checked /> Étiquettes</label>
-    <label class="check"><input id="blobLinkToggle" type="checkbox" checked /> Liens</label>
-    <div class="row"><label for="blobColorInput">Couleur</label><input id="blobColorInput" class="swatch" type="color" value="#ffffff" /></div>
-  </div>
+  </details>
 
   <!-- Aura : la trace du corps qui s'efface, se diffuse et monte -->
-  <div class="section">
-    <h2>Aura</h2>
-    <div class="row"><label for="trailSlider" title="Temps que met la trace à s'effacer (s)">Rémanence</label><input id="trailSlider" type="range" min="0.1" max="8" step="0.05" value="1.6" /></div>
-    <div class="row"><label for="spreadSlider" title="La trace s'étale à chaque image">Diffusion</label><input id="spreadSlider" type="range" min="0" max="3" step="0.01" value="1.2" /></div>
-    <div class="row"><label for="riseSlider" title="La trace monte comme une flamme">Montée</label><input id="riseSlider" type="range" min="-0.3" max="0.3" step="0.005" value="0.03" /></div>
-    <div class="row"><label for="blurSlider" title="Douceur des bords de l'aura">Flou</label><input id="blurSlider" type="range" min="0" max="1" step="0.01" value="0.8" /></div>
-    <div class="row"><label for="haloSlider" title="Grande brume colorée autour de l'aura">Halo</label><input id="haloSlider" type="range" min="0" max="1.5" step="0.01" value="0.55" /></div>
-    <div class="row"><label for="gainSlider" title="Étend les couleurs vers l'extérieur">Intensité</label><input id="gainSlider" type="range" min="0.3" max="3" step="0.01" value="0.95" /></div>
-    <div class="row"><label for="gammaSlider" title="Bandes de couleur plus larges ou plus serrées">Contraste</label><input id="gammaSlider" type="range" min="0.4" max="2.5" step="0.01" value="1.15" /></div>
-  </div>
+  <details class="section" open>
+    <summary>Aura</summary>
+    <div class="sectionBody">
+      <div class="row"><label for="trailSlider" title="Time the trace takes to fade (s)">Persistence</label><input id="trailSlider" data-unit="s" type="range" min="0.1" max="8" step="0.05" value="1.6" /></div>
+      <div class="row"><label for="spreadSlider" title="The trace spreads on every frame">Diffusion</label><input id="spreadSlider" type="range" min="0" max="3" step="0.01" value="1.2" /></div>
+      <div class="row"><label for="riseSlider" title="The trace rises like a flame">Rise</label><input id="riseSlider" type="range" min="-0.3" max="0.3" step="0.005" value="0.03" /></div>
+      <div class="row"><label for="blurSlider" title="Softness of the aura edges">Blur</label><input id="blurSlider" type="range" min="0" max="1" step="0.01" value="0.8" /></div>
+      <div class="row"><label for="haloSlider" title="Wide coloured haze around the aura">Halo</label><input id="haloSlider" type="range" min="0" max="1.5" step="0.01" value="0.55" /></div>
+      <div class="row"><label for="gainSlider" title="Pushes the colours outwards">Intensity</label><input id="gainSlider" type="range" min="0.3" max="3" step="0.01" value="0.95" /></div>
+      <div class="row"><label for="gammaSlider" title="Wider or tighter colour bands">Contrast</label><input id="gammaSlider" type="range" min="0.4" max="2.5" step="0.01" value="1.15" /></div>
+    </div>
+  </details>
 
   <!-- Couleurs : dégradé du fond (0) jusqu'au cœur du corps (1) -->
-  <div class="section">
-    <h2>Couleurs</h2>
-    <div class="row">
-      <label for="presetSelect">Palette</label>
-      <select id="presetSelect">
-        <option value="neon">Néon</option>
-        <option value="thermal">Thermique</option>
-        <option value="nordway" selected>Nordway</option>
-        <option value="mono">Noir et blanc</option>
-      </select>
+  <details class="section" open>
+    <summary>Colours</summary>
+    <div class="sectionBody">
+      <div id="gradientColors">
+        <input type="color" class="gradColor" id="c0" value="#000000" title="Background" aria-label="Background colour" />
+        <input type="color" class="gradColor" id="c1" value="#003b0b" title="Edge" aria-label="Edge colour" />
+        <input type="color" class="gradColor" id="c2" value="#00ff26" title="Middle" aria-label="Middle colour" />
+        <input type="color" class="gradColor" id="c3" value="#c8ffd2" title="Light" aria-label="Light colour" />
+        <input type="color" class="gradColor" id="c4" value="#ffffff" title="Core" aria-label="Core colour" />
+      </div>
+      <div id="gradientPreview" aria-hidden="true"></div>
+      <button id="reverseBtn" class="block" type="button" title="The core becomes the background and vice versa"><span>Swap</span></button>
     </div>
-    <div id="gradientColors">
-      <input type="color" class="gradColor" id="c0" value="#000000" title="Fond" aria-label="Couleur du fond" />
-      <input type="color" class="gradColor" id="c1" value="#003b0b" title="Bord" aria-label="Couleur du bord" />
-      <input type="color" class="gradColor" id="c2" value="#00ff26" title="Milieu" aria-label="Couleur du milieu" />
-      <input type="color" class="gradColor" id="c3" value="#c8ffd2" title="Clair" aria-label="Couleur claire" />
-      <input type="color" class="gradColor" id="c4" value="#ffffff" title="Cœur" aria-label="Couleur du cœur" />
-    </div>
-    <div id="gradientPreview" aria-hidden="true"></div>
-    <div class="btnRow">
-      <button id="reverseBtn" type="button" title="Le cœur devient le fond et inversement">Inverser</button>
-    </div>
-  </div>
+  </details>
 
   <!-- Affichage -->
-  <div class="section">
-    <h2>Affichage</h2>
-    <div class="btnRow">
-      <button id="fullscreenBtn" type="button">Plein écran</button>
-      <button id="hidePanelBtn" type="button">Masquer</button>
+  <details class="section">
+    <summary>Display</summary>
+    <div class="sectionBody">
+      <div class="btnRow">
+        <button id="fullscreenBtn" class="block" type="button"><span>Full screen</span><span class="key" aria-hidden="true">F</span></button>
+        <button id="hidePanelBtn" class="block" type="button"><span>Hide</span><span class="key" aria-hidden="true">H</span></button>
+      </div>
     </div>
-    <p class="hint">Touche H : masquer / afficher le panneau. Touche F : plein écran.</p>
-  </div>
+  </details>
 
-  <button id="resetBtn" type="button">Réinitialiser</button>
-  <button id="privacyBtn" type="button">Confidentialité · RGPD</button>
+  <footer id="panelFooter">
+    <button id="resetBtn" type="button">Reset</button>
+    <button id="privacyBtn" type="button">Privacy · GDPR</button>
+  </footer>
 </aside>
 
-<!-- Au lancement : proposer d'activer la caméra -->
-<dialog id="cameraDialog" class="dialog" aria-labelledby="cameraTitle">
-  <h2 id="cameraTitle">Activer la caméra ?</h2>
-  <p>L'aura suit ta silhouette en direct. La vidéo est analysée uniquement dans ton navigateur :
-  rien n'est enregistré ni envoyé.</p>
-  <div class="dialogActions">
-    <button id="cameraAcceptBtn" type="button">Activer la caméra</button>
-    <button id="cameraLaterBtn" type="button">Continuer sans</button>
+<!-- Notice RGPD : un volet qui sort sur la droite -->
+<dialog id="privacyDialog" class="dialog drawer" aria-labelledby="privacyTitle">
+  <div class="drawerHead">
+    <h2 id="privacyTitle">Privacy · GDPR</h2>
+    <form method="dialog"><button class="close" type="submit" aria-label="Close the panel">✕</button></form>
   </div>
+  <h3>Data controller</h3>
+  <p>Valentin Maynadié — contact: <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
+  <h3>Camera</h3>
+  <p>The camera only turns on when you click “Start camera”, after your browser asks for permission.
+  The video stream is analysed only in your browser, to cut out your silhouette: no image or video is recorded, kept or sent to a server.
+  A loaded MP4 video also stays on your computer.</p>
+  <h3>Cookies and tracking</h3>
+  <p>This site uses no cookies, no analytics and no user accounts.</p>
+  <h3>Third-party services</h3>
+  <ul>
+    <li>jsDelivr — body cutout (MediaPipe), loaded when the camera starts;</li>
+    <li>Google Cloud Storage — cutout model.</li>
+  </ul>
+  <p>These services receive your IP address, which they need to send the files.</p>
 </dialog>
 
-<dialog id="privacyDialog" class="dialog" aria-labelledby="privacyTitle">
-  <h2 id="privacyTitle">Confidentialité · RGPD</h2>
-  <h3>Responsable</h3>
-  <p>Valentin Maynadié — contact : <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
-  <h3>Caméra</h3>
-  <p>La caméra n'est activée que si tu cliques sur « Démarrer la caméra », après autorisation de ton navigateur.
-  Le flux vidéo est analysé uniquement dans ton navigateur pour détourer ta silhouette :
-  aucune image ni vidéo n'est enregistrée, conservée ou envoyée à un serveur.</p>
-  <h3>Cookies et suivi</h3>
-  <p>Ce site n'utilise ni cookies, ni mesure d'audience, ni compte utilisateur.</p>
-  <h3>Services tiers</h3>
-  <ul>
-    <li>Google Fonts — police d'interface ;</li>
-    <li>jsDelivr — détourage du corps (MediaPipe), chargé au démarrage de la caméra ;</li>
-    <li>Google Cloud Storage — modèle de détourage.</li>
-  </ul>
-  <p>Ces services reçoivent ton adresse IP, nécessaire à l'envoi des fichiers.</p>
-  <form method="dialog"><button type="submit">Fermer</button></form>
-</dialog>
 
 <script type="module">
 const $ = (id) => document.getElementById(id);
@@ -189,7 +195,6 @@ const controls = {
   halo: $("haloSlider"),
   gain: $("gainSlider"),
   gamma: $("gammaSlider"),
-  preset: $("presetSelect"),
   c0: $("c0"), c1: $("c1"), c2: $("c2"), c3: $("c3"), c4: $("c4"),
 };
 // Valeurs par défaut lues dans le HTML (au rechargement, le navigateur restaure les anciens réglages)
@@ -209,13 +214,7 @@ resetControls();
 const num = (k) => Number(controls[k].value);
 const on = (k) => controls[k].checked;
 
-// Palettes : 5 couleurs, du fond (0) au cœur du corps (1)
-const PALETTES = {
-  neon:    ["#03051c", "#1238ff", "#ff2bd6", "#ffd6f3", "#18ffc4"],
-  thermal: ["#000000", "#2a00ff", "#ff0040", "#ffb300", "#ffffff"],
-  nordway: ["#000000", "#003b0b", "#00ff26", "#c8ffd2", "#ffffff"],
-  mono:    ["#000000", "#2b2b2b", "#808080", "#d0d0d0", "#ffffff"],
-};
+// Couleurs du dégradé, du fond (0) au cœur du corps (1)
 const STOPS = [0, 0.22, 0.45, 0.62, 0.85]; // position de chaque couleur dans le dégradé
 
 // ═══════════════════════════════════════════════════════════════════
@@ -224,8 +223,8 @@ const STOPS = [0, 0.22, 0.45, 0.62, 0.85]; // position de chaque couleur dans le
 // ═══════════════════════════════════════════════════════════════════
 const gl = glCanvas.getContext("webgl2", { alpha: false, antialias: false });
 if (!gl || !gl.getExtension("EXT_color_buffer_float")) {
-  statusEl.textContent = "Navigateur incompatible (WebGL2 requis : Chrome ou Edge).";
-  throw new Error("WebGL2 + EXT_color_buffer_float requis");
+  statusEl.textContent = "Unsupported browser (WebGL2 required: Chrome or Edge).";
+  throw new Error("WebGL2 + EXT_color_buffer_float required");
 }
 
 // Un triangle qui couvre tout le cadre, sans sommets à fournir
@@ -485,7 +484,7 @@ let lastVideoTime = -1;
 
 async function loadSegmenter() {
   if (segmenter) return;
-  statusEl.textContent = "Chargement du modèle…";
+  statusEl.textContent = "Loading the model…";
   // import à la demande : sans réseau, l'outil marche quand même (démo)
   const { ImageSegmenter, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14");
   const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
@@ -503,7 +502,7 @@ async function loadSegmenter() {
 async function startCamera() {
   startBtn.disabled = true;
   await loadSegmenter();
-  statusEl.textContent = "Ouverture de la caméra…";
+  statusEl.textContent = "Opening the camera…";
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 360 } },
     audio: false,
@@ -556,7 +555,7 @@ function stopCamera() {
   startBtn.hidden = false;
   startBtn.disabled = false;
   stopBtn.hidden = true;
-  statusEl.textContent = "Démo";
+  statusEl.textContent = "";
 }
 
 function segment(now) {
@@ -751,13 +750,13 @@ const overlay = $("overlay");
 const octx = overlay.getContext("2d");
 new FontFace("Replica Mono", "url('../fonts/Replica-Mono.otf')").load()
   .then((face) => document.fonts.add(face))
-  .catch((err) => console.error("Impossible de charger la police Replica Mono :", err));
+  .catch((err) => console.error("Could not load the Replica Mono font:", err));
 
 // Mention centrée en bas de l'écran, mêmes proportions que dans l'outil Cercle
 // (11 unités et marge de 10 + 6 sur un petit côté de 800), en blanc sur le fond sombre
 new FontFace("MingLiU-01", "url('../fonts/MingLiU-01.ttf')").load()
   .then((face) => document.fonts.add(face))
-  .catch((err) => console.error("Impossible de charger la police MingLiU-01 :", err));
+  .catch((err) => console.error("Could not load the MingLiU-01 font:", err));
 function drawFooterNote() {
   const k = Math.min(overlay.width, overlay.height) / 800;
   octx.setTransform(1, 0, 0, 1, 0, 0);
@@ -820,7 +819,7 @@ function drawBlobs(dt) {
 }
 
 startBtn.addEventListener("click", () => startCamera().catch((err) => {
-  statusEl.textContent = "Erreur caméra : " + err.message;
+  statusEl.textContent = "Camera error: " + err.message;
   startBtn.disabled = false;
 }));
 stopBtn.addEventListener("click", stopCamera);
@@ -830,7 +829,7 @@ $("fileInput").addEventListener("change", (e) => {
   e.target.value = ""; // permet de recharger le même fichier
   if (!file) return;
   loadVideoFile(file).catch((err) => {
-    statusEl.textContent = "Vidéo illisible : " + err.message;
+    statusEl.textContent = "Unreadable video: " + err.message;
     startBtn.disabled = false;
   });
 });
@@ -838,12 +837,54 @@ $("fileInput").addEventListener("change", (e) => {
 // ═══════════════════════════════════════════════════════════════════
 // Réglages
 // ═══════════════════════════════════════════════════════════════════
+// Listes à choix courts : des pastilles cliquables, comme les tailles d'une fiche produit.
+// La liste cachée reste la valeur de référence (lue par num / Réinitialiser).
+for (const sel of document.querySelectorAll("select.chips")) {
+  const grid = document.createElement("div");
+  grid.className = "chipGrid";
+  for (const o of sel.options) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.dataset.value = o.value;
+    b.textContent = o.text;
+    b.addEventListener("click", () => {
+      sel.value = o.value;
+      sel.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    grid.append(b);
+  }
+  sel.hidden = true;
+  sel.after(grid);
+}
+
+// Chaque réglage affiche sa valeur à droite du libellé, comme une fiche technique
+const rows = Array.from(document.querySelectorAll("#panel .row")).map((row) => {
+  const ctl = row.querySelector("input, select");
+  const out = document.createElement("output");
+  out.setAttribute("for", ctl.id);
+  row.querySelector("label").after(out);
+  return { ctl, out };
+});
+function paintControls() {
+  for (const { ctl, out } of rows) {
+    if (ctl.type === "range") {
+      // partie de la piste à gauche du curseur remplie
+      ctl.style.setProperty("--fill", `${((ctl.value - ctl.min) / (ctl.max - ctl.min)) * 100}%`);
+      const digits = Math.min(4, (ctl.step.split(".")[1] ?? "").length);
+      out.textContent = Number(ctl.value).toFixed(digits) + (ctl.dataset.unit ? ` ${ctl.dataset.unit}` : "");
+    } else {
+      out.textContent = ctl.selectedOptions[0]?.text ?? "";
+      for (const b of ctl.parentElement.querySelectorAll(".chip")) b.setAttribute("aria-pressed", b.dataset.value === ctl.value);
+    }
+  }
+}
+$("panel").addEventListener("input", paintControls);
+paintControls();
+
 const applyMirror = () => document.querySelectorAll(".previewBox").forEach((el) => el.classList.toggle("mirror", on("mirror")));
 controls.mirror.addEventListener("change", applyMirror);
-controls.preset.addEventListener("input", () => {
-  PALETTES[controls.preset.value].forEach((c, i) => (gradColorInputs[i].value = c));
-  updateRamp();
-});
+
 gradColorInputs.forEach((i) => i.addEventListener("input", updateRamp));
 $("reverseBtn").addEventListener("click", () => {
   const c = gradColorInputs.map((i) => i.value).reverse();
@@ -866,22 +907,18 @@ window.addEventListener("keydown", (e) => {
 
 $("resetBtn").addEventListener("click", () => {
   resetControls();
+  paintControls();
   applyMirror();
   updateRamp();
   resize(); // efface la trace
   clearBlobs();
 });
 
-$("privacyBtn").addEventListener("click", () => $("privacyDialog").showModal());
+const privacyDialog = $("privacyDialog");
+$("privacyBtn").addEventListener("click", () => privacyDialog.showModal());
+// un clic à côté du volet le ferme
+privacyDialog.addEventListener("click", (e) => { if (e.target === privacyDialog) privacyDialog.close(); });
 
-// Fenêtre d'activation de la caméra, ouverte dès le lancement
-const cameraDialog = $("cameraDialog");
-$("cameraAcceptBtn").addEventListener("click", () => {
-  cameraDialog.close();
-  startBtn.click();
-});
-$("cameraLaterBtn").addEventListener("click", () => cameraDialog.close());
-cameraDialog.showModal();
 
 // ── Boucle ──
 let lastTime = performance.now();

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bookmarks → Resources</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" />
+<!-- interface commune des outils (verre, typo, sliders), puis la mise en page propre à l'outil -->
+<link rel="stylesheet" href="../ui/ui_000.css" />
+<link rel="stylesheet" href="style.css" />
+<script defer src="../ui/ui_000.js"></script>
+</head>
+<body>
+
+<!-- Panneau latéral : les étapes, de haut en bas -->
+<aside id="panel">
+
+  <!-- En-tête : catégorie, badge, titre (dessiné en MingLiU par ui_000.js) -->
+  <header id="panelHead">
+    <p class="eyebrow"><span>Digital tool</span><span class="badge">Experimental</span></p>
+    <h1 class="toolTitle">Bookmarks<br>→ Resources</h1>
+  </header>
+
+  <!-- 1. Export Firefox : lu dans le navigateur, jamais envoyé -->
+  <div class="section">
+    <h2><span class="step">1</span> Firefox bookmarks export</h2>
+    <div id="dropZone">
+      <p>Drop your bookmarks export here (.html)</p>
+      <button id="fileBtn" type="button">Choose the file</button>
+      <input id="fileInput" type="file" accept=".html,text/html" hidden />
+    </div>
+    <p id="fileName" class="hint">Firefox › Library › Import and Backup › Export Bookmarks to HTML.</p>
+  </div>
+
+  <!-- 2. Les deux dossiers gardés : tout le reste des favoris est ignoré -->
+  <div class="section">
+    <h2><span class="step">2</span> Folders</h2>
+    <div class="row">
+      <label for="inspiSelect">Inspirations</label>
+      <select id="inspiSelect" disabled><option>—</option></select>
+    </div>
+    <div class="row">
+      <label for="ressSelect">Resources & Tools</label>
+      <select id="ressSelect" disabled><option>—</option></select>
+    </div>
+    <p class="hint">Each subfolder becomes a category, Firefox labels become the tags. Only these two folders are read.</p>
+  </div>
+
+  <!-- 3. Token GitHub : chiffré dans ce navigateur avec ton mot de passe -->
+  <div class="section">
+    <h2><span class="step">3</span> GitHub token</h2>
+    <div id="tokenNew">
+      <div class="field"><label for="tokenInput">Fine-grained token</label><input id="tokenInput" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" /></div>
+      <div class="field"><label for="newPassInput">Password</label><input id="newPassInput" type="password" autocomplete="new-password" /></div>
+      <div class="field"><label for="newPass2Input">Confirm</label><input id="newPass2Input" type="password" autocomplete="new-password" /></div>
+      <button id="saveTokenBtn" type="button">Encrypt and save</button>
+    </div>
+    <div id="tokenSaved" hidden>
+      <p class="ok">Token saved, encrypted (AES-GCM).</p>
+      <button id="forgetTokenBtn" type="button">Forget the token</button>
+    </div>
+    <p class="hint">The token is never stored in clear: only an encrypted block stays in this browser. The password is stored nowhere.</p>
+  </div>
+
+  <!-- 4. Envoi du ressources.json dans le dépôt -->
+  <div class="section">
+    <h2><span class="step">4</span> Upload</h2>
+    <div class="field"><label for="passInput">Password</label><input id="passInput" type="password" autocomplete="current-password" /></div>
+    <button id="sendBtn" type="button" class="primary" disabled>Send ressources.json</button>
+    <p id="sendStatus" class="hint">File sent: tools_favoris_000/data/ressources.json</p>
+  </div>
+
+  <!-- Fichiers à télécharger : JSON de secours et page HTML complète pour OVH -->
+  <div class="section">
+    <h2>Download</h2>
+    <div class="btnRow">
+      <button id="dlJsonBtn" type="button" disabled>ressources.json</button>
+      <button id="dlPageBtn" type="button" disabled>HTML page</button>
+    </div>
+    <div class="field"><label for="pageNameInput">Page name</label><input id="pageNameInput" type="text" value="ressources.html" spellcheck="false" /></div>
+    <p class="hint">The HTML page contains the links written in full (read by Google) and the script that updates them from GitHub.</p>
+  </div>
+
+  <footer id="panelFooter">
+    <button id="privacyBtn" type="button">Privacy · Security</button>
+  </footer>
+</aside>
+
+<dialog id="privacyDialog" class="dialog" aria-labelledby="privacyTitle">
+  <h2 id="privacyTitle">Privacy · Security</h2>
+  <h3>Your bookmarks</h3>
+  <p>The Firefox export is read only in your browser. Only the two chosen folders become ressources.json; the rest of your bookmarks never leaves your computer.</p>
+  <h3>GitHub token</h3>
+  <p>The token is encrypted with your password (PBKDF2, 600,000 iterations, then 256-bit AES-GCM) and only the encrypted result is kept in this browser (localStorage). It is decrypted when you send, used once, then forgotten. Use a fine-grained token limited to the digital_js_tools repository, with Contents read/write permission and an expiry date.</p>
+  <h3>Third-party services</h3>
+  <ul>
+    <li>GitHub (api.github.com) — receives only ressources.json, with your token;</li>
+    <li>Google Fonts — Roboto Mono font of the preview.</li>
+  </ul>
+  <form method="dialog"><button type="submit">Close</button></form>
+</dialog>
+
+<!-- Zone principale : aperçu, dans la structure de la page ressources -->
+<main id="main">
+  <header id="hero">
+    <h1>Bookmarks → Resources</h1>
+    <div id="stats">
+      <div><span id="statLinks">—</span><small>links</small></div>
+      <div><span id="statCats">—</span><small>categories</small></div>
+      <div><span id="statSource">—</span><small>source</small></div>
+    </div>
+  </header>
+  <section id="preview"></section>
+  <footer id="note">[For experimental purposes only]</footer>
+</main>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+
+// ── Dépôt cible (public : ces informations ne sont pas secrètes) ──
+const OWNER = "Logival2";
+const REPO = "digital_js_tools";
+const BRANCH = "main";
+const JSON_PATH = "tools_favoris_000/data/ressources.json";
+// lu par la page chez OVH (GitHub Pages autorise la lecture depuis un autre site : CORS « * »)
+const JSON_URL = `https://logival2.github.io/${REPO}/${JSON_PATH}`;
+const TOKEN_KEY = "favoris.token.v1";
+
+// Les deux parties de la page, avec les ancres déjà utilisées sur valentinmaynadie.com
+const PARTS = [
+  { key: "inspi", id: "Inspirations", title: "Inspirations", select: $("inspiSelect"), guess: /inspi|graphisme/i },
+  { key: "ress", id: "Ressources_Outils", title: "Ressources & Outils", select: $("ressSelect"), guess: /ressource|resource/i },
+];
+
+let data = null;        // ressources.json en cours (aperçu, envoi, téléchargements)
+let folders = [];       // dossiers trouvés dans l'export : { path, dl }
+
+// ═══════════════════════════════════════════════════════════════════
+// Rendu commun : utilisé par l'aperçu, par la page HTML générée ET recopié
+// tel quel dans le script de la page (un seul code pour tout).
+// Il reproduit exactement le balisage de ressources.html.
+// ═══════════════════════════════════════════════════════════════════
+function renderRessources(data) {
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const safeUrl = (u) => (/^https?:\/\//i.test(u) ? u : "#"); // pas de lien « javascript: »
+  let index = "", liste = "";
+  data.parts.forEach((part, p) => {
+    index += `<table${p === 0 ? ' id="grey"' : ""} class="tableau"><tr><th id="yellow"><a href="#${esc(part.id)}">${esc(part.title)}</a></th></tr>`;
+    liste += `<table class="tableau"><caption id="${esc(part.id)}">${esc(part.title)}</caption>`;
+    for (const cat of part.categories) {
+      index += `<tr><td><a href="#${esc(cat.id)}">${esc(cat.title)}</a></td></tr>`;
+      liste += `<tr><th colspan="3" id="${esc(cat.id)}">${esc(cat.title)}</th></tr>`;
+      for (const l of cat.links) {
+        liste += `<tr><td><a href="${esc(safeUrl(l.url))}">${esc(l.title)}</a></td><td>${esc((l.tags || []).join(","))}</td></tr>`;
+      }
+      liste += `<tr class="spacer"><td colspan="3"></td></tr>`;
+    }
+    index += "</table>";
+    liste += "</table>";
+  });
+  return { index, liste };
+}
+
+// Ancre d'une catégorie, dans le style des ancres existantes (« Studio : Motion Design / CGI » -> Studio_Motion_Design_CGI)
+function slug(title) {
+  return title.replace(/[’‘]/g, "'").replace(/\s*[\/:]\s*/g, " ").trim().replace(/\s+/g, "_");
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 1. Lecture de l'export Firefox (format « Netscape bookmarks »)
+//    <DT><H3>Dossier</H3><DL> … <DT><A HREF="…" TAGS="a,b">Titre</A> … </DL>
+// ═══════════════════════════════════════════════════════════════════
+function listFolders(doc) {
+  const out = [];
+  const walk = (dl, path) => {
+    for (const dt of dl.querySelectorAll(":scope > dt")) {
+      const h3 = dt.querySelector(":scope > h3");
+      const sub = dt.querySelector(":scope > dl");
+      if (h3 && sub) {
+        const p = [...path, h3.textContent.trim()];
+        out.push({ path: p.join(" › "), name: h3.textContent.trim(), dl: sub, depth: p.length });
+        walk(sub, p);
+      }
+    }
+  };
+  const root = doc.querySelector("body > dl, dl");
+  if (root) walk(root, []);
+  return out;
+}
+
+// Liens d'un dossier, sous-dossiers compris
+function linksIn(dl) {
+  const links = [];
+  for (const a of dl.querySelectorAll("a[href]")) {
+    const url = a.getAttribute("href");
+    if (!/^https?:\/\//i.test(url)) continue; // on ignore « place: », « javascript: »…
+    const tags = (a.getAttribute("tags") || "").split(",").map((t) => t.trim()).filter(Boolean);
+    links.push({ title: a.textContent.trim() || url, url, tags });
+  }
+  return links;
+}
+
+// Une partie = un dossier ; ses sous-dossiers directs = les catégories
+function buildPart(part, folder) {
+  const categories = [];
+  const used = new Set();
+  const loose = [];
+  for (const dt of folder.dl.querySelectorAll(":scope > dt")) {
+    const h3 = dt.querySelector(":scope > h3");
+    const sub = dt.querySelector(":scope > dl");
+    if (h3 && sub) {
+      const links = linksIn(sub);
+      if (!links.length) continue; // dossier vide : pas de catégorie vide sur la page
+      const title = h3.textContent.trim();
+      let id = slug(title), n = 2;
+      while (used.has(id)) id = `${slug(title)}_${n++}`;
+      used.add(id);
+      categories.push({ id, title, links });
+    } else {
+      loose.push(...linksIn(dt));
+    }
+  }
+  // liens posés directement dans le dossier, hors sous-dossier
+  if (loose.length) categories.push({ id: `${part.id}_divers`, title: "Divers", links: loose });
+  return { id: part.id, title: part.title, categories };
+}
+
+function readExport(text, fileName) {
+  const doc = new DOMParser().parseFromString(text, "text/html");
+  folders = listFolders(doc);
+  if (!folders.length) throw new Error("no folder found: is this really a Firefox bookmarks export?");
+  const remembered = JSON.parse(localStorage.getItem("favoris.folders") || "{}");
+  for (const part of PARTS) {
+    const sel = part.select;
+    sel.replaceChildren(...folders.map((f, i) => new Option("  ".repeat(f.depth - 1) + f.name, String(i))));
+    // dossier mémorisé, sinon le premier dont le nom ressemble
+    let i = folders.findIndex((f) => f.path === remembered[part.key]);
+    if (i < 0) i = folders.findIndex((f) => part.guess.test(f.name));
+    sel.value = String(Math.max(0, i));
+    sel.disabled = false;
+  }
+  $("fileName").textContent = `${fileName} — ${folders.length} folders found`;
+  rebuild();
+}
+
+function rebuild() {
+  const remembered = {};
+  data = {
+    version: 1,
+    generated: new Date().toISOString(),
+    source: "Firefox",
+    parts: PARTS.map((part) => {
+      const folder = folders[Number(part.select.value)];
+      remembered[part.key] = folder.path;
+      return buildPart(part, folder);
+    }),
+  };
+  try { localStorage.setItem("favoris.folders", JSON.stringify(remembered)); } catch {}
+  showPreview("Export Firefox");
+}
+
+// ── Aperçu ──
+function showPreview(source) {
+  const links = data.parts.reduce((n, p) => n + p.categories.reduce((m, c) => m + c.links.length, 0), 0);
+  const cats = data.parts.reduce((n, p) => n + p.categories.length, 0);
+  $("statLinks").textContent = links;
+  $("statCats").textContent = cats;
+  $("statSource").textContent = source;
+  const { index, liste } = renderRessources(data);
+  $("preview").innerHTML = `<div class="col1">${index}</div><div class="col2">${liste}</div>`;
+  $("sendBtn").disabled = source !== "Export Firefox";
+  $("dlJsonBtn").disabled = false;
+  $("dlPageBtn").disabled = false;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 3. Token : chiffré avec le mot de passe (PBKDF2 → clé AES-GCM 256 bits)
+// ═══════════════════════════════════════════════════════════════════
+const ITERATIONS = 600_000;
+const b64 = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes)));
+const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+
+async function deriveKey(password, salt) {
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations: ITERATIONS, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"],
+  );
+}
+
+async function saveToken(token, password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(password, salt);
+  const cipher = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(token));
+  localStorage.setItem(TOKEN_KEY, JSON.stringify({ v: 1, iterations: ITERATIONS, salt: b64(salt), iv: b64(iv), data: b64(cipher) }));
+}
+
+async function readToken(password) {
+  const box = JSON.parse(localStorage.getItem(TOKEN_KEY) || "null");
+  if (!box) throw new Error("no token saved.");
+  const key = await deriveKey(password, unb64(box.salt));
+  try {
+    const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(box.iv) }, key, unb64(box.data));
+    return new TextDecoder().decode(plain);
+  } catch {
+    throw new Error("wrong password.");
+  }
+}
+
+function showTokenState() {
+  const saved = !!localStorage.getItem(TOKEN_KEY);
+  $("tokenNew").hidden = saved;
+  $("tokenSaved").hidden = !saved;
+}
+
+$("saveTokenBtn").addEventListener("click", async () => {
+  const token = $("tokenInput").value.trim();
+  const pass = $("newPassInput").value;
+  if (!/^(github_pat_|ghp_)/.test(token)) return alert("This is not a GitHub token (it starts with github_pat_).");
+  if (pass.length < 8) return alert("Choose a password of at least 8 characters.");
+  if (pass !== $("newPass2Input").value) return alert("The two passwords don't match.");
+  await saveToken(token, pass);
+  for (const id of ["tokenInput", "newPassInput", "newPass2Input"]) $(id).value = "";
+  showTokenState();
+});
+
+$("forgetTokenBtn").addEventListener("click", () => {
+  if (!confirm("Delete the encrypted token from this browser?")) return;
+  localStorage.removeItem(TOKEN_KEY);
+  showTokenState();
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// 4. Envoi dans le dépôt par l'API GitHub (création ou mise à jour du fichier)
+// ═══════════════════════════════════════════════════════════════════
+function utf8ToBase64(text) {
+  const bytes = new TextEncoder().encode(text);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+async function sendJson() {
+  const status = $("sendStatus");
+  const token = await readToken($("passInput").value);
+  const api = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${JSON_PATH}`;
+  const headers = {
+    Accept: "application/vnd.github+json",
+    Authorization: `Bearer ${token}`,
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+  status.textContent = "Sending…";
+  // identifiant (sha) de la version en ligne, nécessaire pour la remplacer
+  const current = await fetch(`${api}?ref=${BRANCH}`, { headers, cache: "no-store" });
+  if (current.status === 401) throw new Error("token rejected (expired or revoked?).");
+  let sha;
+  if (current.ok) sha = (await current.json()).sha;
+  else if (current.status !== 404) throw new Error(`could not read the file (${current.status}).`);
+
+  const links = data.parts.reduce((n, p) => n + p.categories.reduce((m, c) => m + c.links.length, 0), 0);
+  const res = await fetch(api, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({
+      message: `Resources: update from Firefox bookmarks (${links} links)`,
+      content: utf8ToBase64(JSON.stringify(data, null, 1)),
+      branch: BRANCH,
+      ...(sha ? { sha } : {}),
+    }),
+  });
+  if (res.status === 403 || res.status === 404) throw new Error("the token isn't allowed to write to this repository (Contents permission: Read and write).");
+  if (res.status === 409 || res.status === 422) throw new Error("the file changed in the meantime: send again.");
+  if (!res.ok) throw new Error(`upload rejected (${res.status}).`);
+  const commit = (await res.json()).commit;
+  status.innerHTML = `Sent · <a href="${commit.html_url}" target="_blank" rel="noopener">see the commit</a>. Live on the page in 1 to 10 min.`;
+}
+
+$("sendBtn").addEventListener("click", () => {
+  $("sendBtn").disabled = true;
+  sendJson()
+    .catch((err) => { $("sendStatus").textContent = "Failed: " + err.message; })
+    .finally(() => { $("sendBtn").disabled = false; $("passInput").value = ""; });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// Téléchargements : ressources.json, et la page complète pour OVH
+// ═══════════════════════════════════════════════════════════════════
+function download(text, name, type) {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+$("dlJsonBtn").addEventListener("click", () => download(JSON.stringify(data, null, 1), "ressources.json", "application/json"));
+
+// Page ressources complète : liens écrits en dur (lisibles par Google, même sans script)
+// + script qui les remplace par la dernière version du JSON sur GitHub
+function buildPage() {
+  const { index, liste } = renderRessources(data);
+  const script = `
+// Mise à jour automatique des ressources depuis GitHub (dépôt ${OWNER}/${REPO}).
+// Si GitHub ne répond pas, les liens écrits ci-dessus restent affichés.
+(() => {
+  const URL_JSON = "${JSON_URL}";
+  ${renderRessources.toString()}
+  fetch(URL_JSON, { cache: "no-cache" })
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
+    .then((data) => {
+      const { index, liste } = renderRessources(data);
+      document.getElementById("ressources-index").innerHTML = index;
+      document.getElementById("ressources-liste").innerHTML = liste;
+      // si l'adresse contient une ancre (#Affiche…), on y revient après la mise à jour
+      if (location.hash) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
+    })
+    .catch((err) => console.warn("Ressources : version de la page conservée.", err));
+})();`;
+  return `<!doctype html>
+<\!-- Code by Valentin Maynadié 2025 · liens générés par tools_favoris_000 le ${new Date().toLocaleString("fr-FR")} -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Ressources</title>
+    <link rel="icon" type="image/png" href="images/xxxxxxx.png">
+    <meta name="description" content="Enseignement Post Diplôme Digital Média Lab">
+    <meta name="keywords" content="médias numériques, Design Graphic, Communication visuelle, technologies créatives, Art Numérique, Motion Design, CGI, EPSAA, Enseignement Post Diplôme Digital Média Lab">
+    <\!-- Config tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <\!-- styles & JS -->
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="container_grid">
+      <div class="columns_1">
+        <nav class="bloc_nav">
+          <ul>
+            <li>
+              <a href="enseignement.html" id="yellow" class="btn blanc_2">Enseignement</a>
+            </li>
+            <li>
+              <a href="ressources.html" class="btn jaune">Ressources</a>
+            </li>
+          </ul>
+        </nav>
+        <header class="bloc_prez">
+          <p> Index de référence regroupant des outils, des ressources et des technologies créatives dédiés à la création visuelle et aux pratiques numériques appliquées aux domaines de l’art, du design et de la communication. </p>
+        </header>
+        <div id="marge_index" class="bloc_gauche">
+          <h2>INDEX</h2>
+        </div>
+        <\!-- sommaire : régénéré par le script ; display: contents = sans effet sur la mise en page -->
+        <div id="ressources-index" style="display: contents">
+${index}
+        </div>
+      </div>
+      <div class="columns_2" id="ressources-liste">
+${liste}
+      </div>
+    </div>
+    <script>${script}
+    <\/script>
+  </body>
+</html>
+`;
+}
+
+$("dlPageBtn").addEventListener("click", () => {
+  const name = $("pageNameInput").value.trim() || "ressources.html";
+  download(buildPage(), name, "text/html");
+});
+
+// ── Fichier glissé ou choisi ──
+function loadFile(file) {
+  if (!file) return;
+  file.text().then((text) => readExport(text, file.name)).catch((err) => alert("Unreadable export: " + err.message));
+}
+$("fileBtn").addEventListener("click", () => $("fileInput").click());
+$("fileInput").addEventListener("change", (e) => { loadFile(e.target.files[0]); e.target.value = ""; });
+const drop = $("dropZone");
+drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); loadFile(e.dataTransfer.files[0]); });
+for (const part of PARTS) part.select.addEventListener("change", rebuild);
+
+$("privacyBtn").addEventListener("click", () => $("privacyDialog").showModal());
+
+// ── Démarrage : on montre la version actuellement en ligne ──
+showTokenState();
+fetch(`data/ressources.json`, { cache: "no-cache" })
+  .then((r) => r.json())
+  .then((json) => { data = json; showPreview("En ligne"); })
+  .catch(() => { $("statSource").textContent = "—"; });
+</script>
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Type flyer</title>
+<!-- interface commune des outils (verre, typo, sliders), puis la mise en page propre à l'outil -->
+<link rel="stylesheet" href="../ui/ui_000.css" />
+<link rel="stylesheet" href="style.css" />
+<script defer src="../ui/ui_000.js"></script>
+</head>
+<body>
+
+<!-- Panneau latéral (paramètres) -->
+<aside id="panel">
+
+  <!-- En-tête : catégorie, badge, titre (dessiné en MingLiU par ui_000.js) -->
+  <header id="panelHead">
+    <p class="eyebrow"><span>Digital tool</span><span class="badge">Experimental</span></p>
+    <h1 class="toolTitle">Type<br>flyer</h1>
+  </header>
+
+  <!-- Textes : titre (collé en haut, d'une marge à l'autre), milieu, bas.
+       Mise en page et typo fixes, calquées sur l'affiche de référence. -->
+  <div class="section">
+    <h2>Text</h2>
+    <textarea id="titleInput" rows="4" maxlength="400" placeholder="Title, one line per row">WE
+APOLOGIZE
+FUTURE
+04*11*2026</textarea>
+    <textarea id="middleInput" rows="1" maxlength="200" placeholder="Middle">18H.22H</textarea>
+    <textarea id="bottomInput" rows="3" maxlength="400" placeholder="Bottom">@ODDITYPARIS
+27 RUE NOTRE DAME DE NAZARETH,
+75004 PARIS</textarea>
+  </div>
+
+  <!-- Couleurs : fond et texte -->
+  <div class="section">
+    <h2>Colours</h2>
+    <div id="colors">
+      <input id="bgColor" type="color" value="#ff3a0a" title="Background" aria-label="Background colour" />
+      <input id="textColor" type="color" value="#000000" title="Text" aria-label="Text colour" />
+    </div>
+    <div class="btnRow">
+      <button id="swapBtn" type="button" title="Background ↔ text">Swap</button>
+    </div>
+  </div>
+
+  <footer id="panelFooter">
+    <button id="resetBtn" type="button">Reset</button>
+    <button id="privacyBtn" type="button">Privacy · GDPR</button>
+  </footer>
+</aside>
+
+<!-- Notice de confidentialité (RGPD) -->
+<dialog id="privacyDialog" aria-labelledby="privacyTitle">
+  <h2 id="privacyTitle">Privacy · GDPR</h2>
+
+  <h3>Data controller</h3>
+  <p>Valentin Maynadié — contact: <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
+
+  <h3>Texts and exports</h3>
+  <p>What you type stays in your browser and disappears when you close the page. PNG files are made locally.</p>
+
+  <h3>Cookies and tracking</h3>
+  <p>This site uses no cookies, no analytics, no user accounts and no third-party service: fonts are served with the page.</p>
+
+  <h3>Your rights</h3>
+  <p>This site keeps no personal data. For any question about your rights (access, rectification, erasure, objection), write to the address above. You can also contact the CNIL, the French data protection authority (cnil.fr).</p>
+
+  <form method="dialog">
+    <button type="submit">Close</button>
+  </form>
+</dialog>
+
+<!-- Zone principale : l'affiche -->
+<div id="main">
+  <canvas id="scene"></canvas>
+</div>
+
+<!-- Panneau de droite, calé en bas : format de l'affiche, export -->
+<aside id="rightPanel">
+  <div id="formatButtons">
+    <button type="button" data-format="portrait">4:5</button>
+    <button type="button" data-format="din">A4</button>
+    <button type="button" data-format="square">1:1</button>
+    <button type="button" data-format="story">9:16</button>
+  </div>
+  <p id="formatInfo"></p>
+  <div id="exportRow">
+    <button id="exportBtn" type="button">Export PNG</button>
+  </div>
+</aside>
+
+<script type="module">
+const mainEl = document.getElementById("main");
+const scene  = document.getElementById("scene");
+const $ = (id) => document.getElementById(id);
+const formatButtons = Array.from(document.querySelectorAll("#formatButtons button"));
+const formatInfo = $("formatInfo");
+const panelFields = Array.from(document.querySelectorAll("#panel input, #panel textarea"));
+
+// Au rechargement, le navigateur restaure les anciens réglages dans les champs :
+// on repart toujours des valeurs écrites dans le HTML (sinon un nouveau défaut ne s'applique pas)
+function resetFields() {
+  for (const el of panelFields) {
+    if (el.type === "checkbox") el.checked = el.defaultChecked;
+    else el.value = el.defaultValue;
+  }
+}
+resetFields();
+
+// Police "maison" : MingLiU, en capitales, avec le faux gras arrondi des autres outils
+const posterFace = new FontFace("MingLiU-01", "url('../fonts/MingLiU-01.ttf')");
+posterFace.load().then((loaded) => {
+  document.fonts.add(loaded);
+  draw();
+}).catch((err) => {
+  console.error("Could not load the MingLiU-01 font:", err);
+});
+const FONT = (size) => `${size}px "MingLiU-01", serif`;
+
+// Formats d'affiche : taille réelle d'export en px
+const FORMATS = {
+  portrait: { w: 1080, h: 1350 }, // 4:5 portrait Instagram (format de la référence)
+  din:      { w: 1240, h: 1754 }, // DIN A4 portrait (1:√2), 150 dpi
+  square:   { w: 1080, h: 1080 }, // 1:1
+  story:    { w: 1080, h: 1920 }, // 9:16 story
+};
+let currentFormat = "portrait";
+
+// Repère de dessin : le PETIT côté vaut toujours 800 unités, quel que soit le format.
+// Toutes les tailles des sliders sont dans ce repère ; seul le grand côté s'allonge.
+const SCENE_SHORT_SIDE = 800;
+let sceneW = 800;
+let sceneH = 1000;
+let ctx = scene.getContext("2d"); // remplacé le temps d'un export PNG
+let pixelScale = 1;               // pixels physiques par unité du repère
+const SCENE_MARGIN = 40;          // marge autour de l'affiche à l'écran, en px CSS
+
+function applyFormat(key) {
+  currentFormat = key;
+  const { w, h } = FORMATS[key];
+  const scale = SCENE_SHORT_SIDE / Math.min(w, h);
+  sceneW = w * scale;
+  sceneH = h * scale;
+  formatButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.format === key));
+  formatInfo.textContent = `${w} × ${h} px`;
+  resizeScene();
+}
+
+function resizeScene() {
+  const maxW = mainEl.clientWidth - SCENE_MARGIN * 2;
+  const maxH = mainEl.clientHeight - SCENE_MARGIN * 2;
+  const k = Math.min(maxW / sceneW, maxH / sceneH);
+  const displayW = sceneW * k;
+  const displayH = sceneH * k;
+  scene.style.width = displayW + "px";
+  scene.style.height = displayH + "px";
+  // buffer = pixels physiques affichés, pour des lettres nettes
+  const dpr = window.devicePixelRatio || 1;
+  scene.width = Math.round(displayW * dpr);
+  scene.height = Math.round(displayH * dpr);
+  pixelScale = scene.width / sceneW;
+  draw();
+}
+
+// ── Dessin ──
+// Typo et mise en page fixes, calquées sur l'affiche de référence
+const MARGIN_PX = 20;        // marge tout autour, en px de l'image exportée
+const WIDTH = 1.2;           // MingLiU, bien plus étroite que le Times de la référence, élargie
+const EMBOLDEN = 0.025;      // faux gras : contour arrondi, en fraction de la taille
+const TITLE_LEADING = 0.95;  // interligne du titre (× sa taille)
+const MIDDLE_RATIO = 0.45;   // taille du milieu (× celle du titre)
+const MIDDLE_POS = 0.755;    // ligne de base du milieu (× la hauteur de l'affiche)
+const BOTTOM_RATIO = 0.17;   // taille du bas (× celle du titre)
+const BOTTOM_LEADING = 1.25; // interligne du bas (× sa taille)
+
+const linesOf = (id) => $(id).value.toUpperCase().split("\n");
+const inkWidth = (m) => m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
+
+// Une ligne centrée sur cx d'après le contour réel des lettres, élargie de WIDTH,
+// remplie puis épaissie par un contour arrondi de la même couleur.
+function drawLine(line, cx, baseline) {
+  if (!line.trim()) return;
+  const m = ctx.measureText(line);
+  const x = -inkWidth(m) / 2 + m.actualBoundingBoxLeft;
+  ctx.save();
+  ctx.translate(cx, baseline);
+  ctx.scale(WIDTH, 1);
+  ctx.fillText(line, x, 0);
+  ctx.strokeText(line, x, 0);
+  ctx.restore();
+}
+
+function setType(size) {
+  ctx.font = FONT(size);
+  ctx.lineWidth = size * EMBOLDEN;
+}
+
+function draw() {
+  ctx.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
+  ctx.fillStyle = $("bgColor").value;
+  ctx.fillRect(0, 0, sceneW, sceneH);
+
+  const ink = $("textColor").value;
+  ctx.fillStyle = ink;
+  ctx.strokeStyle = ink;
+  ctx.lineJoin = "round";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  const { w, h } = FORMATS[currentFormat];
+  const margin = (MARGIN_PX * SCENE_SHORT_SIDE) / Math.min(w, h);
+  const cx = sceneW / 2;
+
+  // Titre : la ligne la plus large va d'une marge à l'autre (contour compris),
+  // le haut des capitales de la 1re ligne touche la marge haute.
+  // Les deux autres blocs suivent sa taille : tout s'adapte à la page.
+  const title = linesOf("titleInput");
+  const REF = 100;
+  setType(REF);
+  const widest = Math.max(0, ...title.map((l) => inkWidth(ctx.measureText(l))));
+  const titleSize = widest > 0 ? (REF * (sceneW - margin * 2)) / (WIDTH * (widest + REF * EMBOLDEN)) : REF;
+  const firstLine = title.find((l) => l.trim());
+  if (firstLine) {
+    setType(titleSize);
+    const top = margin + ctx.measureText(firstLine).actualBoundingBoxAscent + ctx.lineWidth / 2;
+    title.forEach((line, i) => drawLine(line, cx, top + i * titleSize * TITLE_LEADING));
+  }
+
+  // Milieu : la ligne de base du bloc à MIDDLE_POS de la hauteur
+  const middle = linesOf("middleInput");
+  const middleSize = titleSize * MIDDLE_RATIO;
+  setType(middleSize);
+  middle.forEach((line, i) =>
+    drawLine(line, cx, sceneH * MIDDLE_POS - (middle.length - 1 - i) * middleSize * 1.1));
+
+  // Bas : dernière ligne posée sur la marge basse
+  const bottom = linesOf("bottomInput");
+  const bottomSize = titleSize * BOTTOM_RATIO;
+  setType(bottomSize);
+  const lastBaseline = sceneH - margin - ctx.lineWidth / 2;
+  bottom.forEach((line, i) =>
+    drawLine(line, cx, lastBaseline - (bottom.length - 1 - i) * bottomSize * BOTTOM_LEADING));
+}
+
+// ── Contrôles ──
+for (const el of panelFields) el.addEventListener("input", draw);
+
+$("swapBtn").addEventListener("click", () => {
+  const bg = $("bgColor").value;
+  $("bgColor").value = $("textColor").value;
+  $("textColor").value = bg;
+  draw();
+});
+
+formatButtons.forEach((btn) => btn.addEventListener("click", () => applyFormat(btn.dataset.format)));
+window.addEventListener("resize", resizeScene);
+
+$("resetBtn").addEventListener("click", () => {
+  resetFields();
+  applyFormat("portrait");
+});
+
+const privacyDialog = $("privacyDialog");
+$("privacyBtn").addEventListener("click", () => privacyDialog.showModal());
+
+// ── Export PNG : la même affiche, redessinée à la taille réelle du format ──
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+$("exportBtn").addEventListener("click", () => {
+  const { w, h } = FORMATS[currentFormat];
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const saved = { ctx, pixelScale };
+  ctx = canvas.getContext("2d");
+  pixelScale = w / sceneW;
+  try {
+    draw();
+  } finally {
+    ({ ctx, pixelScale } = saved);
+  }
+  canvas.toBlob((blob) => downloadBlob(blob, `flyer-${currentFormat}-${w}x${h}.png`), "image/png");
+});
+
+applyFormat(currentFormat);
+</script>
+</body>
+</html>

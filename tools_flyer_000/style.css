@@ -1,0 +1,21 @@
+/* Type flyer — mise en page propre à l'outil.
+   Couleurs, typo, panneaux et contrôles : ../ui/ui_000.css */
+
+/* Zone principale : l'affiche au format choisi, à l'échelle de l'écran */
+#main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#scene {
+  display: block;
+  flex: none;
+}
+
+/* Couleurs : fond et texte côte à côte */
+#colors {
+  display: flex;
+  gap: 4px;
+}

@@ -1,0 +1,32 @@
+/* Montage — mise en page propre à l'outil.
+   Couleurs, typo, panneaux et contrôles : ../ui/ui_000.css */
+
+/* Zone principale : le format choisi, à l'échelle de l'écran */
+#main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+#stage {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: calc(100vw - 19vw - 16vw - 120px);
+  max-height: calc(100vh - 80px);
+  border: 1px solid var(--line); /* sans vidéo, la scène est du même gris que la page */
+  background: #fff;
+}
+
+/* Panneau de droite : durée et lecture, séparés par un filet */
+.rpBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+#outputBtn { margin-top: 6px; }
+#outputLabel { margin: 0; overflow-wrap: anywhere; }

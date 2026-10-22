@@ -1,0 +1,76 @@
+/* Cercle de cartes — mise en page propre à l'outil.
+   Couleurs, typo, panneaux et contrôles : ../ui/ui_000.css */
+
+/* Zone principale : les deux frames côte à côte */
+#main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px; /* = FRAME_GAP dans le script */
+}
+#scene,
+#scene2 {
+  display: block;
+  flex: none;
+  background: #fff;
+}
+
+/* Champs de texte empilés */
+#textFields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Dégradé désactivé : aperçu estompé */
+#gradientPreview.off { opacity: 0.35; }
+
+/* Liste des images importées : un nom par ligne, × pour retirer */
+#imageControl {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+#imageList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 252px; /* ~12 noms visibles, le reste défile */
+  overflow-y: auto;
+  border-top: 1px solid var(--line);
+}
+#imageList li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--line);
+}
+#imageList span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-transform: none; /* garde le vrai nom du fichier */
+  font-size: var(--fs-small);
+}
+#panel #imageList button {
+  flex: none;
+  min-height: 0;
+  padding: 0 4px;
+  line-height: 1;
+  background: none;
+}
+
+/* Recopie de la caméra (vue selfie), au format 4:3 */
+#panel #preview { aspect-ratio: 4 / 3; }
+#preview video { display: none; }
+#preview canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}

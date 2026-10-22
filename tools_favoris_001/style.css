@@ -1,0 +1,135 @@
+/* Favoris → Ressources — mise en page propre à l'outil.
+   Couleurs, typo, panneau et contrôles : ../ui/ui_000.css
+   La zone principale garde le style de la page Ressources (Roboto Mono). */
+@font-face {
+  font-family: "MingLiU-01";
+  src: url("../fonts/MingLiU-01.ttf") format("truetype");
+  font-display: swap;
+}
+
+/* ── Panneau : les étapes ── */
+/* numéro d'étape : petit carré cerclé de noir */
+.step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  font-size: var(--fs-small);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.section > h2 { justify-content: flex-start; }
+
+/* champ : libellé au-dessus, saisie pleine largeur */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ok { margin: 0; }
+.hint a { color: inherit; }
+
+/* zone de dépôt du fichier */
+#dropZone {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  text-align: center;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+}
+#dropZone p { margin: 0; }
+#dropZone.over { background: #00ff26; }
+#panel #dropZone button { text-align: center; }
+
+/* ── Zone principale : aperçu minimaliste — Roboto Mono Regular, deux tailles seulement ── */
+#main {
+  --t1: clamp(22px, 1.9vw, 30px);  /* niveau 1 : titre, parties */
+  --t2: 13px;                      /* niveau 2 : tout le reste */
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  margin: 10px 10px 10px 0;
+  padding: 20px 24px 12px;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  font-family: "Roboto Mono", monospace;
+  font-size: var(--t2);
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+#hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #000;
+}
+#hero h1 {
+  margin: 0;
+  font-size: var(--t1);
+  font-weight: 400;
+  line-height: 1.1;
+}
+#hero h1 br { display: none; }
+#stats { display: flex; gap: 24px; }
+#stats div { display: flex; gap: 6px; }
+#stats small { font-size: inherit; color: #6b6b6b; }
+
+/* aperçu : même structure que la page ressources (sommaire à gauche, liste à droite) */
+#preview {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 3fr;
+  gap: 32px;
+  margin-top: 24px;
+  align-items: start;
+}
+#preview .col1 { position: sticky; top: 0; }
+#preview .tableau {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 32px;
+}
+#preview caption {
+  caption-side: top;
+  text-align: left;
+  padding: 0 0 12px;
+  font-size: var(--t1);
+  line-height: 1.1;
+}
+#preview th {
+  text-align: left;
+  font-weight: 400;
+  padding: 18px 0 6px;
+  text-transform: uppercase;
+  border-bottom: 1px solid #000;
+}
+#preview .col1 th { padding-top: 0; }
+#preview td {
+  padding: 3px 12px 3px 0;
+  vertical-align: top;
+}
+#preview td:nth-child(2) { color: #6b6b6b; width: 45%; }
+#preview .col1 td { padding: 2px 0; }
+#preview tr.spacer td { padding: 0; height: 0; }
+#preview a { color: #000; text-decoration: none; }
+#preview a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+#note {
+  margin-top: auto;
+  padding-top: 16px;
+  text-align: center;
+  font-family: "MingLiU-01", serif;
+  font-size: 11px;
+  text-transform: none;
+  letter-spacing: 0;
+}

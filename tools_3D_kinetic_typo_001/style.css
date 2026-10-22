@@ -1,0 +1,41 @@
+/* Typo cinétique 3D — mise en page propre à l'outil.
+   Couleurs, typo, panneaux et contrôles : ../ui/ui_000.css */
+
+/* Zone principale : une seule frame, centrée */
+#main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* La frame : canvas WebGL (la typo 3D) + canvas 2D par-dessus (grille) */
+#frame {
+  position: relative;
+  flex: none;
+  background: #fff;
+}
+#frame canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+#overlay { cursor: grab; touch-action: none; }
+#overlay.dragging { cursor: grabbing; }
+
+/* Couleurs du fond et de la typo : 2 pastilles + Inverser */
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.colorRow label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
