@@ -27,7 +27,7 @@
   --fs-text: 14px;
   --fs-small: 11px;
   /* verre Bureau Borsche */
-  --glass: rgba(200, 200, 200, 0.7);
+  --glass: rgba(190, 190, 190, 0.7); /* un peu plus foncé (avant : 200) */
   --blur: 20px;
   --text: #000;
   --line: #000;
@@ -54,7 +54,7 @@ html, body {
   letter-spacing: -0.02em;
   text-transform: uppercase;
   color: var(--text);
-  background: #d1d1d1; /* gris de valentinmaynadie.com */
+  background: #d8d8d8; /* gris de valentinmaynadie.com (#d1d1d1), un peu éclairci */
   -webkit-font-smoothing: antialiased;
 }
 body {
@@ -124,6 +124,11 @@ dialog h3 {
   padding: 1px 5px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
+}
+/* Retour au menu des outils : un lien qui a l'allure du badge */
+.backLink {
+  color: inherit;
+  text-decoration: none;
 }
 /* Titre en MingLiU, faux gras comme dans l'outil 3D kinetic typo :
    contour de la couleur du texte, épais de 0,025 × la taille, jointures arrondies.

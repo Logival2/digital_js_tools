@@ -16,7 +16,6 @@
   height: auto;
   max-width: calc(100vw - 19vw - 16vw - 120px);
   max-height: calc(100vh - 80px);
-  border: 1px solid var(--line); /* sans vidéo, la scène est du même gris que la page */
   background: #fff;
 }
 
