@@ -1,0 +1,9 @@
+montblanc_dem.bin — relief du massif du Mont-Blanc et de la vallée de Chamonix
+
+Grille de 160 × 180 altitudes (int16 little-endian, en mètres), lignes du nord au sud.
+Emprise : latitude 45.78 → 46.01, longitude 6.77 → 7.06 (≈ 22,5 × 25,6 km, un point tous les ≈ 140 m).
+
+Source : Terrain Tiles (Mapzen / Tilezen) sur AWS Open Data, tuiles « terrarium » au zoom 12,
+réduites par interpolation bilinéaire. Données d'origine : SRTM (NASA), EU-DEM (Copernicus,
+produit avec des fonds de l'Union européenne) et autres sources libres listées sur
+https://github.com/tilezen/joerd/blob/master/docs/attribution.md

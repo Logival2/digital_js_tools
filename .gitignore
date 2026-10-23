@@ -1,0 +1,22 @@
+# Ce qui reste sur l'ordinateur et ne part jamais sur GitHub
+
+# Archives locales : les anciennes versions sont rangées ici en local,
+# mais restent en ligne dans le dépôt (extraction partielle, voir .git/info/sparse-checkout)
+/00-OLD/
+
+# Polices : Helvetica Neue est sous licence, seules les deux graisses utilisées sont en ligne
+/fonts/Helvetica Neue LT Std/*
+!/fonts/Helvetica Neue LT Std/HelveticaNeueLTStd-Roman.otf
+!/fonts/Helvetica Neue LT Std/HelveticaNeueLTStd-BlkEx.otf
+/fonts/_source_complete/
+
+# Médias personnels de l'outil Montage
+/tools_montage_*/INPUT/
+/tools_montage_*/OUTPUT/
+
+# Réglages d'outils de travail
+/.impeccable/
+/.claude/
+.DS_Store
+Thumbs.db
+desktop.ini

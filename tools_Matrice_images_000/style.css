@@ -1,0 +1,67 @@
+/* Matrice d'images — mise en page propre à l'outil.
+   Couleurs, typo, panneaux et contrôles : ../ui/ui_000.css
+   Comme Gradient body : le rendu occupe tout l'écran, le panneau flotte devant. */
+
+/* White cube : fond blanc */
+html, body { background: #fff; }
+
+/* Le rendu occupe tout l'écran, derrière le panneau */
+#gl {
+  position: fixed;
+  inset: 0;
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  touch-action: none;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0, 1);
+}
+#gl.ready { opacity: 1; }
+#gl.dragging { cursor: grabbing; }
+#gl.hovering { cursor: pointer; }
+
+/* Panneau en verre posé sur le rendu ; H le masque */
+#panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  max-height: calc(100vh - 20px);
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0, 1), transform 0.6s cubic-bezier(0.4, 0, 0, 1), visibility 0.6s;
+}
+body.panel-hidden #panel {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-16px);
+}
+
+/* Quatre modes : deux par ligne */
+#modeSwitch { flex-wrap: wrap; }
+#modeSwitch button { flex: 1 1 calc(50% - 2px); }
+
+/* Invite du focus (plan 2D), en bas au centre, discrète comme sur la référence */
+#arrowHint {
+  position: fixed;
+  left: 50%;
+  bottom: 5%;
+  margin: 0;
+  transform: translateX(-50%);
+  font-size: var(--fs-small);
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.2s cubic-bezier(0.4, 0, 0, 1);
+}
+#arrowHint.visible { opacity: 0.35; }
+
+/* Pas de WebGL2 : un message au centre */
+#noGl {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}

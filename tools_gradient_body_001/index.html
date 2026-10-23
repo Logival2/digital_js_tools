@@ -4,7 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Gradient body</title>
+<!-- interface commune des outils (verre, typo, sliders), puis la mise en page propre à l'outil -->
+<link rel="stylesheet" href="../ui/ui_000.css" />
 <link rel="stylesheet" href="style.css" />
+<script defer src="../ui/ui_000.js"></script>
 </head>
 <body>
 
@@ -15,136 +18,118 @@
 <!-- Étiquettes des taches : petites plaques de verre, comme le panneau -->
 <div id="tags" aria-hidden="true"></div>
 
-<!-- Panneau flottant à gauche, construit comme une fiche produit -->
+<!-- Panneau flottant à gauche -->
 <aside id="panel">
 
-  <!-- En-tête : retour au menu, numéro de l'outil -->
+  <!-- En-tête : retour au menu, titre (dessiné en MingLiU par ui_000.js) -->
   <header id="panelHead">
     <p class="eyebrow"><a class="badge backLink" href="../" title="Back to all tools">← Digital tools</a></p>
-    <!-- Titre en MingLiU avec faux gras arrondi (comme l'outil 3D kinetic typo) : SVG pour arrondir les jointures du contour -->
-    <h1 id="title">
-      <span class="visuallyHidden">Gradient body</span>
-      <svg aria-hidden="true"><text x="0" y="0.8em">GRAD<tspan dx="-0.06em">I</tspan><tspan dx="-0.06em">ENT</tspan></text><text x="0" y="1.68em">BODY</text></svg>
-    </h1>
+    <h1 class="toolTitle">Gradient<br>body</h1>
   </header>
 
   <!-- Action principale : la source -->
   <div id="cta">
     <div id="bar">
-      <button id="startBtn" class="primary" type="button"><span>Start camera</span><span aria-hidden="true">→</span></button>
-      <button id="stopBtn" class="primary" type="button" hidden><span>Stop</span><span aria-hidden="true">■</span></button>
+      <button id="startBtn" class="primary" type="button">Start camera</button>
+      <button id="stopBtn" class="primary" type="button" hidden>Stop</button>
     </div>
-    <div id="fileRow">
-      <button id="fileBtn" class="block" type="button"><span>Load an MP4 video</span></button>
-      <input id="fileInput" type="file" accept="video/mp4,video/*" hidden />
-    </div>
+    <button id="fileBtn" type="button">Load an MP4 video</button>
+    <input id="fileInput" type="file" accept="video/mp4,video/*" hidden />
     <!-- messages de chargement / erreur seulement, caché quand il n'y a rien à dire -->
     <p id="readout"><span class="status" id="status"></span></p>
   </div>
 
   <!-- Caméra : détourage du corps en direct (MediaPipe) -->
-  <details class="section" open>
-    <summary>Source</summary>
-    <div class="sectionBody">
-      <div id="preview" class="previewBox mirror">
-        <video id="cam" playsinline muted></video>
-      </div>
-      <label class="check"><input id="mirrorToggle" type="checkbox" checked /> Mirror</label>
-      <p class="hint">Webcam or MP4 video. Without a source, a demo silhouette moves on screen.</p>
+  <div class="section">
+    <h2>Source</h2>
+    <div id="preview" class="previewBox mirror">
+      <video id="cam" playsinline muted></video>
     </div>
-  </details>
+    <label class="check"><input id="mirrorToggle" type="checkbox" checked /><span>Mirror</span></label>
+    <p class="hint">Webcam or MP4 video. Without a source, a demo silhouette moves on screen.</p>
+  </div>
 
   <!-- Détourage : ce que MediaPipe voit, après seuil (blanc = corps) -->
-  <details class="section">
-    <summary>Cutout</summary>
-    <div class="sectionBody">
-      <div id="maskPreview" class="previewBox mirror">
-        <canvas id="maskCanvas" width="320" height="180"></canvas>
-      </div>
-      <div class="row"><label for="thresholdSlider" title="Higher = only confident areas count as body">Threshold</label><input id="thresholdSlider" type="range" min="0.05" max="0.95" step="0.01" value="0.5" /></div>
-      <div class="row"><label for="softSlider" title="Sharp or soft edge">Softness</label><input id="softSlider" type="range" min="0" max="0.5" step="0.01" value="0.15" /></div>
+  <div class="section collapsed">
+    <h2>Cutout</h2>
+    <div id="maskPreview" class="previewBox mirror">
+      <canvas id="maskCanvas" width="320" height="180"></canvas>
     </div>
-  </details>
+    <div class="row"><label for="thresholdSlider" title="Higher = only confident areas count as body">Threshold</label><input id="thresholdSlider" type="range" min="0.05" max="0.95" step="0.01" value="0.5" /></div>
+    <div class="row"><label for="softSlider" title="Sharp or soft edge">Softness</label><input id="softSlider" type="range" min="0" max="0.5" step="0.01" value="0.15" /></div>
+  </div>
 
   <!-- Blob tracking : taches repérées dans l'image RVB de la source, suivies d'une image à l'autre -->
-  <details class="section">
-    <summary>Blob tracking</summary>
-    <div class="sectionBody">
-      <label class="check"><input id="blobToggle" type="checkbox" checked /> Show</label>
-      <div id="blobPreview" class="previewBox mirror">
-        <canvas id="blobCanvas" width="160" height="90"></canvas>
-      </div>
-      <div class="row">
-        <label for="blobChannelSelect" title="What makes a blob in the image">Channel</label>
-        <select id="blobChannelSelect" class="chips">
-          <option value="luma">Brightness</option>
-          <option value="dark">Dark</option>
-          <option value="r">Red</option>
-          <option value="g">Green</option>
-          <option value="b">Blue</option>
-          <option value="motion">Motion</option>
-        </select>
-      </div>
-      <div class="row"><label for="blobThresholdSlider" title="Higher = only the strongest areas count">Threshold</label><input id="blobThresholdSlider" type="range" min="0.02" max="0.98" step="0.01" value="0.6" /></div>
-      <div class="row"><label for="blobMinSlider" title="Minimum blob size (share of the image)">Min size</label><input id="blobMinSlider" type="range" min="0.0005" max="0.05" step="0.0005" value="0.004" /></div>
-      <div class="row"><label for="blobMaxSlider" title="Number of tracked blobs, largest first">Max count</label><input id="blobMaxSlider" type="range" min="1" max="30" step="1" value="12" /></div>
-      <!-- Étiquettes : un petit cartouche sombre « ■ NOM » posé sur chaque tache -->
-      <label class="check"><input id="blobTagToggle" type="checkbox" checked /> Tags</label>
-      <textarea id="blobNamesInput" rows="3" maxlength="600" title="One name per blob, separated by commas" aria-label="Tag names">Aiguille du Midi, Dent du Géant, Aiguille du Goûter, Dôme du Goûter, Aiguille de Bionnassay, Aiguille du Dru, Mont Blanc du Tacul, Aiguille d'Argentière, Aiguille du Chardonnet, Aiguille du Plan, Aiguille de Blaitière, Tour Ronde</textarea>
-      <label class="check"><input id="blobBoxToggle" type="checkbox" /> Boxes</label>
-      <label class="check"><input id="blobLabelToggle" type="checkbox" /> Coordinates</label>
-      <label class="check"><input id="blobLinkToggle" type="checkbox" /> Links</label>
-      <label class="check"><input id="blobColorInput" class="swatch" type="color" value="#ffffff" /> Colour</label>
+  <div class="section collapsed">
+    <h2>Blob tracking</h2>
+    <label class="check"><input id="blobToggle" type="checkbox" checked /><span>Show</span></label>
+    <div id="blobPreview" class="previewBox mirror">
+      <canvas id="blobCanvas" width="160" height="90"></canvas>
     </div>
-  </details>
+    <div class="row">
+      <label for="blobChannelSelect" title="What makes a blob in the image">Channel</label>
+      <select id="blobChannelSelect">
+        <option value="luma">Brightness</option>
+        <option value="dark">Dark</option>
+        <option value="r">Red</option>
+        <option value="g">Green</option>
+        <option value="b">Blue</option>
+        <option value="motion">Motion</option>
+      </select>
+    </div>
+    <div class="row"><label for="blobThresholdSlider" title="Higher = only the strongest areas count">Threshold</label><input id="blobThresholdSlider" type="range" min="0.02" max="0.98" step="0.01" value="0.6" /></div>
+    <div class="row"><label for="blobMinSlider" title="Minimum blob size (share of the image)">Min size</label><input id="blobMinSlider" type="range" min="0.0005" max="0.05" step="0.0005" value="0.004" /></div>
+    <div class="row"><label for="blobMaxSlider" title="Number of tracked blobs, largest first">Max count</label><input id="blobMaxSlider" type="range" min="1" max="30" step="1" value="12" /></div>
+    <!-- Étiquettes : un petit cartouche « ■ NOM » posé sur chaque tache -->
+    <label class="check"><input id="blobTagToggle" type="checkbox" checked /><span>Tags</span></label>
+    <textarea id="blobNamesInput" rows="3" maxlength="600" title="One name per blob, separated by commas" aria-label="Tag names">Aiguille du Midi, Dent du Géant, Aiguille du Goûter, Dôme du Goûter, Aiguille de Bionnassay, Aiguille du Dru, Mont Blanc du Tacul, Aiguille d'Argentière, Aiguille du Chardonnet, Aiguille du Plan, Aiguille de Blaitière, Tour Ronde</textarea>
+    <label class="check"><input id="blobBoxToggle" type="checkbox" /><span>Boxes</span></label>
+    <label class="check"><input id="blobLabelToggle" type="checkbox" /><span>Coordinates</span></label>
+    <label class="check"><input id="blobLinkToggle" type="checkbox" /><span>Links</span></label>
+    <label class="check"><input id="blobColorInput" type="color" value="#ffffff" /><span>Colour</span></label>
+  </div>
 
   <!-- Aura : la trace du corps qui s'efface, se diffuse et monte -->
-  <details class="section" open>
-    <summary>Aura</summary>
-    <div class="sectionBody">
-      <div class="row"><label for="trailSlider" title="Time the trace takes to fade (s)">Persistence</label><input id="trailSlider" data-unit="s" type="range" min="0.1" max="8" step="0.05" value="1.6" /></div>
-      <div class="row"><label for="spreadSlider" title="The trace spreads on every frame">Diffusion</label><input id="spreadSlider" type="range" min="0" max="3" step="0.01" value="1.2" /></div>
-      <div class="row"><label for="riseSlider" title="The trace rises like a flame">Rise</label><input id="riseSlider" type="range" min="-0.3" max="0.3" step="0.005" value="0.03" /></div>
-      <div class="row"><label for="blurSlider" title="Softness of the aura edges">Blur</label><input id="blurSlider" type="range" min="0" max="1" step="0.01" value="0.8" /></div>
-      <div class="row"><label for="haloSlider" title="Wide coloured haze around the aura">Halo</label><input id="haloSlider" type="range" min="0" max="1.5" step="0.01" value="0.55" /></div>
-      <div class="row"><label for="gainSlider" title="Pushes the colours outwards">Intensity</label><input id="gainSlider" type="range" min="0.3" max="3" step="0.01" value="0.95" /></div>
-      <div class="row"><label for="gammaSlider" title="Wider or tighter colour bands">Contrast</label><input id="gammaSlider" type="range" min="0.4" max="2.5" step="0.01" value="1.15" /></div>
-      <div class="row"><label for="warpSlider" title="Slow random patches that move through the colours">Noise</label><input id="warpSlider" type="range" min="0" max="1" step="0.01" value="0.55" /></div>
-      <div class="row"><label for="grainSlider" title="Fine random grain, new on every frame">Grain</label><input id="grainSlider" type="range" min="0" max="0.3" step="0.005" value="0.07" /></div>
-    </div>
-  </details>
+  <div class="section">
+    <h2>Aura</h2>
+    <div class="row"><label for="trailSlider" title="Time the trace takes to fade (s)">Persistence</label><input id="trailSlider" data-unit="s" type="range" min="0.1" max="8" step="0.05" value="1.6" /></div>
+    <div class="row"><label for="spreadSlider" title="The trace spreads on every frame">Diffusion</label><input id="spreadSlider" type="range" min="0" max="3" step="0.01" value="1.2" /></div>
+    <div class="row"><label for="riseSlider" title="The trace rises like a flame">Rise</label><input id="riseSlider" type="range" min="-0.3" max="0.3" step="0.005" value="0.03" /></div>
+    <div class="row"><label for="blurSlider" title="Softness of the aura edges">Blur</label><input id="blurSlider" type="range" min="0" max="1" step="0.01" value="0.8" /></div>
+    <div class="row"><label for="haloSlider" title="Wide coloured haze around the aura">Halo</label><input id="haloSlider" type="range" min="0" max="1.5" step="0.01" value="0.55" /></div>
+    <div class="row"><label for="gainSlider" title="Pushes the colours outwards">Intensity</label><input id="gainSlider" type="range" min="0.3" max="3" step="0.01" value="0.95" /></div>
+    <div class="row"><label for="gammaSlider" title="Wider or tighter colour bands">Contrast</label><input id="gammaSlider" type="range" min="0.4" max="2.5" step="0.01" value="1.15" /></div>
+    <div class="row"><label for="warpSlider" title="Slow random patches that move through the colours">Noise</label><input id="warpSlider" type="range" min="0" max="1" step="0.01" value="0.55" /></div>
+    <div class="row"><label for="grainSlider" title="Fine random grain, new on every frame">Grain</label><input id="grainSlider" type="range" min="0" max="0.3" step="0.005" value="0.07" /></div>
+  </div>
 
   <!-- Couleurs : dégradé du fond (0) jusqu'au cœur du corps (1) -->
-  <details class="section" open>
-    <summary>Colours</summary>
-    <div class="sectionBody">
-      <div id="gradientColors">
-        <input type="color" class="gradColor" id="c0" value="#02060d" title="Background" aria-label="Background colour" />
-        <input type="color" class="gradColor" id="c1" value="#0c2c4a" title="Edge" aria-label="Edge colour" />
-        <input type="color" class="gradColor" id="c2" value="#3d8cc4" title="Middle" aria-label="Middle colour" />
-        <input type="color" class="gradColor" id="c3" value="#a8e3f2" title="Light" aria-label="Light colour" />
-        <input type="color" class="gradColor" id="c4" value="#f3fbff" title="Core" aria-label="Core colour" />
-      </div>
-      <div id="gradientPreview" aria-hidden="true"></div>
-      <!-- Gammes toutes faites : Glacier (nuit bleue, glace, neige, par défaut) ou Fire (rouge et magenta) -->
-      <div class="btnRow">
-        <button class="block palette" type="button" data-colors="#070006,#4a063f,#c414bc,#e2003c,#e00000"><span>Fire</span></button>
-        <button class="block palette" type="button" data-colors="#02060d,#0c2c4a,#3d8cc4,#a8e3f2,#f3fbff"><span>Glacier</span></button>
-      </div>
-      <button id="reverseBtn" class="block" type="button" title="The core becomes the background and vice versa"><span>Swap</span></button>
+  <div class="section">
+    <h2>Colours</h2>
+    <div id="gradientColors">
+      <input type="color" class="gradColor" id="c0" value="#02060d" title="Background" aria-label="Background colour" />
+      <input type="color" class="gradColor" id="c1" value="#0c2c4a" title="Edge" aria-label="Edge colour" />
+      <input type="color" class="gradColor" id="c2" value="#3d8cc4" title="Middle" aria-label="Middle colour" />
+      <input type="color" class="gradColor" id="c3" value="#a8e3f2" title="Light" aria-label="Light colour" />
+      <input type="color" class="gradColor" id="c4" value="#f3fbff" title="Core" aria-label="Core colour" />
     </div>
-  </details>
+    <div id="gradientPreview" aria-hidden="true"></div>
+    <!-- Gammes toutes faites : Glacier (nuit bleue, glace, neige, par défaut) ou Fire (rouge et magenta) -->
+    <div class="btnRow">
+      <button class="palette" type="button" data-colors="#070006,#4a063f,#c414bc,#e2003c,#e00000">Fire</button>
+      <button class="palette" type="button" data-colors="#02060d,#0c2c4a,#3d8cc4,#a8e3f2,#f3fbff">Glacier</button>
+    </div>
+    <button id="reverseBtn" type="button" title="The core becomes the background and vice versa">Swap</button>
+  </div>
 
   <!-- Affichage -->
-  <details class="section">
-    <summary>Display</summary>
-    <div class="sectionBody">
-      <div class="btnRow">
-        <button id="fullscreenBtn" class="block" type="button"><span>Full screen</span><span class="key" aria-hidden="true">F</span></button>
-        <button id="hidePanelBtn" class="block" type="button"><span>Hide</span><span class="key" aria-hidden="true">H</span></button>
-      </div>
+  <div class="section collapsed">
+    <h2>Display</h2>
+    <div class="btnRow">
+      <button id="fullscreenBtn" type="button">Full screen · F</button>
+      <button id="hidePanelBtn" type="button">Hide · H</button>
     </div>
-  </details>
+  </div>
 
   <footer id="panelFooter">
     <button id="resetBtn" type="button">Reset</button>
@@ -153,27 +138,31 @@
 </aside>
 
 <!-- Notice RGPD : un volet qui sort sur la droite -->
-<dialog id="privacyDialog" class="dialog drawer" aria-labelledby="privacyTitle">
-  <div class="drawerHead">
-    <h2 id="privacyTitle">Privacy · GDPR</h2>
-    <form method="dialog"><button class="close" type="submit" aria-label="Close the panel">✕</button></form>
-  </div>
+<dialog id="privacyDialog" aria-labelledby="privacyTitle">
+  <h2 id="privacyTitle">Privacy · GDPR</h2>
+
   <h3>Data controller</h3>
   <p>Valentin Maynadié — contact: <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
+
   <h3>Camera</h3>
   <p>The camera only turns on when you click “Start camera”, after your browser asks for permission.
   The video stream is analysed only in your browser, to cut out your silhouette: no image or video is recorded, kept or sent to a server.
   A loaded MP4 video also stays on your computer.</p>
+
   <h3>Cookies and tracking</h3>
   <p>This site uses no cookies, no analytics and no user accounts.</p>
+
   <h3>Third-party services</h3>
   <ul>
     <li>jsDelivr — body cutout (MediaPipe), loaded when the camera starts;</li>
     <li>Google Cloud Storage — cutout model.</li>
   </ul>
   <p>These services receive your IP address, which they need to send the files.</p>
-</dialog>
 
+  <form method="dialog">
+    <button type="submit">Close</button>
+  </form>
+</dialog>
 
 <script type="module">
 const $ = (id) => document.getElementById(id);
@@ -930,51 +919,7 @@ $("fileInput").addEventListener("change", (e) => {
 // ═══════════════════════════════════════════════════════════════════
 // Réglages
 // ═══════════════════════════════════════════════════════════════════
-// Listes à choix courts : des pastilles cliquables, comme les tailles d'une fiche produit.
-// La liste cachée reste la valeur de référence (lue par num / Réinitialiser).
-for (const sel of document.querySelectorAll("select.chips")) {
-  const grid = document.createElement("div");
-  grid.className = "chipGrid";
-  for (const o of sel.options) {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "chip";
-    b.dataset.value = o.value;
-    b.textContent = o.text;
-    b.addEventListener("click", () => {
-      sel.value = o.value;
-      sel.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-    grid.append(b);
-  }
-  sel.hidden = true;
-  sel.after(grid);
-}
-
-// Chaque réglage affiche sa valeur à droite du libellé, comme une fiche technique
-const rows = Array.from(document.querySelectorAll("#panel .row")).map((row) => {
-  const ctl = row.querySelector("input, select");
-  const out = document.createElement("output");
-  out.setAttribute("for", ctl.id);
-  row.querySelector("label").after(out);
-  return { ctl, out };
-});
-function paintControls() {
-  for (const { ctl, out } of rows) {
-    if (ctl.type === "range") {
-      // partie de la piste à gauche du curseur remplie
-      ctl.style.setProperty("--fill", `${((ctl.value - ctl.min) / (ctl.max - ctl.min)) * 100}%`);
-      const digits = Math.min(4, (ctl.step.split(".")[1] ?? "").length);
-      out.textContent = Number(ctl.value).toFixed(digits) + (ctl.dataset.unit ? ` ${ctl.dataset.unit}` : "");
-    } else {
-      out.textContent = ctl.selectedOptions[0]?.text ?? "";
-      for (const b of ctl.parentElement.querySelectorAll(".chip")) b.setAttribute("aria-pressed", b.dataset.value === ctl.value);
-    }
-  }
-}
-$("panel").addEventListener("input", paintControls);
-paintControls();
-
+// Valeurs des sliders, volets, titre et fermeture de la notice : ../ui/ui_000.js
 const applyMirror = () => document.querySelectorAll(".previewBox").forEach((el) => el.classList.toggle("mirror", on("mirror")));
 controls.mirror.addEventListener("change", applyMirror);
 
@@ -1007,7 +952,6 @@ window.addEventListener("keydown", (e) => {
 
 $("resetBtn").addEventListener("click", () => {
   resetControls();
-  paintControls();
   applyMirror();
   updateRamp();
   resize(); // efface la trace
@@ -1016,8 +960,6 @@ $("resetBtn").addEventListener("click", () => {
 
 const privacyDialog = $("privacyDialog");
 $("privacyBtn").addEventListener("click", () => privacyDialog.showModal());
-// un clic à côté du volet le ferme
-privacyDialog.addEventListener("click", (e) => { if (e.target === privacyDialog) privacyDialog.close(); });
 
 
 // ── Boucle ──

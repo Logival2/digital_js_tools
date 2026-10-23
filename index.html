@@ -39,8 +39,20 @@
   }
   #top nav a { color: inherit; text-underline-offset: 3px; }
 
+  /* rubrique : un titre sur sa propre plaque de verre, comme une section du panneau */
+  .groupTitle {
+    margin: 14px 0 0;
+    padding: 8px var(--pad);
+    font-size: var(--fs-text);
+    font-weight: 400;
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(var(--blur));
+    backdrop-filter: blur(var(--blur));
+    border-radius: var(--radius-panel);
+  }
+
   /* outils : une plaque de verre par outil, aperçu au format A4 */
-  #tools {
+  .toolGrid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 10px;
@@ -95,18 +107,25 @@
   </nav>
 </header>
 
-<main id="tools"></main>
+<main>
+  <div class="toolGrid" id="tools"></div>
+  <!-- Pipeline : les outils de préparation et de publication (convertir, monter, publier) -->
+  <h2 class="groupTitle">Pipeline</h2>
+  <div class="toolGrid" id="pipeline"></div>
+</main>
 
 <footer id="note">[For experimental purposes only]</footer>
 
 <script>
-// Pour ajouter un outil : une ligne de plus ici (dossier = nom du dossier dans le dépôt,
-// apercu = une image dans le dossier apercu/, facultative).
+// Pour ajouter un outil : une ligne de plus dans TOOLS (outils de création) ou PIPELINE
+// (préparation et publication) — dossier = nom du dossier dans le dépôt,
+// apercu = une image dans le dossier apercu/, facultative.
 const TOOLS = [
   {
-    dossier: "tools_heif_000",
-    nom: "HEIF to JPEG",
-    desc: "Converts iPhone HEIC / HEIF photos to JPEG in the browser, several at once, all exported in one ZIP.",
+    dossier: "tools_Matrice_images_000",
+    nom: "Image matrix",
+    desc: "An image viewer in WebGL: your images as an endless 2D index, a 3D sphere, a 3D space, or pinned over the Mont Blanc massif.",
+    apercu: "apercu/tools_Matrice_images_000.png",
   },
   {
     dossier: "tools_flyer_000",
@@ -136,7 +155,16 @@ const TOOLS = [
     dossier: "tools_gradient_body_001",
     nom: "Gradient body",
     desc: "Full screen: the webcam cuts out your silhouette (MediaPipe), which leaves a grainy glacier-blue aura, with tags on the tracked blobs.",
-    apercu: "apercu/tools_gradient_body_001.png",
+    apercu: "apercu/tools_gradient_body_001.jpg",
+  },
+];
+
+const PIPELINE = [
+  {
+    dossier: "tools_heif_000",
+    nom: "HEIF to JPEG",
+    desc: "Converts iPhone HEIC / HEIF photos to JPEG in the browser, several at once, all exported in one ZIP.",
+    apercu: "apercu/tools_heif_000.png",
   },
   {
     dossier: "tools_montage_001",
@@ -152,8 +180,11 @@ const TOOLS = [
   },
 ];
 
-const list = document.getElementById("tools");
-for (const t of TOOLS) {
+for (const [listId, entries] of [["tools", TOOLS], ["pipeline", PIPELINE]]) {
+  const list = document.getElementById(listId);
+  for (const t of entries) list.appendChild(toolCard(t));
+}
+function toolCard(t) {
   const a = document.createElement("a");
   a.className = "tool";
   a.href = t.dossier + "/";
@@ -168,7 +199,7 @@ for (const t of TOOLS) {
   a.querySelector(".name").textContent = t.nom;
   a.querySelector(".folder").textContent = t.dossier;
   a.querySelector(".desc").textContent = t.desc;
-  list.appendChild(a);
+  return a;
 }
 </script>
 </body>

@@ -55,7 +55,7 @@
     const section = h2.parentElement;
     h2.tabIndex = 0;
     h2.setAttribute("role", "button");
-    h2.setAttribute("aria-expanded", "true");
+    h2.setAttribute("aria-expanded", String(!section.classList.contains("collapsed"))); // une section peut partir fermée
     const toggle = () => {
       const collapsed = section.classList.toggle("collapsed");
       h2.setAttribute("aria-expanded", String(!collapsed));
