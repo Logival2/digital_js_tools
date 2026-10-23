@@ -6,6 +6,13 @@
   src: url("../fonts/MingLiU-01.ttf") format("truetype");
   font-display: swap;
 }
+/* servie avec la page, comme les autres polices (plus de Google Fonts) */
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("../fonts/RobotoMono-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
 
 /* ── Panneau : les étapes ── */
 /* numéro d'étape : petit carré cerclé de noir */

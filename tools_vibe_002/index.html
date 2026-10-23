@@ -4,9 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Organic type</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&display=swap" />
 <!-- interface commune des outils (verre, typo, sliders), puis la mise en page propre à l'outil -->
 <link rel="stylesheet" href="../ui/ui_000.css" />
 <link rel="stylesheet" href="style.css" />
@@ -161,14 +158,15 @@
   <h3>Images and exports</h3>
   <p>The image you import stays on your device for the session. PNG and MP4 files are made locally.</p>
   <h3>Cookies and tracking</h3>
-  <p>This site uses no cookies, no analytics and no user accounts.</p>
+  <p>This site uses no cookies, no analytics and no user accounts. Fonts are served with the page.</p>
   <h3>Third-party services</h3>
   <ul>
-    <li>Google Fonts — Roboto Mono font, offered for the text;</li>
     <li>jsDelivr — hand tracking (MediaPipe) and the MP4 video muxer;</li>
     <li>Google Cloud Storage — hand tracking model.</li>
   </ul>
   <p>These services receive your IP address, which they need to send the files.</p>
+  <h3>Your rights</h3>
+  <p>This site keeps no personal data. For any question about your rights (access, rectification, erasure, objection), write to the address above. You can also contact the CNIL, the French data protection authority (cnil.fr).</p>
   <form method="dialog"><button type="submit">Close</button></form>
 </dialog>
 
@@ -285,8 +283,23 @@ const controls = {
   duration: $("durationSelect"),
   headStart: $("headStartSlider"),
 };
-const DEFAULTS = Object.fromEntries(Object.entries(controls).map(([k, el]) => [k, el.type === "checkbox" ? el.checked : el.value]));
-const DEFAULT_COLORS = gradColorInputs.map((i) => i.value);
+// Valeurs par défaut lues dans le HTML lui-même (et pas dans l'état courant :
+// au rechargement, le navigateur restaure les anciens réglages dans les champs)
+function htmlDefault(el) {
+  if (el.type === "checkbox") return el.defaultChecked;
+  if (el.tagName === "SELECT") return (Array.from(el.options).find((o) => o.defaultSelected) ?? el.options[0]).value;
+  return el.defaultValue;
+}
+const DEFAULTS = Object.fromEntries(Object.entries(controls).map(([k, el]) => [k, htmlDefault(el)]));
+const DEFAULT_COLORS = gradColorInputs.map((i) => i.defaultValue);
+function resetControls() {
+  for (const [k, el] of Object.entries(controls)) {
+    if (el.type === "checkbox") el.checked = DEFAULTS[k];
+    else el.value = DEFAULTS[k];
+  }
+  gradColorInputs.forEach((i, k) => (i.value = DEFAULT_COLORS[k]));
+}
+resetControls(); // la page démarre toujours sur les réglages par défaut
 const num = (k) => Number(controls[k].value);
 
 // Matières de Gray-Scott (feed, kill), d'après les tables de Karl Sims / Robert Munafo
@@ -317,7 +330,11 @@ const SCENE_MARGIN = 40;
 const GRID_MARGIN = 10, GRID_GUTTER = 10, GRID_COLS = 5, GRID_ROWS = 10;
 
 // ── Polices ──
-const FONT_FILES = { "Replica Mono": "../fonts/Replica-Mono.otf", "MingLiU-01": "../fonts/MingLiU-01.ttf" };
+const FONT_FILES = {
+  "Replica Mono": "../fonts/Replica-Mono.otf",
+  "MingLiU-01": "../fonts/MingLiU-01.ttf",
+  "Roboto Mono": "../fonts/RobotoMono-Regular.ttf", // servie avec la page (avant : Google Fonts)
+};
 for (const [name, url] of Object.entries(FONT_FILES)) {
   new FontFace(name, `url('${url}')`).load().then((face) => {
     document.fonts.add(face);
@@ -1093,11 +1110,7 @@ $("imageInput").addEventListener("change", async (e) => {
 });
 
 $("resetBtn").addEventListener("click", () => {
-  for (const [k, el] of Object.entries(controls)) {
-    if (el.type === "checkbox") el.checked = DEFAULTS[k];
-    else el.value = DEFAULTS[k];
-  }
-  gradColorInputs.forEach((i, k) => (i.value = DEFAULT_COLORS[k]));
+  resetControls();
   updateGradientPreview();
   strokes = [];
   sourceImage = null;

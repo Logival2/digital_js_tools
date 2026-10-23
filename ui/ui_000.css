@@ -453,6 +453,39 @@ input[type="color"]:disabled { opacity: 0.4; cursor: default; }
   background: none;
 }
 
+/* ── Téléphone : volet « Desktop only » posé par ui_000.js, qui couvre tout l'outil ── */
+#desktopOnly {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: #d8d8d8;
+}
+#desktopOnly .desktopOnlyPlate {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 360px;
+  padding: var(--pad);
+  background: var(--glass);
+  border-radius: var(--radius-panel);
+}
+#desktopOnly h2 {
+  margin: 0;
+  font-family: "MingLiU-01", serif;
+  font-size: 40px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+#desktopOnly p:not(.eyebrow) {
+  margin: 0;
+  text-transform: none; /* une phrase : en minuscules pour se lire */
+}
+
 /* ── Fenêtres (RGPD) : volet blanc collé à droite, toute la hauteur ── */
 dialog {
   position: fixed;

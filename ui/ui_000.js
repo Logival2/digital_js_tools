@@ -94,6 +94,30 @@
   }
   if (sliders.length) paintSliders();
 
+  // ── Téléphone : les outils sont faits pour un ordinateur (grand écran, souris, clavier).
+  // Sur petit écran, un volet couvre la page et renvoie vers l'ordinateur ; une page adaptée
+  // au téléphone s'en exempte avec <body data-mobile="ok"> (l'accueil, HEIF to JPEG). ──
+  if (document.body.dataset.mobile !== "ok") {
+    const small = matchMedia("(max-width: 760px), (max-height: 480px) and (pointer: coarse)");
+    const notice = document.createElement("div");
+    notice.id = "desktopOnly";
+    notice.setAttribute("role", "alertdialog");
+    notice.setAttribute("aria-modal", "true");
+    notice.setAttribute("aria-labelledby", "desktopOnlyTitle");
+    notice.innerHTML = `
+      <div class="desktopOnlyPlate">
+        <p class="eyebrow"><a class="badge backLink" href="../">← Digital tools</a></p>
+        <h2 id="desktopOnlyTitle">Desktop only</h2>
+        <p>This tool is made for a computer: a large screen, a mouse and a keyboard. Open it in a desktop browser.</p>
+      </div>`;
+    const apply = () => {
+      notice.hidden = !small.matches;
+      if (small.matches && !notice.isConnected) document.body.append(notice);
+    };
+    apply();
+    small.addEventListener("change", apply);
+  }
+
   // ── Fenêtres : un clic sur le fond assombri ferme le volet ──
   for (const dialog of document.querySelectorAll("dialog")) {
     dialog.addEventListener("click", (e) => {

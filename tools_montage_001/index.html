@@ -40,7 +40,39 @@
     <div class="row"><label for="borderInput" title="White border around the frame video">Border</label><input id="borderInput" type="range" min="0" max="0.08" step="0.001" value="0" /></div>
   </div>
 
+  <footer id="panelFooter">
+    <button id="resetBtn" type="button">Reset</button>
+    <button id="privacyBtn" type="button">Privacy · GDPR</button>
+  </footer>
 </aside>
+
+<!-- Notice de confidentialité (RGPD) -->
+<dialog id="privacyDialog" aria-labelledby="privacyTitle">
+  <h2 id="privacyTitle">Privacy · GDPR</h2>
+
+  <h3>Data controller</h3>
+  <p>Valentin Maynadié — contact: <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
+
+  <h3>Videos and exports</h3>
+  <p>The videos you load are read only in your browser and are never uploaded. PNG and MP4 files are made locally.
+  If you choose an output folder, the browser remembers it on this computer only, to save the next exports there.</p>
+
+  <h3>Cookies and tracking</h3>
+  <p>This site uses no cookies, no analytics and no user accounts. Fonts are served with the page.</p>
+
+  <h3>Third-party services</h3>
+  <ul>
+    <li>jsDelivr — MP4 video muxer, when you export.</li>
+  </ul>
+  <p>These services receive your IP address, which they need to send the files.</p>
+
+  <h3>Your rights</h3>
+  <p>This site keeps no personal data. For any question about your rights (access, rectification, erasure, objection), write to the address above. You can also contact the CNIL, the French data protection authority (cnil.fr).</p>
+
+  <form method="dialog">
+    <button type="submit">Close</button>
+  </form>
+</dialog>
 
 <!-- Zone principale : le format choisi, à l'échelle de l'écran -->
 <div id="main">
@@ -95,6 +127,11 @@
 <script type="module">
 const $ = (id) => document.getElementById(id);
 const num = (id) => Number($(id).value);
+
+// Au rechargement, le navigateur restaure les anciens réglages : on repart toujours du HTML
+const settingFields = Array.from(document.querySelectorAll("#panel input:not([type=file]), #rightPanel input"));
+const resetFields = () => settingFields.forEach((el) => { el.value = el.defaultValue; });
+resetFields();
 
 // Formats d'export (identiques aux autres outils)
 const FORMATS = {
@@ -442,6 +479,20 @@ async function exportMP4() {
   muxer.finalize();
   saveBlob(new Blob([muxer.target.buffer], { type: "video/mp4" }), `montage-${currentFormat}-${W}x${H}-${duration}s.mp4`);
 }
+
+// ── Réinitialiser : réglages et format par défaut ; les vidéos chargées restent ──
+$("resetBtn").addEventListener("click", () => {
+  resetFields();
+  durationTouched = false;
+  duration = Number(durationInput.value);
+  setDuration(Math.max(bgVideo.duration || 0, frameVideo.duration || 0)); // durée des vidéos, s'il y en a
+  applyFormat("portrait");
+  setMode("video");
+  setPlaying(true);
+  restart();
+});
+
+$("privacyBtn").addEventListener("click", () => $("privacyDialog").showModal());
 
 // ── Démarrage ──
 applyFormat(currentFormat);

@@ -70,3 +70,26 @@
 }
 
 #fileInput { display: none; }
+
+/* ── Téléphone : tout en une colonne qui défile ; l'export reste en bas de l'écran ── */
+@media (max-width: 760px) {
+  html, body { height: auto; min-height: 100%; overflow: auto; }
+  body { flex-direction: column; }
+  #panel,
+  #rightPanel {
+    flex: none;
+    width: auto;
+    min-width: 0;
+    margin: 10px 10px 0;
+  }
+  #panel { overflow: visible; }
+  #main { overflow: visible; padding: 10px; }
+  #empty { height: auto; padding: 32px 0; }
+  #grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #rightPanel {
+    position: sticky;
+    bottom: 10px;
+    align-self: stretch;
+    margin: 0 10px 10px;
+  }
+}

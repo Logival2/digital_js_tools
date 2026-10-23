@@ -4,9 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Bookmarks → Resources</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" />
 <!-- interface commune des outils (verre, typo, sliders), puis la mise en page propre à l'outil -->
 <link rel="stylesheet" href="../ui/ui_000.css" />
 <link rel="stylesheet" href="style.css" />
@@ -88,17 +85,28 @@
   </footer>
 </aside>
 
-<dialog id="privacyDialog" class="dialog" aria-labelledby="privacyTitle">
+<dialog id="privacyDialog" aria-labelledby="privacyTitle">
   <h2 id="privacyTitle">Privacy · Security</h2>
+
+  <h3>Data controller</h3>
+  <p>Valentin Maynadié — contact: <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
+
   <h3>Your bookmarks</h3>
   <p>The Firefox export is read only in your browser. Only the two chosen folders become ressources.json; the rest of your bookmarks never leaves your computer.</p>
   <h3>GitHub token</h3>
   <p>The token is encrypted with your password (PBKDF2, 600,000 iterations, then 256-bit AES-GCM) and only the encrypted result is kept in this browser (localStorage). It is decrypted when you send, used once, then forgotten. Use a fine-grained token limited to the digital_js_tools repository, with Contents read/write permission and an expiry date.</p>
+  <h3>Cookies and tracking</h3>
+  <p>This site uses no cookies, no analytics and no user accounts. Fonts are served with the page.</p>
+
   <h3>Third-party services</h3>
   <ul>
-    <li>GitHub (api.github.com) — receives only ressources.json, with your token;</li>
-    <li>Google Fonts — Roboto Mono font of the preview.</li>
+    <li>GitHub (api.github.com) — receives only ressources.json, with your token.</li>
   </ul>
+  <p>GitHub receives your IP address, which it needs to answer.</p>
+
+  <h3>Your rights</h3>
+  <p>This site keeps no personal data. For any question about your rights (access, rectification, erasure, objection), write to the address above. You can also contact the CNIL, the French data protection authority (cnil.fr).</p>
+
   <form method="dialog"><button type="submit">Close</button></form>
 </dialog>
 
@@ -135,6 +143,7 @@ const PARTS = [
 ];
 
 let data = null;        // ressources.json en cours (aperçu, envoi, téléchargements)
+const SOURCE_EXPORT = "Firefox export", SOURCE_ONLINE = "Online"; // provenance affichée dans l'aperçu
 let folders = [];       // dossiers trouvés dans l'export : { path, dl }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -258,7 +267,7 @@ function rebuild() {
     }),
   };
   try { localStorage.setItem("favoris.folders", JSON.stringify(remembered)); } catch {}
-  showPreview("Export Firefox");
+  showPreview(SOURCE_EXPORT);
 }
 
 // ── Aperçu ──
@@ -270,7 +279,7 @@ function showPreview(source) {
   $("statSource").textContent = source;
   const { index, liste } = renderRessources(data);
   $("preview").innerHTML = `<div class="col1">${index}</div><div class="col2">${liste}</div>`;
-  $("sendBtn").disabled = source !== "Export Firefox";
+  $("sendBtn").disabled = source !== SOURCE_EXPORT; // on n'envoie que ce qui vient d'un export
   $("dlJsonBtn").disabled = false;
   $("dlPageBtn").disabled = false;
 }
@@ -490,11 +499,15 @@ for (const part of PARTS) part.select.addEventListener("change", rebuild);
 $("privacyBtn").addEventListener("click", () => $("privacyDialog").showModal());
 
 // ── Démarrage : on montre la version actuellement en ligne ──
+// (le fichier vit dans tools_favoris_000/data : on lit l'adresse publique, la même que la page chez OVH)
 showTokenState();
-fetch(`data/ressources.json`, { cache: "no-cache" })
-  .then((r) => r.json())
-  .then((json) => { data = json; showPreview("En ligne"); })
-  .catch(() => { $("statSource").textContent = "—"; });
+fetch(JSON_URL, { cache: "no-cache" })
+  .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
+  .then((json) => { data = json; showPreview(SOURCE_ONLINE); })
+  .catch((err) => {
+    console.error("Could not load the online ressources.json:", err);
+    $("statSource").textContent = "—";
+  });
 </script>
 </body>
 </html>
