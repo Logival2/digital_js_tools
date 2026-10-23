@@ -118,6 +118,28 @@
     small.addEventListener("change", apply);
   }
 
+  // ── Outils plein écran sur téléphone : un bouton pour ouvrir / fermer le panneau (pas de touche H) ──
+  if (document.body.dataset.layout === "fullscreen") {
+    const phone = matchMedia("(max-width: 760px)");
+    const toggle = document.createElement("button");
+    toggle.id = "panelToggle";
+    toggle.type = "button";
+    const label = () => {
+      const hidden = document.body.classList.contains("panel-hidden");
+      toggle.textContent = hidden ? "Settings" : "Hide";
+      toggle.setAttribute("aria-expanded", String(!hidden));
+    };
+    toggle.addEventListener("click", () => { document.body.classList.toggle("panel-hidden"); label(); });
+    new MutationObserver(label).observe(document.body, { attributes: true, attributeFilter: ["class"] }); // H au clavier
+    const apply = () => {
+      if (phone.matches && !toggle.isConnected) document.body.append(toggle);
+      toggle.hidden = !phone.matches;
+      label();
+    };
+    apply();
+    phone.addEventListener("change", apply);
+  }
+
   // ── Fenêtres : un clic sur le fond assombri ferme le volet ──
   for (const dialog of document.querySelectorAll("dialog")) {
     dialog.addEventListener("click", (e) => {

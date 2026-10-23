@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="style.css" />
 <script defer src="../ui/ui_000.js"></script>
 </head>
-<body>
+<body data-mobile="ok" data-layout="fullscreen">
 
 <!-- Rendu WebGL2, plein écran derrière le panneau -->
 <canvas id="gl"></canvas>
@@ -888,6 +888,7 @@ fetch("data/montblanc_dem.bin")
   .catch((err) => console.error("Could not load the Mont Blanc terrain:", err));
 let lastGrid = null;        // dernière grille du plan 2D : ses répétitions s'effacent en quittant le mode
 let lastTerrain = null;     // dernière vue du relief : il pâlit sur place en quittant le mode
+let lastCount = 0;          // instances dessinées à la dernière image (pour retrouver la carte cliquée)
 
 // ── Taille de l'écran ──
 let cssW = 1, cssH = 1, proj = perspective(1);
@@ -909,17 +910,42 @@ let hovered = -1;      // carte survolée
 let hoveredCell = -1;  // sa case sur le plan 2D (-1 ailleurs)
 let currentDepth = 10; // profondeur de référence du mode, pour convertir les pixels en unités
 
+// Zoom (molette, ou pincement à deux doigts) : k > 1 rapproche
+function zoomBy(k) {
+  if (mode === "sphere") view.sphere.zoom = Math.max(0.35, Math.min(4, view.sphere.zoom * k));
+  else if (mode === "terrain") view.terrain.zoom = Math.max(0.5, Math.min(5, view.terrain.zoom * k));
+  else if (mode === "space") view.space.travel += (k - 1) * 12; // dans l'espace, écarter les doigts fait avancer
+}
+
+// Doigts posés sur l'écran : à deux, on pince pour zoomer au lieu de glisser
+const touches = new Map();
+let pinchDist = 0;
+const touchSpread = () => { const [a, b] = [...touches.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
+
 canvas.addEventListener("pointerdown", (e) => {
+  touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  canvas.setPointerCapture(e.pointerId);
+  if (touches.size === 2) {
+    pinchDist = touchSpread();
+    pointer.moved = Infinity; // un pincement n'est jamais un clic
+    return;
+  }
   pointer.down = true;
   pointer.lastX = pointer.startX = e.clientX;
   pointer.lastY = pointer.startY = e.clientY;
   pointer.lastT = pointer.startT = e.timeStamp;
   pointer.moved = 0;
   view.grid.velX = view.grid.velY = 0;
-  canvas.setPointerCapture(e.pointerId);
   canvas.classList.add("dragging");
 });
 canvas.addEventListener("pointermove", (e) => {
+  if (touches.has(e.pointerId)) touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (touches.size >= 2) {
+    const d = touchSpread();
+    if (pinchDist > 0 && d > 0) zoomBy(d / pinchDist);
+    pinchDist = d;
+    return;
+  }
   pointer.x = e.clientX;
   pointer.y = e.clientY;
   pointer.inside = true;
@@ -957,13 +983,21 @@ canvas.addEventListener("pointermove", (e) => {
   }
 });
 const endDrag = (e) => {
-  if (!pointer.down) return;
+  touches.delete(e.pointerId);
+  if (touches.size === 1) {
+    // fin d'un pincement : le doigt restant reprend le glisser sans saut
+    const [rest] = touches.values();
+    pointer.lastX = rest.x;
+    pointer.lastY = rest.y;
+    return;
+  }
+  if (touches.size > 0 || !pointer.down) return;
   pointer.down = false;
   canvas.classList.remove("dragging");
   // lâché sans glisser, ou main arrêtée avant de lâcher : pas d'élan
   if (e.timeStamp - pointer.lastT > 80) view.grid.velX = view.grid.velY = 0;
   const isClick = pointer.moved <= 5 && e.timeStamp - pointer.startT < 300;
-  if (isClick && e.type === "pointerup") onClick();
+  if (isClick && e.type === "pointerup") onClick(e);
 };
 canvas.addEventListener("pointerup", endDrag);
 canvas.addEventListener("pointercancel", endDrag);
@@ -977,18 +1011,23 @@ canvas.addEventListener("wheel", (e) => {
     v.focus = -1;
     v.velX -= e.deltaX * k;
     v.velY += e.deltaY * k;
-  } else if (mode === "sphere") view.sphere.zoom = Math.max(0.35, Math.min(4, view.sphere.zoom * Math.exp(-e.deltaY * 0.0012)));
-  else if (mode === "terrain") view.terrain.zoom = Math.max(0.5, Math.min(5, view.terrain.zoom * Math.exp(-e.deltaY * 0.0012)));
-  else view.space.travel += e.deltaY * 0.01;
+  } else if (mode === "space") view.space.travel += e.deltaY * 0.01;
+  else zoomBy(Math.exp(-e.deltaY * 0.0012));
 }, { passive: false });
 canvas.addEventListener("dblclick", () => {
   if (mode !== "grid") Object.assign(view[mode], structuredClone(freshView[mode]));
 });
 
-// Plan 2D : un clic sur une carte la centre et zoome dessus ; à côté, on ressort
-function onClick() {
+// Plan 2D : un clic sur une carte la centre et zoome dessus ; à côté, on ressort.
+// La carte est cherchée sous le point du lâcher (pendant l'appui, le survol est suspendu,
+// et au doigt il n'y a pas de survol du tout).
+function onClick(e) {
   if (mode !== "grid") return;
-  view.grid.focus = hoveredCell >= 0 ? hoveredCell : -1;
+  pointer.x = e.clientX;
+  pointer.y = e.clientY;
+  pointer.inside = true;
+  const hit = pick(instanceData, lastCount);
+  view.grid.focus = hit >= 0 ? instanceCells[hit] : -1;
 }
 // Flèches : de carte en carte (la grille boucle) ; sans focus, la carte au centre de l'écran
 function stepFocus(key) {
@@ -1167,6 +1206,7 @@ function frame(now) {
       }
     }
   }
+  lastCount = count;
   const hit = pick(instanceData, count);
   hovered = hit >= 0 ? instanceData[hit * FLOATS + 16] : -1;
   hoveredCell = hit >= 0 ? instanceCells[hit] : -1;

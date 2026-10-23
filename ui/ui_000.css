@@ -314,7 +314,7 @@ select {
   cursor: pointer;
 }
 option, optgroup { text-transform: none; color: #000; background: #fff; }
-::placeholder { color: var(--line-faint); }
+::placeholder { color: rgba(0, 0, 0, 0.6); } /* lisible sur le verre (contraste ≈ 4,8:1), plus pâle que le texte saisi */
 
 /* Interrupteurs (cases à cocher) : libellé à gauche, bouton à droite */
 .check {
@@ -484,6 +484,68 @@ input[type="color"]:disabled { opacity: 0.4; cursor: default; }
 #desktopOnly p:not(.eyebrow) {
   margin: 0;
   text-transform: none; /* une phrase : en minuscules pour se lire */
+}
+
+/* ── Téléphone (≤ 760 px), pour les pages marquées <body data-mobile="ok" data-layout="…"> ──
+   « panels » : l'aperçu en haut, collé en haut de l'écran pendant qu'on fait défiler,
+   puis le panneau de droite (format, export), puis les réglages.
+   « fullscreen » : le rendu reste plein écran, le panneau devient un tiroir en bas,
+   ouvert et fermé par le bouton #panelToggle (posé par ui_000.js). */
+@media (max-width: 760px) {
+  html:has(body[data-layout="panels"]),
+  body[data-layout="panels"] {
+    height: auto;
+    min-height: 100%;
+    overflow: auto;
+  }
+  body[data-layout="panels"] { flex-direction: column; }
+  body[data-layout="panels"] #main {
+    order: 0;
+    flex: none;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    height: 52svh;
+    min-height: 280px;
+    padding: 0;
+    background: #d8d8d8;
+  }
+  body[data-layout="panels"] #rightPanel,
+  body[data-layout="panels"] #panel {
+    flex: none;
+    width: auto;
+    min-width: 0;
+    max-height: none;
+    margin: 10px 10px 0;
+    overflow: visible;
+  }
+  body[data-layout="panels"] #rightPanel { order: 1; align-self: stretch; }
+  body[data-layout="panels"] #panel { order: 2; margin-bottom: 10px; }
+
+  body[data-layout="fullscreen"] #panel {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: auto;
+    min-width: 0;
+    max-height: 50svh;
+    margin: 0 8px 8px;
+  }
+  #panelToggle {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 3;
+    min-height: 30px;
+    padding: 5px 12px;
+    border: none;
+    border-radius: var(--radius-panel);
+    color: var(--text);
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(var(--blur));
+    backdrop-filter: blur(var(--blur));
+  }
 }
 
 /* ── Fenêtres (RGPD) : volet blanc collé à droite, toute la hauteur ── */

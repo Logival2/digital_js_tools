@@ -29,3 +29,11 @@
 }
 #outputBtn { margin-top: 6px; }
 #outputLabel { margin: 0; overflow-wrap: anywhere; }
+
+/* Téléphone : la vidéo tient dans la largeur et dans l'aperçu du haut (voir ui_000.css) */
+@media (max-width: 760px) {
+  #stage {
+    max-width: calc(100vw - 20px);
+    max-height: calc(52svh - 20px);
+  }
+}

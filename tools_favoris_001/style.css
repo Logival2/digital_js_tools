@@ -140,3 +140,15 @@
   text-transform: none;
   letter-spacing: 0;
 }
+
+/* Téléphone : l'aperçu est une longue page à lire, il passe sous les réglages au lieu de rester en haut */
+@media (max-width: 760px) {
+  body[data-layout="panels"] #main {
+    order: 3;
+    position: static;
+    height: auto;
+    margin: 0 10px 10px;
+    padding: 16px;
+    overflow: visible;
+  }
+}
