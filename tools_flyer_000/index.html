@@ -21,24 +21,26 @@
   </header>
 
   <!-- Textes : titre (collé en haut, d'une marge à l'autre), milieu, bas.
-       Mise en page fixe, calquée sur l'affiche de référence ; une police pour les trois. -->
+       Mise en page fixe, calquée sur l'affiche de référence ; une police par bloc
+       (les options des menus sont remplies depuis FONTS). -->
   <div class="section">
     <h2>Text</h2>
     <div class="row">
-      <label for="fontSelect">Font</label>
-      <select id="fontSelect">
-        <option value="Happy Times" selected>Happy Times</option>
-        <option value="Flor de Ruina">Flor de Ruina</option>
-        <option value="Roboto Mono">Roboto Mono</option>
-        <option value="MingLiU-01">MingLiU</option>
-        <option value="SangBleu Kingdom">SangBleu Kingdom</option>
-        <option value="Century Schoolbook Mono">Century Schoolbook Mono</option>
-      </select>
+      <label for="titleFont">Title font</label>
+      <select id="titleFont" class="fontSelect"></select>
     </div>
     <textarea id="titleInput" rows="3" maxlength="400" placeholder="Title, one line per row">MAKE
 THE TOOLS
 OUR OWN</textarea>
+    <div class="row">
+      <label for="middleFont">Middle font</label>
+      <select id="middleFont" class="fontSelect"></select>
+    </div>
     <textarea id="middleInput" rows="1" maxlength="200" placeholder="Middle">→ DIGITAL TOOLS ←</textarea>
+    <div class="row">
+      <label for="bottomFont">Bottom font</label>
+      <select id="bottomFont" class="fontSelect"></select>
+    </div>
     <textarea id="bottomInput" rows="2" maxlength="400" placeholder="Bottom">valentinmaynadie.com
 /tools</textarea>
   </div>
@@ -109,6 +111,24 @@ const formatButtons = Array.from(document.querySelectorAll("#formatButtons butto
 const formatInfo = $("formatInfo");
 const panelFields = Array.from(document.querySelectorAll("#panel input, #panel textarea, #panel select"));
 
+// Polices proposées (dossier ../fonts), au choix pour chacun des trois blocs.
+// MingLiU garde le traitement des autres outils : capitales, faux gras arrondi
+// (contour de 2,5 % de la taille) et chasse élargie (bien plus étroite que le Times de la référence).
+const FONTS = {
+  "Happy Times":             { file: "happy-times-at-the-ikob.ttf" },
+  "Flor de Ruina":           { file: "FlorDeRuina-Flor.ttf" },
+  "Roboto Mono":             { file: "RobotoMono-Regular.ttf" },
+  "MingLiU-01":              { file: "MingLiU-01.ttf", label: "MingLiU", width: 1.2, embolden: 0.025, upper: true },
+  "SangBleu Kingdom":        { file: "SangBleuKingdom-Regular.otf" },
+  "Century Schoolbook Mono": { file: "Century-Schoolbook-Monospace-BT.otf" },
+};
+const DEFAULT_FONT = "Century Schoolbook Mono";
+for (const select of document.querySelectorAll(".fontSelect")) {
+  for (const [name, { label }] of Object.entries(FONTS)) {
+    select.add(new Option(label ?? name, name, name === DEFAULT_FONT));
+  }
+}
+
 // Au rechargement, le navigateur restaure les anciens réglages dans les champs :
 // on repart toujours des valeurs écrites dans le HTML (sinon un nouveau défaut ne s'applique pas)
 function resetFields() {
@@ -120,17 +140,6 @@ function resetFields() {
 }
 resetFields();
 
-// Polices proposées (dossier ../fonts), une seule pour les trois blocs.
-// MingLiU garde le traitement des autres outils : capitales, faux gras arrondi
-// (contour de 2,5 % de la taille) et chasse élargie (bien plus étroite que le Times de la référence).
-const FONTS = {
-  "Happy Times":             { file: "happy-times-at-the-ikob.ttf" },
-  "Flor de Ruina":           { file: "FlorDeRuina-Flor.ttf" },
-  "Roboto Mono":             { file: "RobotoMono-Regular.ttf" },
-  "MingLiU-01":              { file: "MingLiU-01.ttf", width: 1.2, embolden: 0.025, upper: true },
-  "SangBleu Kingdom":        { file: "SangBleuKingdom-Regular.otf" },
-  "Century Schoolbook Mono": { file: "Century-Schoolbook-Monospace-BT.otf" },
-};
 for (const [name, { file }] of Object.entries(FONTS)) {
   new FontFace(name, `url('../fonts/${file}')`).load().then((loaded) => {
     document.fonts.add(loaded);
@@ -139,8 +148,9 @@ for (const [name, { file }] of Object.entries(FONTS)) {
     console.error(`Could not load the ${name} font:`, err);
   });
 }
-const font = () => FONTS[$("fontSelect").value];
-const FONT = (size) => `${size}px "${$("fontSelect").value}", serif`;
+// Police du bloc en cours de dessin (choisie par setType)
+let fontName = DEFAULT_FONT;
+const font = () => FONTS[fontName];
 
 // Formats d'affiche : taille réelle d'export en px
 const FORMATS = {
@@ -198,6 +208,7 @@ const BOTTOM_LEADING = 1.25; // interligne du bas (× sa taille)
 const TITLE_TOP = 0.07;     // marge au-dessus du titre (× la hauteur de la page)
 const TRACKING =-0.03;     // interlettrage des trois blocs, en em
 
+// Lignes d'un bloc, dans la police choisie pour lui (à appeler après setType)
 const linesOf = (id) => (font().upper ? $(id).value.toUpperCase() : $(id).value).split("\n");
 const inkWidth = (m) => m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
 
@@ -216,8 +227,9 @@ function drawLine(line, cx, baseline) {
 }
 
 let strokeW = 0; // épaisseur du faux gras de la taille en cours
-function setType(size) {
-  ctx.font = FONT(size);
+function setType(size, selectId) {
+  fontName = $(selectId).value;
+  ctx.font = `${size}px "${fontName}", serif`;
   ctx.letterSpacing = `${size * TRACKING}px`;
   strokeW = size * (font().embolden ?? 0); // 0 = pas de faux gras (le canvas refuse un lineWidth de 0)
   ctx.lineWidth = strokeW || 1;
@@ -241,29 +253,29 @@ function draw() {
   // Titre : la ligne la plus large va d'une marge à l'autre (contour compris),
   // le haut des capitales de la 1re ligne est à TITLE_TOP de la hauteur de la page.
   // Les deux autres blocs suivent sa taille : tout s'adapte à la page.
-  const title = linesOf("titleInput");
   const REF = 100;
-  setType(REF);
+  setType(REF, "titleFont");
+  const title = linesOf("titleInput");
   const widest = Math.max(0, ...title.map((l) => inkWidth(ctx.measureText(l))));
   const titleSize = widest > 0 ? (REF * (sceneW - margin * 2)) / ((font().width ?? 1) * (widest + strokeW)) : REF;
   const firstLine = title.find((l) => l.trim());
   if (firstLine) {
-    setType(titleSize);
+    setType(titleSize, "titleFont");
     const top = sceneH * TITLE_TOP + ctx.measureText(firstLine).actualBoundingBoxAscent + strokeW / 2;
     title.forEach((line, i) => drawLine(line, cx, top + i * titleSize * TITLE_LEADING));
   }
 
   // Milieu : la ligne de base du bloc à MIDDLE_POS de la hauteur
-  const middle = linesOf("middleInput");
   const middleSize = titleSize * MIDDLE_RATIO;
-  setType(middleSize);
+  setType(middleSize, "middleFont");
+  const middle = linesOf("middleInput");
   middle.forEach((line, i) =>
     drawLine(line, cx, sceneH * MIDDLE_POS - (middle.length - 1 - i) * middleSize * 1.1));
 
   // Bas : dernière ligne posée sur la marge basse
-  const bottom = linesOf("bottomInput");
   const bottomSize = titleSize * BOTTOM_RATIO;
-  setType(bottomSize);
+  setType(bottomSize, "bottomFont");
+  const bottom = linesOf("bottomInput");
   const lastBaseline = sceneH - margin - strokeW / 2;
   bottom.forEach((line, i) =>
     drawLine(line, cx, lastBaseline - (bottom.length - 1 - i) * bottomSize * BOTTOM_LEADING));
