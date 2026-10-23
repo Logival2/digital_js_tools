@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HEIF to JPEG</title>
+<!-- interface commune des outils (verre, typo, sliders), puis la mise en page propre à l'outil -->
+<link rel="stylesheet" href="../ui/ui_000.css" />
+<link rel="stylesheet" href="style.css" />
+<script defer src="../ui/ui_000.js"></script>
+</head>
+<body>
+
+<!-- Panneau latéral (paramètres) -->
+<aside id="panel">
+
+  <!-- En-tête : retour au menu, titre (dessiné en MingLiU par ui_000.js) -->
+  <header id="panelHead">
+    <p class="eyebrow"><a class="badge backLink" href="../" title="Back to all tools">← Digital tools</a></p>
+    <h1 class="toolTitle">HEIF<br>to JPEG</h1>
+  </header>
+
+  <!-- Fichiers : sélection multiple, ou glisser-déposer sur la zone principale -->
+  <div class="section">
+    <h2>Files</h2>
+    <input id="fileInput" type="file" multiple accept=".heic,.heif,.hif,image/heic,image/heif" />
+    <div class="btnRow">
+      <button id="addBtn" class="primary" type="button">Add files</button>
+      <button id="clearBtn" type="button">Clear</button>
+    </div>
+    <p class="hint">Several at once, or drop them on the page.</p>
+  </div>
+
+  <!-- Qualité JPEG : changer la valeur reconvertit les images déjà ajoutées à l'export -->
+  <div class="section">
+    <h2>JPEG</h2>
+    <div class="row">
+      <label for="quality">Quality</label>
+      <input id="quality" type="range" min="50" max="100" step="1" value="92" data-unit="%" />
+    </div>
+  </div>
+
+  <footer id="panelFooter">
+    <button id="resetBtn" type="button">Reset</button>
+    <button id="privacyBtn" type="button">Privacy · GDPR</button>
+  </footer>
+</aside>
+
+<!-- Notice de confidentialité (RGPD) -->
+<dialog id="privacyDialog" aria-labelledby="privacyTitle">
+  <h2 id="privacyTitle">Privacy · GDPR</h2>
+
+  <h3>Data controller</h3>
+  <p>Valentin Maynadié — contact: <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
+
+  <h3>Your images</h3>
+  <p>Images are converted inside your browser and are never sent anywhere. They disappear when you close the page. JPEG and ZIP files are made locally.</p>
+
+  <h3>Cookies and tracking</h3>
+  <p>This site uses no cookies, no analytics, no user accounts and no third-party service: fonts and the HEIF decoder (libheif, LGPL) are served with the page.</p>
+
+  <h3>Your rights</h3>
+  <p>This site keeps no personal data. For any question about your rights (access, rectification, erasure, objection), write to the address above. You can also contact the CNIL, the French data protection authority (cnil.fr).</p>
+
+  <form method="dialog">
+    <button type="submit">Close</button>
+  </form>
+</dialog>
+
+<!-- Zone principale : les images ajoutées -->
+<div id="main">
+  <p id="empty">Drop HEIC / HEIF files here</p>
+  <div id="grid"></div>
+</div>
+
+<!-- Panneau de droite, calé en bas : bilan, export -->
+<aside id="rightPanel">
+  <p id="formatInfo">No file</p>
+  <div id="exportRow">
+    <button id="exportBtn" type="button" disabled>Export all (ZIP)</button>
+  </div>
+</aside>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const mainEl = $("main");
+const grid = $("grid");
+const quality = $("quality");
+
+// Au rechargement, le navigateur restaure les anciens réglages : on repart du HTML
+quality.value = quality.defaultValue;
+
+// ── Décodage ──
+// libheif (WebAssembly, ./lib), chargé au premier fichier seulement (1,4 Mo).
+// Si elle ne lit pas le fichier, on tente le décodeur du navigateur (Safari lit le HEIC).
+let decoderPromise = null;
+function getDecoder() {
+  decoderPromise ??= import("./lib/libheif-bundle.mjs").then(async (mod) => {
+    const libheif = await mod.default();
+    return new libheif.HeifDecoder();
+  });
+  return decoderPromise;
+}
+
+// is_primary() est cassée dans libheif-js 1.19.8 (fonction interne absente) : à défaut, la 1re image
+function primaryImage(images) {
+  try {
+    return images.find((img) => img.is_primary()) ?? images[0];
+  } catch {
+    return images[0];
+  }
+}
+
+// Un vrai HEIF commence par une boîte « ftyp » ; les « ._photo.heic » de macOS
+// (métadonnées copiées depuis un Mac, quelques centaines d'octets) n'en ont pas
+const isAppleDouble = (bytes) => bytes[0] === 0x00 && bytes[1] === 0x05 && bytes[2] === 0x16 && bytes[3] === 0x07;
+const hasFtyp = (bytes) => String.fromCharCode(...bytes.subarray(4, 8)) === "ftyp";
+const notPhoto = (message) => Object.assign(new Error(message), { shown: true }); // message affiché tel quel
+
+// Fichier → canvas à la taille réelle (rotation de l'appareil déjà appliquée)
+async function decodeToCanvas(file) {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (isAppleDouble(bytes)) throw notPhoto("macOS metadata file (._), not a photo");
+  if (!hasFtyp(bytes)) throw notPhoto("not a HEIF file");
+  const decoder = await getDecoder();
+  const images = decoder.decode(bytes);
+  const image = primaryImage(images);
+  const canvas = document.createElement("canvas");
+  if (image) {
+    const width = image.get_width();
+    const height = image.get_height();
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    const imageData = ctx.createImageData(width, height);
+    await new Promise((resolve, reject) => {
+      image.display(imageData, (data) => (data ? resolve() : reject(new Error("HEIF decoding error"))));
+    });
+    ctx.putImageData(imageData, 0, 0);
+    images.forEach((img) => img.free?.());
+    return canvas;
+  }
+  const bitmap = await createImageBitmap(file); // lève une erreur si le navigateur ne sait pas non plus
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  canvas.getContext("2d").drawImage(bitmap, 0, 0);
+  bitmap.close();
+  return canvas;
+}
+
+const toJpeg = (canvas, q) => new Promise((resolve, reject) => {
+  canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("JPEG encoding error"))), "image/jpeg", q / 100);
+});
+
+// ── Liste des images ──
+// item : { file, name (sortie .jpg), el, jpeg (Blob), q (qualité du blob), url, error }
+let items = [];
+let queue = Promise.resolve(); // une conversion à la fois : un HEIC décodé pèse vite 50 Mo en mémoire
+
+const baseName = (name) => name.replace(/\.[^.]+$/, "") || name;
+function uniqueName(file) {
+  const base = baseName(file.name);
+  const taken = new Set(items.map((it) => it.name.toLowerCase()));
+  let name = `${base}.jpg`;
+  for (let n = 2; taken.has(name.toLowerCase()); n++) name = `${base}-${n}.jpg`;
+  return name;
+}
+
+function addFiles(files) {
+  for (const file of files) {
+    const item = { file, name: uniqueName(file), jpeg: null, q: null, url: null, error: null };
+    item.el = document.createElement("div");
+    item.el.className = "item";
+    item.el.innerHTML = `
+      <div class="thumb"></div>
+      <div>
+        <div class="name"></div>
+        <div class="state">Waiting</div>
+      </div>
+      <div class="btnRow">
+        <button type="button" data-act="save" disabled>JPEG</button>
+        <button type="button" data-act="remove">Remove</button>
+      </div>`;
+    item.el.querySelector(".name").textContent = item.name;
+    item.el.querySelector(".name").title = file.name;
+    item.el.querySelector('[data-act="save"]').addEventListener("click", () => downloadBlob(item.jpeg, item.name));
+    item.el.querySelector('[data-act="remove"]').addEventListener("click", () => removeItem(item));
+    grid.append(item.el);
+    items.push(item);
+    queue = queue.then(() => convert(item));
+  }
+  updateInfo();
+}
+
+const setState = (item, text) => { item.el.querySelector(".state").textContent = text; };
+
+async function convert(item) {
+  if (!items.includes(item)) return; // retirée entre-temps
+  const q = Number(quality.value);
+  setState(item, "Converting…");
+  try {
+    const canvas = await decodeToCanvas(item.file);
+    item.jpeg = await toJpeg(canvas, q);
+    item.q = q;
+    item.error = null;
+    canvas.width = canvas.height = 0; // libère la mémoire tout de suite
+    if (item.url) URL.revokeObjectURL(item.url);
+    item.url = URL.createObjectURL(item.jpeg);
+    const img = new Image();
+    img.src = item.url;
+    img.alt = "";
+    item.el.querySelector(".thumb").replaceChildren(img);
+    item.el.querySelector('[data-act="save"]').disabled = false;
+    setState(item, `${(item.jpeg.size / 1e6).toFixed(1)} MB · ${q} %`);
+  } catch (err) {
+    console.error(`Could not convert ${item.file.name}:`, err);
+    item.error = err;
+    setState(item, `Error: ${err.shown ? err.message : "could not decode this file"}`);
+  }
+  updateInfo();
+}
+
+function removeItem(item) {
+  items = items.filter((it) => it !== item);
+  if (item.url) URL.revokeObjectURL(item.url);
+  item.el.remove();
+  updateInfo();
+}
+
+function clearAll() {
+  for (const item of [...items]) removeItem(item);
+}
+
+let exporting = false;
+function updateInfo() {
+  const done = items.filter((it) => it.jpeg).length;
+  const failed = items.filter((it) => it.error).length;
+  const pending = items.length - done - failed;
+  $("empty").hidden = items.length > 0;
+  $("formatInfo").textContent = !items.length ? "No file"
+    : `${items.length} file${items.length > 1 ? "s" : ""} · ${done} converted`
+      + (pending ? ` · ${pending} waiting` : "") + (failed ? ` · ${failed} error${failed > 1 ? "s" : ""}` : "");
+  $("exportBtn").disabled = exporting || done === 0;
+}
+
+// ── Contrôles ──
+$("addBtn").addEventListener("click", () => $("fileInput").click());
+$("fileInput").addEventListener("change", (e) => {
+  addFiles(Array.from(e.target.files));
+  e.target.value = ""; // pouvoir rajouter les mêmes fichiers
+});
+$("clearBtn").addEventListener("click", clearAll);
+$("resetBtn").addEventListener("click", () => {
+  clearAll();
+  quality.value = quality.defaultValue;
+});
+
+// Glisser-déposer sur toute la page
+let dragDepth = 0;
+window.addEventListener("dragenter", (e) => { e.preventDefault(); dragDepth++; mainEl.classList.add("dragover"); });
+window.addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; mainEl.classList.remove("dragover"); } });
+window.addEventListener("dragover", (e) => e.preventDefault());
+window.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dragDepth = 0;
+  mainEl.classList.remove("dragover");
+  addFiles(Array.from(e.dataTransfer.files));
+});
+
+const privacyDialog = $("privacyDialog");
+$("privacyBtn").addEventListener("click", () => privacyDialog.showModal());
+
+// ── Export ──
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// Tout d'un coup : un ZIP « stocké » (les JPEG sont déjà compressés), écrit à la main.
+// Les images à une autre qualité que le slider sont d'abord reconverties.
+$("exportBtn").addEventListener("click", async () => {
+  exporting = true;
+  updateInfo();
+  const btn = $("exportBtn");
+  try {
+    const q = Number(quality.value);
+    for (const item of items.filter((it) => it.jpeg && it.q !== q)) {
+      btn.textContent = "Converting…";
+      await (queue = queue.then(() => convert(item)));
+    }
+    await queue;
+    const ready = items.filter((it) => it.jpeg);
+    if (!ready.length) return;
+    btn.textContent = "Zipping…";
+    const zip = await makeZip(ready.map((it) => ({ name: it.name, blob: it.jpeg, date: new Date(it.file.lastModified) })));
+    const stamp = new Date().toISOString().slice(0, 10);
+    downloadBlob(zip, `heif-to-jpeg-${stamp}.zip`);
+  } finally {
+    btn.textContent = "Export all (ZIP)";
+    exporting = false;
+    updateInfo();
+  }
+});
+
+// ── ZIP (méthode 0, sans compression) ──
+const CRC_TABLE = new Uint32Array(256).map((_, n) => {
+  let c = n;
+  for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+  return c;
+});
+function crc32(bytes) {
+  let c = 0xffffffff;
+  for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+function dosDateTime(d) {
+  const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  const date = ((Math.max(1980, d.getFullYear()) - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  return { time, date };
+}
+async function makeZip(entries) {
+  const enc = new TextEncoder();
+  const parts = [];
+  const central = [];
+  let offset = 0;
+  for (const { name, blob, date } of entries) {
+    const data = new Uint8Array(await blob.arrayBuffer());
+    const nameBytes = enc.encode(name);
+    const crc = crc32(data);
+    const { time, date: day } = dosDateTime(date);
+    const local = new DataView(new ArrayBuffer(30));
+    local.setUint32(0, 0x04034b50, true);
+    local.setUint16(4, 20, true);       // version nécessaire
+    local.setUint16(6, 0x0800, true);   // noms en UTF-8
+    local.setUint16(8, 0, true);        // stocké
+    local.setUint16(10, time, true);
+    local.setUint16(12, day, true);
+    local.setUint32(14, crc, true);
+    local.setUint32(18, data.length, true);
+    local.setUint32(22, data.length, true);
+    local.setUint16(26, nameBytes.length, true);
+    local.setUint16(28, 0, true);
+    parts.push(local, nameBytes, data);
+
+    const cd = new DataView(new ArrayBuffer(46));
+    cd.setUint32(0, 0x02014b50, true);
+    cd.setUint16(4, 20, true);
+    cd.setUint16(6, 20, true);
+    cd.setUint16(8, 0x0800, true);
+    cd.setUint16(10, 0, true);
+    cd.setUint16(12, time, true);
+    cd.setUint16(14, day, true);
+    cd.setUint32(16, crc, true);
+    cd.setUint32(20, data.length, true);
+    cd.setUint32(24, data.length, true);
+    cd.setUint16(28, nameBytes.length, true);
+    cd.setUint32(42, offset, true);     // les autres champs restent à 0
+    central.push(cd, nameBytes);
+    offset += 30 + nameBytes.length + data.length;
+  }
+  const cdSize = central.reduce((sum, p) => sum + p.byteLength, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true);
+  end.setUint16(8, entries.length, true);
+  end.setUint16(10, entries.length, true);
+  end.setUint32(12, cdSize, true);
+  end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, end], { type: "application/zip" });
+}
+
+updateInfo();
+</script>
+</body>
+</html>
