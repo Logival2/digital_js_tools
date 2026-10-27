@@ -1,5 +1,5 @@
 /* HEIF → JPEG — mise en page propre à l'outil.
-   Couleurs, typo, panneaux et contrôles : ../ui/ui_000.css */
+   Couleurs, typo, panneaux et contrôles : ../ui/ui_001.css */
 
 /* Zone principale : la grille des images, qui défile seule */
 #main {
@@ -61,12 +61,12 @@
 }
 .item .btnRow > button {
   min-height: 26px;
-  padding: 2px 6px;
+  padding: 2px 10px;
   text-align: center;
   color: var(--text);
   border: none;
-  border-radius: var(--radius);
-  background: var(--button);
+  border-radius: 999px;
+  background: var(--pill);
 }
 
 #fileInput { display: none; }

@@ -1,5 +1,5 @@
 /* Montage — mise en page propre à l'outil.
-   Couleurs, typo, panneaux et contrôles : ../ui/ui_000.css */
+   Couleurs, typo, panneaux et contrôles : ../ui/ui_001.css */
 
 /* Zone principale : le format choisi, à l'échelle de l'écran */
 #main {
@@ -30,7 +30,7 @@
 #outputBtn { margin-top: 6px; }
 #outputLabel { margin: 0; overflow-wrap: anywhere; }
 
-/* Téléphone : la vidéo tient dans la largeur et dans l'aperçu du haut (voir ui_000.css) */
+/* Téléphone : la vidéo tient dans la largeur et dans l'aperçu du haut (voir ui_001.css) */
 @media (max-width: 760px) {
   #stage {
     max-width: calc(100vw - 20px);

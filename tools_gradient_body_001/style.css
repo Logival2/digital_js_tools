@@ -1,8 +1,15 @@
 /* Gradient body — mise en page propre à l'outil.
-   Couleurs, typo, panneau et contrôles : ../ui/ui_000.css
+   Couleurs, typo, panneau et contrôles : ../ui/ui_001.css
    Le rendu occupe tout l'écran, le panneau flotte devant. */
 
 html, body { background: #000; }
+
+/* Rendu sombre : le verre gris foncé et léger de ui_001 rendrait le texte noir illisible,
+   on garde ici le verre clair de ui_000 (panneau et étiquettes) */
+:root {
+  --glass: rgba(190, 190, 190, 0.7);
+  --blur: 20px;
+}
 
 /* Le rendu occupe tout l'écran, derrière le panneau */
 #gl,

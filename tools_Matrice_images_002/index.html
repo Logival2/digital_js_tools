@@ -1,0 +1,2218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Image matrice</title>
+<!-- interface commune des outils (verre, typo, sliders), puis la mise en page propre à l'outil :
+     la 002 fusionne la 001 et la variante archivée dans 00-OLD (voir style.css) -->
+<link rel="stylesheet" href="../ui/ui_001.css" />
+<link rel="stylesheet" href="style.css" />
+<script defer src="../ui/ui_001.js"></script>
+</head>
+<body data-mobile="ok" data-layout="panels">
+
+<!-- Scène : le rendu WebGL2 dans un cadre, avec une fine marie-louise ; le panneau est posé à côté, pas devant
+     (fusion de la 001, interface commune, et de la variante archivée dans 00-OLD) -->
+<main id="main">
+  <canvas id="gl"></canvas>
+  <canvas id="overlay" aria-hidden="true"></canvas>
+  <p id="noGl" hidden>This tool needs WebGL2.</p>
+  <!-- Plan 2D, carte au centre : comme la référence, une invite discrète en bas -->
+  <p id="arrowHint">Use your arrows<br>to move around</p>
+  <!-- Contrôle à la main (option) : la caméra, jamais affichée, et un repère qui suit la paume -->
+  <video id="handVideo" playsinline muted></video>
+  <div id="handCursor" aria-hidden="true"></div>
+</main>
+
+<!-- Panneau de droite (paramètres), posé en colonne -->
+<aside id="panel">
+
+  <!-- En-tête : retour au menu et nombre de cartes, titre (dessiné en MingLiU Prop par ui_001.js) -->
+  <header id="panelHead">
+    <p class="eyebrow"><a class="badge backLink" href="../" title="Back to all tools">← Digital tools</a><span id="bigCount" class="mono">50 cards</span></p>
+    <h1 class="toolTitle">Image matrice</h1>
+  </header>
+
+  <!-- Mode de représentation : les cartes passent d'une forme à l'autre -->
+  <div class="section">
+    <h2>Mode</h2>
+    <div id="modeSwitch" class="pills">
+      <button type="button" data-mode="grid">Grid</button>
+      <button type="button" data-mode="sphere">Sphere</button>
+      <button type="button" data-mode="space">Space</button>
+      <button type="button" data-mode="terrain">Mont Blanc</button>
+    </div>
+    <label class="check" id="facingRow">
+      <input id="facing" type="checkbox" />
+      <span>Cards face the camera</span>
+    </label>
+    <!-- Mont Blanc : trois façons de dessiner le relief -->
+    <div id="reliefSwitch" class="pills" hidden>
+      <button type="button" data-relief="contours">Contours</button>
+      <button type="button" data-relief="mesh">Mesh</button>
+      <button type="button" data-relief="lidar">Lidar</button>
+    </div>
+  </div>
+
+  <!-- Cartes : le gros bloc vert pour les images, puis les réglages -->
+  <div class="section">
+    <h2>Cards</h2>
+    <!-- Images : plusieurs à la fois depuis le Finder / l'explorateur, ou déposées sur la page -->
+    <input id="imageInput" type="file" multiple accept="image/*" hidden />
+    <button id="addImagesBtn" class="cta" type="button">Add images</button>
+    <p class="hint" id="imageInfo">No image: 50 blank cards. Several at once, or drop them on the page.</p>
+    <div class="row" id="countRow">
+      <label for="count">Count</label>
+      <input id="count" type="range" min="10" max="200" step="1" value="50" />
+    </div>
+    <div class="row">
+      <label for="size">Size</label>
+      <input id="size" type="range" min="0.3" max="1.5" step="0.01" value="1" />
+    </div>
+    <div class="row">
+      <label for="spacing">Spacing</label>
+      <input id="spacing" type="range" min="0.2" max="3" step="0.01" value="1.2" />
+    </div>
+    <label class="check">
+      <input id="labels" type="checkbox" checked />
+      <span>Captions</span>
+    </label>
+    <label class="check">
+      <input id="frameOpt" type="checkbox" checked />
+      <span>Frame on hover</span>
+    </label>
+    <button id="clearImagesBtn" class="pill" type="button" disabled>Clear images</button>
+  </div>
+
+  <!-- Environnement : le fond derrière les cartes, un dégradé à trois couleurs ou une couleur unie -->
+  <div class="section">
+    <h2>Environment</h2>
+    <div id="envSwitch" class="pills">
+      <button type="button" data-env="linear">Linear</button>
+      <button type="button" data-env="radial">Radial</button>
+      <button type="button" data-env="mono">Mono</button>
+    </div>
+    <div id="gradientColors">
+      <!-- cinq teintes également espacées, du haut vers le bas : pêche, lilas, passage pâle, vert-jaune, vert acide -->
+      <input type="color" class="gradColor envColor" value="#f7a77d" aria-label="Colour 1" />
+      <input type="color" class="gradColor envColor" value="#e3c7e1" aria-label="Colour 2" />
+      <input type="color" class="gradColor envColor" value="#e5eead" aria-label="Colour 3" />
+      <input type="color" class="gradColor envColor" value="#e5fc50" aria-label="Colour 4" />
+      <input type="color" class="gradColor envColor" value="#defd1f" aria-label="Colour 5" />
+    </div>
+    <!-- Mono : un gris très clair, celui du studio de la variante archivée (00-OLD) -->
+    <div id="monoColors" hidden>
+      <input id="monoColor" type="color" class="gradColor" value="#e9e9eb" title="Colour" aria-label="Background colour" />
+    </div>
+    <div class="row" id="horizonRow">
+      <label for="horizon">Horizon</label>
+      <input id="horizon" type="range" min="0.05" max="0.95" step="0.01" value="0.5" />
+    </div>
+  </div>
+
+  <!-- Main devant la caméra : en option, rien n'est chargé tant que la case n'est pas cochée -->
+  <div class="section">
+    <h2>Hands</h2>
+    <label class="check">
+      <input id="handsToggle" type="checkbox" />
+      <span>Hand control</span>
+    </label>
+    <p class="hint" id="handsInfo">Off. Uses your camera, analysed only in this browser.</p>
+    <!-- Retour caméra quand la main pilote : noir et blanc, en miroir, squelette de la main par-dessus -->
+    <canvas id="handPreview" width="480" height="360" aria-hidden="true" hidden></canvas>
+  </div>
+
+  <!-- Commandes : la souris, le clavier ; la dérive des modes a une vitesse fixe -->
+  <div class="section collapsed">
+    <h2>Controls</h2>
+    <p class="hint">Grid: drag or scroll to move, click a card, arrows to step, Esc to leave. Space: drag to move, scroll to fly forward or back, click a card to reach it. Sphere and Mont Blanc: drag, scroll, double-click to recentre. H hides the panel, F full screen.</p>
+  </div>
+
+  <footer id="panelFooter">
+    <button id="resetBtn" type="button">Reset</button>
+    <button id="privacyBtn" type="button">Privacy · GDPR</button>
+  </footer>
+</aside>
+
+<!-- Notice de confidentialité (RGPD) -->
+<dialog id="privacyDialog" aria-labelledby="privacyTitle">
+  <h2 id="privacyTitle">Privacy · GDPR</h2>
+
+  <h3>Data controller</h3>
+  <p>Valentin Maynadié — contact: <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
+
+  <h3>Images</h3>
+  <p>The images you add are read and drawn inside your browser. They are never uploaded or stored, and disappear when you close the page.</p>
+
+  <h3>Camera</h3>
+  <p>The camera only turns on when you tick “Hand control”, after your browser asks for permission.
+  The video stream is analysed only in your browser, to find the position of your hand, and shown in a small black and white preview: no image or video is recorded, kept or sent to a server.
+  Untick it to turn the camera off at any time.</p>
+
+  <h3>Cookies and tracking</h3>
+  <p>This site uses no cookies, no analytics and no user accounts. Fonts and terrain data are served with the page.</p>
+
+  <h3>Third-party services</h3>
+  <p>Only if you turn on hand control, your browser downloads files from:</p>
+  <ul>
+    <li>jsDelivr — the hand tracking library (MediaPipe);</li>
+    <li>Google Cloud Storage — the hand tracking model.</li>
+  </ul>
+  <p>These services receive your IP address, which they need to send the files, under their own privacy policies.</p>
+
+  <h3>Terrain data</h3>
+  <p>Mont Blanc relief: Terrain Tiles on AWS Open Data (Mapzen / Tilezen), from SRTM (NASA), EU-DEM (Copernicus) and other open sources, reduced to a 140 m grid.</p>
+
+  <h3>Your rights</h3>
+  <p>This site keeps no personal data. For any question about your rights (access, rectification, erasure, objection), write to the address above. You can also contact the CNIL, the French data protection authority (cnil.fr).</p>
+
+  <form method="dialog">
+    <button type="submit">Close</button>
+  </form>
+</dialog>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const canvas = $("gl");
+const stage = $("main");
+const modeButtons = Array.from(document.querySelectorAll("#modeSwitch button"));
+const reliefButtons = Array.from(document.querySelectorAll("#reliefSwitch button"));
+const panelFields = Array.from(document.querySelectorAll("#panel input"));
+const controls = {
+  count: $("count"),
+  size: $("size"),
+  spacing: $("spacing"),
+  labels: $("labels"),
+  frame: $("frameOpt"),
+  facing: $("facing"),
+  horizon: $("horizon"),
+};
+const envButtons = Array.from(document.querySelectorAll("#envSwitch button"));
+const envColors = Array.from(document.querySelectorAll(".envColor"));
+const num = (el) => Number(el.value);
+
+// Au rechargement, le navigateur restaure les anciens réglages : on repart du HTML
+function resetFields() {
+  for (const el of panelFields) {
+    if (el.type === "checkbox") el.checked = el.defaultChecked;
+    else el.value = el.defaultValue;
+  }
+}
+resetFields();
+
+const gl = canvas.getContext("webgl2", { antialias: true, alpha: false });
+if (!gl) {
+  $("noGl").hidden = false;
+  throw new Error("WebGL2 unavailable");
+}
+
+// ── Cartes ──
+// Une carte = la carte noire 3:4 portrait + sa légende au-dessus (« ■ 01 »).
+// Repère local : carte de 0,75 × 1, centrée, face vers +z.
+const CARD_W = 0.75;
+const CARD_H = 1;
+const LABEL_GAP = 0.03;            // entre la carte et la légende, posée dessous
+const LABEL_H = 0.15;              // hauteur de la bande de légende (deux lignes, comme une fiche produit)
+const FOV = (35 * Math.PI) / 180;  // champ vertical de la caméra
+const TAN = Math.tan(FOV / 2);
+const DEFAULT_MODE = "sphere";
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Légende : le nom du fichier de l'image ; sans image, un numéro
+let images = []; // { name, bitmap (recadrée 3:4, null tant qu'elle charge) }, une par carte
+const numberOf = (i, n) => String(i + 1).padStart(Math.max(2, String(n).length), "0");
+const captionOf = (i, n) => images[i]?.name ?? `Card ${numberOf(i, n)}`;
+
+let cards = [];
+function makeCard() {
+  return {
+    pos: [0, 0, -12], quat: [0, 0, 0, 1], scale: 0, // état affiché, lissé vers la cible
+    hover: 0,
+    copies: 0,                                        // présence des répétitions sur le plan 2D (0 → 1)
+    t: 0, delay: 0,                                   // départ échelonné des transitions
+    rank: Math.random(),                              // ordre de départ, au hasard
+    seed: [Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random(), Math.random()], // décalages, profondeur, taille
+  };
+}
+// Transition : chaque carte part à son tour, puis rattrape sa place
+function stagger(span) {
+  for (const c of cards) {
+    c.t = 0;
+    c.delay = reducedMotion ? 0 : 0.05 + c.rank * span;
+  }
+}
+function setCount(n) {
+  const fresh = [];
+  for (let i = cards.length; i < n; i++) {
+    const c = makeCard();
+    c.delay = reducedMotion ? 0 : 0.1 + c.rank * 0.6;
+    fresh.push(c);
+  }
+  cards = cards.slice(0, n).concat(fresh);
+  $("bigCount").textContent = `${n} cards`;
+  buildAtlas();
+}
+
+// ── Vues : un état par mode, gardé quand on change de mode ──
+const view = {
+  // plan 2D : déplacement avec élan, zoom (focus), recul de l'entrée, appui du glisser, grille resserrée → ouverte
+  grid: { panX: 0, panY: 0, velX: 0, velY: 0, zoom: 1, zoomCur: 1, pull: 1, press: 1, spread: 1, introT: Infinity, focus: -1 },
+  // boule : focus = carte visée, back = zoom d'avant le focus (on y revient en ressortant)
+  sphere: { yaw: 0, pitch: 0.25, velYaw: 0, velPitch: 0, zoom: 1.5, focus: -1, back: null }, // zoom 1,5 : 50 % plus près au lancement
+  // espace : position de la caméra, élan, arrivée de l'entrée, carte visée
+  space: { camX: 0, camY: 0, camZ: 0, vx: 0, vy: 0, vz: 0, intro: false, focus: -1 },
+  // Mont Blanc : vu depuis Chamonix (le nord), vers le sommet ; fade = apparition du relief
+  // centre : le point du relief autour duquel il tourne (la carte visée pendant un focus)
+  terrain: { yaw: Math.PI, pitch: 0.75, velYaw: 0, velPitch: 0, zoom: 1.3, fade: 0, cx: 0, cy: 0, cz: 0, focus: -1, back: null },
+};
+const freshView = structuredClone(view);
+let mode = DEFAULT_MODE;
+
+function setMode(next) {
+  const captionsChange = (mode === "terrain") !== (next === "terrain");
+  mode = next;
+  if (captionsChange) buildAtlas(); // au-dessus du relief, la légende dit aussi le lieu
+  modeButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+  $("facingRow").hidden = mode !== "sphere";
+  $("reliefSwitch").hidden = mode !== "terrain";
+  unfocus();
+  // entrée dans le plan 2D, comme la référence : grille resserrée qui s'ouvre, caméra qui revient
+  if (mode === "grid") view.grid.introT = reducedMotion ? Infinity : 0;
+  // entrée dans l'espace, comme la référence : la caméra arrive de l'arrière jusqu'aux cartes
+  if (mode === "space") {
+    Object.assign(view.space, structuredClone(freshView.space));
+    if (!reducedMotion) Object.assign(view.space, { camZ: SPACE_INTRO, intro: true });
+  }
+  stagger(0.5);
+}
+
+// ── Petits calculs 3D ──
+function quatFromBasis(r, u, n) {
+  const [m00, m10, m20] = r, [m01, m11, m21] = u, [m02, m12, m22] = n;
+  const tr = m00 + m11 + m22;
+  if (tr > 0) {
+    const s = 0.5 / Math.sqrt(tr + 1);
+    return [(m21 - m12) * s, (m02 - m20) * s, (m10 - m01) * s, 0.25 / s];
+  }
+  if (m00 > m11 && m00 > m22) {
+    const s = 2 * Math.sqrt(1 + m00 - m11 - m22);
+    return [0.25 * s, (m01 + m10) / s, (m02 + m20) / s, (m21 - m12) / s];
+  }
+  if (m11 > m22) {
+    const s = 2 * Math.sqrt(1 + m11 - m00 - m22);
+    return [(m01 + m10) / s, 0.25 * s, (m12 + m21) / s, (m02 - m20) / s];
+  }
+  const s = 2 * Math.sqrt(1 + m22 - m00 - m11);
+  return [(m02 + m20) / s, (m12 + m21) / s, 0.25 * s, (m10 - m01) / s];
+}
+// Rapproche q de target (interpolation normalisée, par le plus court chemin)
+function quatTowards(q, target, a) {
+  const sign = q[0] * target[0] + q[1] * target[1] + q[2] * target[2] + q[3] * target[3] < 0 ? -1 : 1;
+  for (let k = 0; k < 4; k++) q[k] += (target[k] * sign - q[k]) * a;
+  const len = Math.hypot(...q) || 1;
+  for (let k = 0; k < 4; k++) q[k] /= len;
+}
+const IDENTITY = [0, 0, 0, 1];
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const normalize = (v) => { const l = Math.hypot(...v) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
+
+// Matrice du modèle (colonnes) : rotation q, échelle s, position p
+function writeModel(out, o, q, s, p) {
+  const [x, y, z, w] = q;
+  out[o] = (1 - 2 * (y * y + z * z)) * s; out[o + 1] = 2 * (x * y + w * z) * s; out[o + 2] = 2 * (x * z - w * y) * s; out[o + 3] = 0;
+  out[o + 4] = 2 * (x * y - w * z) * s; out[o + 5] = (1 - 2 * (x * x + z * z)) * s; out[o + 6] = 2 * (y * z + w * x) * s; out[o + 7] = 0;
+  out[o + 8] = 2 * (x * z + w * y) * s; out[o + 9] = 2 * (y * z - w * x) * s; out[o + 10] = (1 - 2 * (x * x + y * y)) * s; out[o + 11] = 0;
+  out[o + 12] = p[0]; out[o + 13] = p[1]; out[o + 14] = p[2]; out[o + 15] = 1;
+}
+const NEAR = 0.05;
+const FAR = 1000;
+function perspective(aspect) {
+  const f = 1 / TAN;
+  return new Float32Array([f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (FAR + NEAR) / (NEAR - FAR), -1, 0, 0, (2 * FAR * NEAR) / (NEAR - FAR), 0]);
+}
+const wrap = (v, half) => ((((v + half) % (2 * half)) + 2 * half) % (2 * half)) - half;
+
+// ── Dispositions ──
+// Caméra fixe à l'origine, regard vers -z : chaque mode place les cartes devant elle.
+// Le réglage Spacing écarte les places, Size grossit les cartes dans leur place.
+let aspect = 1;
+
+// Plan 2D infini, d'après le playground de Cathy Dolle (cathydolle.com/playground) :
+// une grille régulière enroulée sur elle-même (un tore), plus grande que l'écran. Toutes les cases
+// sont remplies en répétant les cartes autant de fois chacune, jamais deux fois côte à côte,
+// et les copies d'une même carte aussi loin que possible les unes des autres.
+const GRID_VISIBLE = 6.5;  // cases visibles sur le grand côté de l'écran, au repos
+// Clic sur une carte, dans tous les modes (d'après espace.html) : la caméra s'en approche jusqu'à ce que
+// la carte et sa légende remplissent 80 % de la scène. focusDist : la distance qu'il faut, pour une échelle s.
+const FOCUS_FILL = 0.8;
+const focusDist = (s) => Math.max((CARD_W * s) / (2 * TAN * aspect * FOCUS_FILL),
+  ((CARD_H + LABEL_GAP + LABEL_H) * s) / (2 * TAN * FOCUS_FILL));
+
+function mulberry32(a) {
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const shuffle = (arr, rnd) => {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+// distance (au carré, en cases) sur le tore : on peut faire le tour par l'autre côté
+function torusDist2(a, b, cols, rows) {
+  let dr = Math.abs(Math.floor(a / cols) - Math.floor(b / cols));
+  let dc = Math.abs((a % cols) - (b % cols));
+  dr = Math.min(dr, rows - dr);
+  dc = Math.min(dc, cols - dc);
+  return dr * dr + dc * dc;
+}
+
+// Répartition des cartes sur les cases (refaite seulement si le nombre de cartes ou de cases change)
+let gridPlanCache = null;
+function gridPlan(n, cols, rows) {
+  const c0 = gridPlanCache;
+  if (c0 && c0.n === n && c0.cols === cols && c0.rows === rows) return c0;
+  const cells = cols * rows;
+  const rnd = mulberry32(n * 7919 + cols * 131 + rows);
+  // chaque carte reçoit le même nombre de cases (à une près)
+  const left = new Int32Array(n);
+  const each = Math.floor(cells / n), extra = cells - each * n;
+  shuffle([...Array(n).keys()], rnd).forEach((card, k) => { left[card] = each + (k < extra ? 1 : 0); });
+  const cardOf = new Int32Array(cells).fill(-1);
+  const cellsOf = Array.from({ length: n }, () => []);
+  const near = new Uint8Array(n);
+  // cases prises dans le désordre ; pour chacune, la carte absente des 8 voisines
+  // dont les autres copies sont le plus loin
+  for (const cell of shuffle([...Array(cells).keys()], rnd)) {
+    near.fill(0);
+    const r = Math.floor(cell / cols), c = cell % cols;
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (!dr && !dc) continue;
+        const k = cardOf[((r + dr + rows) % rows) * cols + ((c + dc + cols) % cols)];
+        if (k >= 0) near[k] = 1;
+      }
+    }
+    let best = -1, bestFree = false, bestDist = -1, ties = 0;
+    for (let k = 0; k < n; k++) {
+      if (left[k] <= 0) continue;
+      const free = !near[k];
+      if (bestFree && !free) continue;
+      let d = Infinity;
+      for (const o of cellsOf[k]) d = Math.min(d, torusDist2(cell, o, cols, rows));
+      if ((free && !bestFree) || d > bestDist) { best = k; bestFree = free; bestDist = d; ties = 1; }
+      else if (d === bestDist && rnd() * ++ties < 1) best = k;
+    }
+    cardOf[cell] = best;
+    cellsOf[best].push(cell);
+    left[best]--;
+  }
+  // Deuxième passe, comme la référence : échanger deux cases au hasard, et garder l'échange
+  // s'il ne crée pas de voisines identiques en plus et ne rapproche pas les copies
+  const sameAround = (cell) => {
+    const r = Math.floor(cell / cols), c = cell % cols, k0 = cardOf[cell];
+    let same = 0;
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if ((dr || dc) && cardOf[((r + dr + rows) % rows) * cols + ((c + dc + cols) % cols)] === k0) same++;
+      }
+    }
+    return same;
+  };
+  const crowding = (cell) => {
+    let e = 0;
+    for (const o of cellsOf[cardOf[cell]]) if (o !== cell) e += 1 / torusDist2(cell, o, cols, rows) ** 2;
+    return e;
+  };
+  const swap = (a, b) => {
+    const ka = cardOf[a], kb = cardOf[b];
+    cardOf[a] = kb; cardOf[b] = ka;
+    cellsOf[ka][cellsOf[ka].indexOf(a)] = b;
+    cellsOf[kb][cellsOf[kb].indexOf(b)] = a;
+  };
+  let calm = 0;
+  for (let attempt = 0; attempt < 6000 && calm < 600; attempt++) {
+    const a = Math.floor(rnd() * cells), b = Math.floor(rnd() * cells);
+    if (cardOf[a] === cardOf[b]) continue;
+    const before = sameAround(a) + sameAround(b), eBefore = crowding(a) + crowding(b);
+    swap(a, b);
+    const after = sameAround(a) + sameAround(b), eAfter = crowding(a) + crowding(b);
+    if (after > before || (after === before && eAfter >= eBefore)) { swap(a, b); calm++; }
+    else calm = 0;
+  }
+  // case « principale » d'une carte : sa copie la plus proche du centre (c'est elle qui vole entre les modes)
+  const centre = (cell) => Math.hypot((cell % cols) - (cols - 1) / 2, Math.floor(cell / cols) - (rows - 1) / 2);
+  const primary = cellsOf.map((list) => list.reduce((a, b) => (centre(a) <= centre(b) ? a : b)));
+  gridPlanCache = { n, cols, rows, cardOf, cellsOf, primary };
+  return gridPlanCache;
+}
+
+function gridLayout(n) {
+  const v = view.grid;
+  const gap = CARD_W * num(controls.spacing);          // écart entre les cartes, comme le « gap » de la référence
+  const cellW0 = CARD_W + gap, cellH0 = CARD_H + LABEL_GAP + LABEL_H + gap;
+  // distance de repos : GRID_VISIBLE cases sur le grand côté de l'écran
+  const rest = aspect >= 1 ? (GRID_VISIBLE * cellW0) / (2 * TAN * aspect) : (GRID_VISIBLE * cellH0) / (2 * TAN);
+  const depth = (rest * v.pull * v.press) / v.zoomCur;
+  const halfH = depth * TAN, halfW = halfH * aspect;
+  // assez de cases pour déborder de l'écran même au recul de l'entrée, et au moins une par carte
+  let cols = Math.max(12, Math.ceil((2 * rest * 1.4 * TAN * aspect) / cellW0) + 3);
+  const rows = Math.max(6, Math.ceil((2 * rest * 1.4 * TAN) / cellH0) + 3);
+  while (cols * rows < n) cols++;
+  const plan = gridPlan(n, cols, rows);
+  const cellW = cellW0 * v.spread, cellH = cellH0 * v.spread; // spread < 1 : grille resserrée de l'entrée
+  const TW = cols * cellW, TH = rows * cellH;
+  const unwrapped = (cell) => [((cell % cols) - (cols - 1) / 2) * cellW, ((rows - 1) / 2 - Math.floor(cell / cols)) * cellH];
+  const cellPos = (cell) => {
+    const [x, y] = unwrapped(cell);
+    return [wrap(x + v.panX, TW / 2), wrap(y + v.panY, TH / 2), -depth];
+  };
+  return {
+    depth,
+    jumpDist: Math.min(TW, TH) / 3,
+    grid: { plan, cols, rows, TW, TH, halfW, halfH, cellPos, unwrapped, rest },
+    place(i) {
+      return { pos: cellPos(plan.primary[i]), quat: IDENTITY };
+    },
+  };
+}
+
+// Boule 3D : points de Fibonacci, cartes tangentes à la sphère (ou face à la caméra)
+function sphereLayout(n) {
+  const area = (CARD_H * (1 + num(controls.spacing))) ** 2;
+  const R = Math.max(1.2, Math.sqrt((n * area) / (4 * Math.PI)));
+  const v = view.sphere;
+  const fit = (R * 1.15) / Math.sin(Math.atan(TAN * Math.min(1, aspect)));
+  const cz = -fit / v.zoom;
+  const cy = Math.cos(v.yaw), sy = Math.sin(v.yaw), cp = Math.cos(v.pitch), sp = Math.sin(v.pitch);
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  const facing = controls.facing.checked;
+  return {
+    depth: -cz,
+    sphere: { fit, R },
+    place(i) {
+      const y0 = 1 - (2 * (i + 0.5)) / n;
+      const r0 = Math.sqrt(1 - y0 * y0);
+      const th = i * golden;
+      let x = Math.cos(th) * r0, z = Math.sin(th) * r0, y = y0;
+      [x, z] = [x * cy + z * sy, -x * sy + z * cy];       // lacet
+      [y, z] = [y * cp - z * sp, y * sp + z * cp];        // tangage
+      const pos = [x * R, y * R, cz + z * R];
+      if (facing) return { pos, quat: IDENTITY };
+      const nrm = [x, y, z];
+      const right = normalize(Math.abs(y) > 0.999 ? [1, 0, 0] : cross([0, 1, 0], nrm));
+      return { pos, quat: quatFromBasis(right, cross(nrm, right), nrm) };
+    },
+  };
+}
+
+// Espace 3D, d'après « espace » (matrice instagram website / expérience) : un champ fixe de cartes
+// étagées en profondeur, qu'on parcourt en déplaçant la caméra (glisser, molette, clic sur une carte).
+// Les unités de la référence (cartes de 700 à 2 100 de profondeur, 3 800 au téléphone) sont ramenées
+// aux nôtres : la carte la plus proche fait 1/6 de la hauteur de l'écran, la plus lointaine trois fois moins.
+const smoothstep = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const SPACE_NEAR = 9.5;               // ≙ 700 : profondeur des premières cartes
+const SPACE_U = SPACE_NEAR / 700;     // une unité de la référence
+const SPACE_INTRO = 1200 * SPACE_U;   // à l'entrée, la caméra arrive de l'arrière
+const SPACE_BACK = 300 * SPACE_U;     // on ne recule pas plus loin
+const SPACE_CLIP = 80 * SPACE_U;      // plus près, la carte s'efface (plan proche de la référence)
+const SPACE_FOG = 4400 * SPACE_U;     // brouillard : à cette distance, la carte s'est fondue dans le fond
+let spacePlanCache = null;
+function spacePlan(n) {
+  const mobile = cssW <= 768;
+  // Spacing étire la profondeur ; au-delà de 60 cartes (le nombre de la référence), le champ s'allonge
+  const far = SPACE_NEAR + ((mobile ? 3800 : 2100) - 700) * SPACE_U * (num(controls.spacing) / 1.2) * Math.max(1, n / 60);
+  const key = `${n}|${aspect.toFixed(3)}|${far.toFixed(3)}|${mobile}`;
+  if (spacePlanCache?.key === key) return spacePlanCache.spots;
+  const SAFE = mobile ? 0.92 : 0.78, PAD = 0.5;
+  const rnd = mulberry32(42);
+  const spots = [];
+  for (let i = 0; i < n; i++) {
+    // profondeurs régulières, un peu bousculées ; place au hasard dans le cadre à cette profondeur,
+    // loin des cartes de profondeur voisine (30 essais)
+    const t = (i + 0.5 + (rnd() - 0.5) * 0.7) / n;
+    const d = SPACE_NEAR + t * (far - SPACE_NEAR);
+    const hh = d * TAN * SAFE, hw = hh * aspect, sep = PAD * (d / SPACE_NEAR);
+    let x = 0, y = 0;
+    for (let tries = 0; tries <= 30; tries++) {
+      x = (rnd() * 2 - 1) * Math.max(0, hw - CARD_W / 2);
+      y = (rnd() * 2 - 1) * Math.max(0, hh - CARD_H / 2);
+      const free = spots.every(([px, py, pz]) => Math.abs(pz + d) > 400 * SPACE_U
+        || Math.abs(x - px) >= CARD_W * sep || Math.abs(y - py) >= CARD_H * sep);
+      if (free) break;
+    }
+    spots.push([x, y, -d]);
+  }
+  spacePlanCache = { key, spots };
+  return spots;
+}
+function spaceLayout(n) {
+  const v = view.space;
+  const spots = spacePlan(n);
+  return {
+    depth: SPACE_NEAR,
+    place(i) {
+      const [x, y, z] = spots[i];
+      const pos = [x - v.camX, y - v.camY, z - v.camZ];
+      return { pos, quat: IDENTITY, scale: smoothstep(SPACE_CLIP, SPACE_CLIP * 2.5, -pos[2]) };
+    },
+  };
+}
+// Distance de la caméra à une carte cliquée : la distance de focus commune
+const spaceFocusDist = () => Math.max(focusDist(num(controls.size)), SPACE_CLIP * 1.25);
+// ── Mont Blanc : le relief du massif et de la vallée de Chamonix, en courbes de niveau discrètes ;
+// chaque carte flotte au-dessus d'un lieu clé ──
+// Altitudes : Terrain Tiles (AWS Open Data / Tilezen : SRTM, EU-DEM…), grille de 355 × 398 (≈ 140 m), voir data/CREDITS.txt
+// Le relief (≈ 49 × 56 km) est bien plus grand que l'écran : ses bords pâlissent jusqu'au blanc
+const DEM = { south: 45.645, north: 46.145, west: 6.595, east: 7.235, cols: 355, rows: 398 };
+const LAT_C = (DEM.south + DEM.north) / 2, LON_C = (DEM.west + DEM.east) / 2;
+const KM_LAT = 111.13, KM_LON = 111.32 * Math.cos((LAT_C * Math.PI) / 180);
+const Y_BASE = 2.2;          // km : altitude qui passe par le centre de rotation
+const TERRAIN_SCALE = 0.8;   // taille des cartes au-dessus du relief (une carte haute de 800 m)
+const TERRAIN_EXAG = 1.6;    // relief exagéré, comme sur les cartes en 3D : à l'échelle réelle il paraît plat
+let dem = null;              // Int16Array, lignes du nord au sud
+const DEFAULT_RELIEF = "lidar";
+let relief = DEFAULT_RELIEF; // dessin du relief : courbes de niveau, surface lissée, nuage de points
+function setRelief(next) {
+  relief = next;
+  reliefButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.relief === relief)));
+}
+
+// Lieux clés : sommets (calés sur le point le plus haut à 3 cases près), villages et lieux (tels quels),
+// glaciers (calés sur le creux le plus proche)
+const PLACES = [
+  ["Mont Blanc", 45.8326, 6.8652, "peak"], ["Chamonix", 45.9237, 6.8694, "place"],
+  ["Aiguille du Midi", 45.8786, 6.8874, "peak"], ["Mer de Glace", 45.915, 6.93, "glacier"],
+  ["Grandes Jorasses", 45.8689, 6.9867, "peak"], ["Aiguille Verte", 45.9345, 6.9701, "peak"],
+  ["Les Drus", 45.9325, 6.9567, "peak"], ["Argentière", 45.981, 6.9286, "place"],
+  ["Mont Blanc du Tacul", 45.8562, 6.8876, "peak"], ["Les Houches", 45.8908, 6.7989, "place"],
+  ["Dent du Géant", 45.8622, 6.9514, "peak"], ["Courmayeur", 45.7969, 6.969, "place"],
+  ["Le Brévent", 45.9346, 6.838, "peak"], ["Montenvers", 45.9283, 6.9186, "place"],
+  ["Mont Maudit", 45.8486, 6.8762, "peak"], ["Dôme du Goûter", 45.8429, 6.8396, "peak"],
+  ["Pointe Helbronner", 45.8435, 6.9332, "peak"], ["Glacier des Bossons", 45.889, 6.854, "glacier"],
+  ["Lac Blanc", 45.9813, 6.8889, "place"], ["Le Tour", 46.0006, 6.9466, "place"],
+  ["Aiguille d'Argentière", 45.9568, 7.0169, "peak"], ["Grands Montets", 45.9567, 6.9586, "peak"],
+  ["Vallée Blanche", 45.88, 6.92, "place"], ["Aiguille du Plan", 45.8853, 6.9016, "peak"],
+  ["Mont Dolent", 45.9221, 7.0461, "peak"], ["Glacier d'Argentière", 45.95, 6.99, "glacier"],
+  ["Aiguille du Chardonnet", 45.969, 7.0006, "peak"], ["Aiguille du Goûter", 45.8508, 6.8236, "peak"],
+];
+
+const demH = (i, j) => dem[Math.max(0, Math.min(DEM.rows - 1, j)) * DEM.cols + Math.max(0, Math.min(DEM.cols - 1, i))];
+const gridToLocal = (i, j, h) => [
+  (DEM.west + ((DEM.east - DEM.west) * i) / (DEM.cols - 1) - LON_C) * KM_LON,
+  (h / 1000 - Y_BASE) * TERRAIN_EXAG,
+  -(DEM.north - ((DEM.north - DEM.south) * j) / (DEM.rows - 1) - LAT_C) * KM_LAT,
+];
+const latLonToGrid = (lat, lon) => [
+  Math.round(((lon - DEM.west) / (DEM.east - DEM.west)) * (DEM.cols - 1)),
+  Math.round(((DEM.north - lat) / (DEM.north - DEM.south)) * (DEM.rows - 1)),
+];
+// Les cartes restent dans le massif (≈ 22 × 26 km au centre), le reste du relief sert de décor
+const [FOCUS_I0, FOCUS_J0] = latLonToGrid(46.01, 6.77);
+const [FOCUS_I1, FOCUS_J1] = latLonToGrid(45.78, 7.06);
+// 0 au centre, 1 au bord du relief : fondu vers le blanc sur le dernier tiers (coins arrondis)
+const HALF_X = ((DEM.east - DEM.west) / 2) * KM_LON, HALF_Z = ((DEM.north - DEM.south) / 2) * KM_LAT;
+const edgeOf = (x, z) => smoothstep(0.62, 0.97, Math.hypot((x / HALF_X) ** 2, (z / HALF_Z) ** 2) ** 0.5);
+
+// Les n places des cartes : les lieux clés, puis les autres sommets du massif, puis des points au hasard
+let terrainSpotsCache = null;
+function terrainSpots(n) {
+  if (terrainSpotsCache && terrainSpotsCache.n === n && terrainSpotsCache.ready === !!dem) return terrainSpotsCache.spots;
+  const spots = [];
+  const taken = [];
+  const farEnough = (i, j, r) => taken.every(([a, b]) => Math.hypot(a - i, b - j) >= r);
+  const add = (i, j, name) => {
+    // alt : altitude du point (seconde ligne de la légende) ; lat, lon : ses coordonnées
+    spots.push({ local: gridToLocal(i, j, dem ? demH(i, j) : Y_BASE * 1000), name, alt: dem ? demH(i, j) : 0,
+      lat: DEM.north - ((DEM.north - DEM.south) * j) / (DEM.rows - 1), lon: DEM.west + ((DEM.east - DEM.west) * i) / (DEM.cols - 1) });
+    taken.push([i, j]);
+  };
+  for (const [name, lat, lon, kind] of PLACES) {
+    if (spots.length >= n) break;
+    let [i, j] = latLonToGrid(lat, lon);
+    if (dem && kind !== "place") {
+      const r = kind === "peak" ? 3 : 2;
+      let best = [i, j], bestH = demH(i, j);
+      for (let dj = -r; dj <= r; dj++) {
+        for (let di = -r; di <= r; di++) {
+          const h = demH(i + di, j + dj);
+          if (kind === "peak" ? h > bestH : h < bestH) { best = [i + di, j + dj]; bestH = h; }
+        }
+      }
+      [i, j] = best;
+    }
+    add(i, j, name);
+  }
+  if (dem && spots.length < n) {
+    // autres sommets : point le plus haut de son voisinage (≈ 560 m), au-dessus de 2 600 m, loin des autres cartes
+    const peaks = [];
+    for (let j = FOCUS_J0; j <= FOCUS_J1; j++) {
+      for (let i = FOCUS_I0; i <= FOCUS_I1; i++) {
+        const h = demH(i, j);
+        if (h < 2600) continue;
+        let top = true;
+        for (let dj = -4; dj <= 4 && top; dj++) for (let di = -4; di <= 4; di++) if (demH(i + di, j + dj) > h) { top = false; break; }
+        if (top) peaks.push([i, j, h]);
+      }
+    }
+    peaks.sort((a, b) => b[2] - a[2]);
+    for (const [i, j, h] of peaks) {
+      if (spots.length >= n) break;
+      if (farEnough(i, j, 7)) add(i, j, "Summit");
+    }
+  }
+  const rnd = mulberry32(4808);
+  for (let tries = 0; spots.length < n && tries < 20000; tries++) {
+    const i = FOCUS_I0 + Math.floor(rnd() * (FOCUS_I1 - FOCUS_I0)), j = FOCUS_J0 + Math.floor(rnd() * (FOCUS_J1 - FOCUS_J0));
+    if (farEnough(i, j, tries < 10000 ? 5 : 2)) add(i, j, "Point");
+  }
+  while (spots.length < n) add(Math.round(DEM.cols / 2), Math.round(DEM.rows / 2), "Point");
+  terrainSpotsCache = { n, ready: !!dem, spots };
+  return spots;
+}
+
+// Vue : le relief tourne sur lui-même devant la caméra (lacet), incliné vers nous (tangage)
+function terrainTransform() {
+  const v = view.terrain;
+  const dist = 12.5 / Math.sin(Math.atan(TAN * Math.min(1, aspect))) / v.zoom;
+  const cy = Math.cos(v.yaw), sy = Math.sin(v.yaw), cp = Math.cos(v.pitch), sp = Math.sin(v.pitch);
+  const rotate = ([x, y, z]) => {
+    const x1 = x * cy + z * sy, z1 = -x * sy + z * cy;
+    return [x1, y * cp - z1 * sp, y * sp + z1 * cp];
+  };
+  const c = [v.cx, v.cy, v.cz];
+  const apply = (p) => { const r = rotate([p[0] - c[0], p[1] - c[1], p[2] - c[2]]); return [r[0], r[1], r[2] - dist]; };
+  const [ex, ey, ez] = [rotate([1, 0, 0]), rotate([0, 1, 0]), rotate([0, 0, 1])];
+  const t = apply([0, 0, 0]);
+  const model = new Float32Array([...ex, 0, ...ey, 0, ...ez, 0, ...t, 1]);
+  return { dist, apply, model };
+}
+
+// position d'une carte au-dessus de son lieu, dans le repère du relief
+function terrainCardLocal(i, c, spots) {
+  const [x, y, z] = spots[i].local;
+  const lift = 0.1 + c.rank * 0.3; // juste au-dessus du sol, à des hauteurs un peu variées : les voisines se chevauchent moins
+  return [x, y + lift + (CARD_H * TERRAIN_SCALE) / 2, z];
+}
+const terrainBase = () => 12.5 / Math.sin(Math.atan(TAN * Math.min(1, aspect))); // distance au zoom 1
+function terrainLayout(n) {
+  const T = terrainTransform();
+  const spots = terrainSpots(n);
+  const half = (CARD_H * TERRAIN_SCALE) / 2;
+  return {
+    depth: T.dist,
+    terrain: T,
+    place(i, c) {
+      return { pos: T.apply(terrainCardLocal(i, c, spots)), quat: IDENTITY, scale: TERRAIN_SCALE };
+    },
+  };
+}
+
+const LAYOUTS = { grid: gridLayout, sphere: sphereLayout, space: spaceLayout, terrain: terrainLayout };
+
+// ── Légendes : une texture atlas, une case par carte ──
+const ATLAS_COLS = 8;
+const CELL_W = 512;
+const CELL_H = Math.round((CELL_W * LABEL_H) / CARD_W);
+const atlasCanvas = document.createElement("canvas");
+const atlasTex = gl.createTexture();
+let atlasRows = 1;
+function buildAtlas() {
+  const n = cards.length;
+  atlasRows = Math.max(1, Math.ceil(n / ATLAS_COLS));
+  atlasCanvas.width = ATLAS_COLS * CELL_W;
+  atlasCanvas.height = atlasRows * CELL_H;
+  const ctx = atlasCanvas.getContext("2d");
+  ctx.clearRect(0, 0, atlasCanvas.width, atlasCanvas.height);
+  ctx.textBaseline = "middle";
+  const fs = Math.round(CELL_H * 0.3);
+  ctx.font = `500 ${fs}px "Roboto Mono", Menlo, monospace`;
+  if ("letterSpacing" in ctx) ctx.letterSpacing = `${(fs * 0.02).toFixed(1)}px`; // même interlettrage que le panneau
+  const spots = mode === "terrain" ? terrainSpots(n) : null;
+  // texte trop long pour la largeur de la carte : coupé, terminé par « … »
+  const fit = (text, maxW) => {
+    if (ctx.measureText(text).width <= maxW) return text;
+    while (text.length > 1 && ctx.measureText(text + "…").width > maxW) text = text.slice(0, -1);
+    return text + "…";
+  };
+  const y1 = CELL_H * 0.27, y2 = CELL_H * 0.72, r = fs * 0.36;
+  for (let i = 0; i < n; i++) {
+    const x = (i % ATLAS_COLS) * CELL_W, y = Math.floor(i / ATLAS_COLS) * CELL_H;
+    // Le texte est blanc pur : le shader le peint de la couleur d'encre de l'environnement.
+    // La pastille garde sa couleur (jamais blanc pur, pour ne pas être prise pour du texte).
+    const right = numberOf(i, n);
+    const spot = spots?.[i];
+    const tone = images[i]?.tone;
+    const right2 = spot?.alt ? `${spot.alt.toLocaleString("en-GB").replace(/,/g, " ")} m` : "";
+    ctx.fillStyle = "#fff";
+    ctx.textAlign = "right";
+    ctx.fillText(right, x + CELL_W, y + y1);
+    if (right2) ctx.fillText(right2, x + CELL_W, y + y2);
+    ctx.textAlign = "left";
+    ctx.fillText(fit(captionOf(i, n), CELL_W - ctx.measureText(right).width - fs), x, y + y1);
+    let x2 = x;
+    if (!spot) {
+      // la teinte de l'image, comme la pastille de couleur sous chaque produit
+      ctx.fillStyle = tone?.css ?? "#8d8f92";
+      ctx.beginPath();
+      ctx.arc(x + r, y + y2, r, 0, Math.PI * 2);
+      ctx.fill();
+      x2 += r * 2 + fs * 0.5;
+      ctx.fillStyle = "#fff";
+    }
+    const second = spot ? spot.name : tone?.name ?? (images[i] ? "Reading…" : "Blank");
+    ctx.fillText(fit(second, CELL_W - (x2 - x) - (right2 ? ctx.measureText(right2).width + fs : 0)), x2, y + y2);
+  }
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, atlasTex);
+  // prémultiplié à l'envoi : le filtrage ne fonce pas les bords du texte ; le shader redivise par l'alpha
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, atlasCanvas);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  const aniso = gl.getExtension("EXT_texture_filter_anisotropic");
+  if (aniso) gl.texParameterf(gl.TEXTURE_2D, aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, gl.getParameter(aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+}
+
+// Couleur de l'environnement en un point de l'écran (uv de 0 à 1, depuis le bas) : le fond la dessine,
+// et le brouillard de l'espace y fond les cartes lointaines
+const ENV_GLSL = `
+uniform vec3 uC[5];       // cinq teintes, également espacées
+uniform float uHorizon;   // où tombe le milieu du dégradé (0,5 : à mi-hauteur)
+uniform float uAspect;
+uniform int uShape;   // 0 linear, 1 radial, 2 mono
+uniform vec3 uMono;
+vec3 envColor(vec2 uv) {
+  if (uShape == 2) return uMono;
+  float t = 1.0 - uv.y;
+  if (uShape == 1) {
+    vec2 d = (uv - 0.5) * vec2(uAspect, 1.0);
+    t = 1.0 - clamp(length(d) / (0.5 * length(vec2(uAspect, 1.0))), 0.0, 1.0);
+  }
+  // Horizon courbe le dégradé : t = Horizon tombe sur la teinte du milieu
+  t = pow(clamp(t, 0.0, 1.0), log(0.5) / log(uHorizon)) * 4.0;
+  int k = int(min(floor(t), 3.0));
+  return mix(uC[k], uC[k + 1], smoothstep(0.0, 1.0, t - float(k)));
+}`;
+
+// ── WebGL : deux quads par carte (carte + légende), dessinés en instances ──
+const VS = `#version 300 es
+layout(location=0) in vec2 aPos;
+layout(location=1) in vec2 aUV;
+layout(location=2) in float aPart;   // 0 carte, 1 légende
+layout(location=3) in vec4 aM0;
+layout(location=4) in vec4 aM1;
+layout(location=5) in vec4 aM2;
+layout(location=6) in vec4 aM3;
+layout(location=7) in vec4 aExtra;   // x numéro de la carte (case de l'atlas, couche d'image), y opacité de la légende,
+                                     // z carte visible, w image chargée
+uniform mat4 uProj;
+uniform vec2 uAtlasGrid;
+uniform float uFogFar;   // brouillard linéaire, de la caméra jusqu'à cette distance
+uniform float uFogMix;   // 0 hors de l'espace, 1 dedans (fondu en changeant de mode)
+out vec2 vUV;
+out float vPart;
+out vec2 vAlpha;
+out float vFog;
+flat out float vIndex;
+flat out float vImage;
+void main() {
+  vec4 world = mat4(aM0, aM1, aM2, aM3) * vec4(aPos, 0.0, 1.0);
+  vFog = uFogMix * clamp(-world.z / uFogFar, 0.0, 1.0);
+  vPart = aPart;
+  vec2 cell = vec2(mod(aExtra.x, uAtlasGrid.x), floor((aExtra.x + 0.5) / uAtlasGrid.x));
+  vUV = aPart > 0.5 ? (cell + aUV) / uAtlasGrid : aUV;
+  vAlpha = aExtra.yz;
+  vIndex = aExtra.x;
+  vImage = aExtra.w;
+  gl_Position = uProj * world;
+}`;
+const FS = `#version 300 es
+precision highp float;
+precision highp sampler2DArray;
+in vec2 vUV;
+in float vPart;
+in vec2 vAlpha;
+in float vFog;
+flat in float vIndex;
+flat in float vImage;
+uniform sampler2D uAtlas;
+uniform sampler2DArray uImages;
+uniform int uPass;   // 0 les cartes, 1 les légendes (dessinées en dernier, sans écrire la profondeur)
+uniform vec2 uViewport;
+out vec4 outColor;
+${ENV_GLSL}
+const vec3 PAPER = vec3(0.84, 0.842, 0.855); // planche des cartes sans image, gris clair
+// distance à la ligne f = 0, en pixels d'écran
+float pxDist(float f) { return abs(f) / max(length(vec2(dFdx(f), dFdy(f))), 1e-6); }
+void main() {
+  if ((vPart > 0.5) != (uPass == 1)) discard;
+  if (vPart > 0.5) {
+    // légende : le texte (blanc pur dans l'atlas) passe en noir, la pastille garde sa couleur ;
+    // seule transparence de l'outil, elle s'efface aussi dans le brouillard
+    vec4 t = texture(uAtlas, vUV);
+    float a = t.a * vAlpha.x * (1.0 - vFog);
+    if (a < 0.03) discard;
+    vec3 rgb = t.rgb / max(t.a, 1e-4);
+    outColor = vec4(mix(rgb, vec3(0.0), smoothstep(0.93, 0.985, min(rgb.r, min(rgb.g, rgb.b)))), a);
+    return;
+  }
+  // carte : toujours opaque, fondue au loin dans la couleur du fond à cet endroit de l'écran
+  if (vAlpha.y < 0.5) discard;
+  vec3 col;
+  if (vImage > 0.5) {
+    col = texture(uImages, vec3(vUV, vIndex)).rgb;
+  } else {
+    // sans image : planche de dessin technique, cadre et croix d'un pixel, de même épaisseur
+    // (le cadre ne montre que sa moitié intérieure, la croix s'étale des deux côtés de son axe)
+    float frame = min(min(pxDist(vUV.x), pxDist(1.0 - vUV.x)), min(pxDist(vUV.y), pxDist(1.0 - vUV.y)));
+    float cross = min(pxDist(vUV.x - vUV.y), pxDist(vUV.x + vUV.y - 1.0));
+    float line = max(clamp(1.5 - frame, 0.0, 1.0), clamp(1.2 - 1.6 * cross, 0.0, 1.0));
+    col = mix(PAPER, vec3(0.0), line);
+  }
+  outColor = vec4(mix(col, envColor(gl_FragCoord.xy / uViewport), vFog), 1.0);
+}`;
+function compile(type, src) {
+  const sh = gl.createShader(type);
+  gl.shaderSource(sh, src);
+  gl.compileShader(sh);
+  if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
+  return sh;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS));
+gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+const uni = (name) => gl.getUniformLocation(prog, name);
+const U = {
+  proj: uni("uProj"), atlasGrid: uni("uAtlasGrid"), atlas: uni("uAtlas"), images: uni("uImages"), pass: uni("uPass"),
+  fogFar: uni("uFogFar"), fogMix: uni("uFogMix"), viewport: uni("uViewport"),
+};
+// uniformes de l'environnement d'un programme (ENV_GLSL)
+const envUniforms = (p) => Object.fromEntries(["c", "horizon", "aspect", "shape", "mono"]
+  .map((k) => [k, gl.getUniformLocation(p, "u" + k[0].toUpperCase() + k.slice(1))]));
+const UE = envUniforms(prog);
+
+// ── Images : une couche de texture par carte (TEXTURE_2D_ARRAY), recadrées en 3:4 comme la carte ──
+const IMG_W = 300, IMG_H = 400;      // assez net pour le focus du plan 2D, léger en mémoire
+const MAX_IMAGES = Math.min(300, gl.getParameter(gl.MAX_ARRAY_TEXTURE_LAYERS));
+const IMG_LEVELS = Math.floor(Math.log2(Math.max(IMG_W, IMG_H))) + 1;
+let imageTex = gl.createTexture();
+let imageLayers = 0;                  // couches allouées
+// texStorage fixe la taille : quand il faut plus de couches, on refait la texture et on recharge tout
+function ensureImageLayers(n) {
+  if (n <= imageLayers) return;
+  gl.deleteTexture(imageTex);
+  imageTex = gl.createTexture();
+  imageLayers = Math.min(MAX_IMAGES, Math.ceil(n / 16) * 16);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D_ARRAY, imageTex);
+  gl.texStorage3D(gl.TEXTURE_2D_ARRAY, IMG_LEVELS, gl.RGBA8, IMG_W, IMG_H, imageLayers);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  images.forEach((img, i) => { if (img.bitmap) uploadImage(i); });
+  gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
+}
+function uploadImage(i) {
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D_ARRAY, imageTex);
+  gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, i, IMG_W, IMG_H, 1, gl.RGBA, gl.UNSIGNED_BYTE, images[i].bitmap);
+}
+// Fichier → image recadrée au centre en 3:4 (« cover », comme la référence), rotation de l'appareil appliquée
+const cropCanvas = new OffscreenCanvas(IMG_W, IMG_H);
+async function cropToCard(file) {
+  const src = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const ctx = cropCanvas.getContext("2d");
+  const k = Math.max(IMG_W / src.width, IMG_H / src.height);
+  const w = src.width * k, h = src.height * k;
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, IMG_W, IMG_H);
+  ctx.drawImage(src, (IMG_W - w) / 2, (IMG_H - h) / 2, w, h);
+  src.close();
+  return { bitmap: await createImageBitmap(cropCanvas), tone: toneOf(ctx.getImageData(0, 0, IMG_W, IMG_H).data) };
+}
+// Teinte dominante d'une image, nommée comme les coloris de Raide (Stone, Shadow, Dusk, Sunshine…)
+function toneOf(data) {
+  let r = 0, g = 0, b = 0, n = 0;
+  for (let k = 0; k < data.length; k += 16) { r += data[k]; g += data[k + 1]; b += data[k + 2]; n++; }
+  r /= n * 255; g /= n * 255; b /= n * 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
+  const sat = max === min ? 0 : (max - min) / (1 - Math.abs(2 * l - 1));
+  let hue = 0;
+  if (max !== min) {
+    if (max === r) hue = ((g - b) / (max - min) + 6) % 6;
+    else if (max === g) hue = (b - r) / (max - min) + 2;
+    else hue = (r - g) / (max - min) + 4;
+    hue *= 60;
+  }
+  let name;
+  if (sat < 0.14) name = l < 0.18 ? "Black" : l < 0.42 ? "Shadow" : l < 0.78 ? "Stone" : "Snow";
+  else if (hue < 20 || hue >= 330) name = l < 0.4 ? "Ember" : "Coral";
+  else if (hue < 45) name = l < 0.45 ? "Earth" : "Sand";
+  else if (hue < 70) name = "Sunshine";
+  else if (hue < 160) name = l < 0.4 ? "Moss" : "Lichen";
+  else if (hue < 200) name = "Ice";
+  else if (hue < 255) name = l < 0.4 ? "Night" : "Glacier";
+  else name = "Dusk";
+  // jamais blanc pur dans l'atlas : le shader y verrait du texte
+  const c = (v) => Math.round(Math.min(0.94, v) * 255);
+  return { name, css: `rgb(${c(r)}, ${c(g)}, ${c(b)})` };
+}
+
+
+let loadToken = 0; // une nouvelle sélection ou « Clear » arrête le chargement en cours
+async function addImages(files) {
+  const list = files.filter((f) => f.type.startsWith("image/")).slice(0, MAX_IMAGES - images.length);
+  if (!list.length) return;
+  const token = loadToken;
+  const start = images.length;
+  images = images.concat(list.map((f) => ({ name: f.name.replace(/\.[^.]+$/, ""), bitmap: null })));
+  ensureImageLayers(images.length);
+  setCount(images.length);
+  updateImageUi();
+  for (let k = 0; k < list.length; k++) {
+    let bitmap = null, tone = null;
+    try {
+      ({ bitmap, tone } = await cropToCard(list[k]));
+    } catch (err) {
+      console.error(`Could not read ${list[k].name}:`, err); // la carte reste noire
+      images[start + k].failed = true;
+    }
+    if (token !== loadToken) { bitmap?.close(); return; }
+    images[start + k].bitmap = bitmap;
+    images[start + k].tone = tone;
+    if (bitmap) uploadImage(start + k);
+    if (k % 8 === 7 || k === list.length - 1) {
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D_ARRAY, imageTex);
+      gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
+      buildAtlas(); // les légendes prennent la teinte des images lues
+    }
+    updateImageUi();
+  }
+}
+function clearImages() {
+  loadToken++;
+  images.forEach((img) => img.bitmap?.close());
+  images = [];
+  setCount(num(controls.count));
+  updateImageUi();
+}
+function updateImageUi() {
+  const n = images.length;
+  const failed = images.filter((img) => img.failed).length;
+  const done = images.filter((img) => img.bitmap).length + failed;
+  $("clearImagesBtn").disabled = n === 0;
+  $("countRow").hidden = n > 0; // avec des images, une carte par image
+  $("imageInfo").textContent = n === 0
+    ? `No image: ${num(controls.count)} blank cards. Several at once, or drop them on the page.`
+    : `${n} image${n > 1 ? "s" : ""}` + (done < n ? ` · loading ${done}/${n}` : "")
+      + (failed ? ` · ${failed} unreadable (blank card)` : "") + (n >= MAX_IMAGES ? ` · ${MAX_IMAGES} max` : "");
+}
+
+// légende sous la carte : de ly0 (haut de la bande) à ly1 (bas)
+const hw = CARD_W / 2, hh = CARD_H / 2, ly0 = -hh - LABEL_GAP, ly1 = ly0 - LABEL_H;
+// x, y, u, v, partie
+const verts = new Float32Array([
+  -hw, -hh, 0, 1, 0,   hw, -hh, 1, 1, 0,   hw, hh, 1, 0, 0,   -hw, hh, 0, 0, 0,
+  -hw, ly0, 0, 0, 1,   hw, ly0, 1, 0, 1,   hw, ly1, 1, 1, 1,  -hw, ly1, 0, 1, 1,
+]);
+const indices = new Uint16Array([0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7]);
+const vao = gl.createVertexArray();
+gl.bindVertexArray(vao);
+const vbo = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
+gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 20, 0);
+gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 20, 8);
+gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 20, 16);
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+const FLOATS = 20; // matrice (16) + extra (4) par carte
+const instanceBuf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuf);
+for (let k = 0; k < 5; k++) {
+  gl.enableVertexAttribArray(3 + k);
+  gl.vertexAttribPointer(3 + k, 4, gl.FLOAT, false, FLOATS * 4, k * 16);
+  gl.vertexAttribDivisor(3 + k, 1);
+}
+gl.bindVertexArray(null);
+let instanceData = new Float32Array(0);
+const MAX_INSTANCES = 8000; // plafond des cartes dessinées (répétitions comprises), zoom arrière maximal
+const instanceCells = new Int32Array(MAX_INSTANCES); // case du plan 2D de chaque instance (-1 ailleurs), pour le clic
+
+// ── Environnement : un triangle qui couvre l'écran, dessiné avant tout le reste ──
+// Linear : du haut (couleur 1) vers le bas (couleur 5) ; Radial : des coins (1) vers le centre (5).
+// « Horizon » place la couleur du milieu (3). Mono : une seule couleur, un gris très clair par défaut.
+const DEFAULT_ENV = "mono"; // par défaut : le gris uni très clair
+let env = DEFAULT_ENV;
+const ENV_TITLES = {
+  linear: ["Top", "Upper", "Middle", "Lower", "Bottom"],
+  radial: ["Edge", "Outer", "Middle", "Inner", "Centre"],
+};
+const ENV_SHAPES = ["linear", "radial", "mono"];
+function setEnv(next) {
+  env = next;
+  envButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.env === env)));
+  // en Mono, une seule pastille : les couleurs du dégradé et l'horizon n'ont plus de sens
+  $("gradientColors").hidden = $("horizonRow").hidden = env === "mono";
+  $("monoColors").hidden = env !== "mono";
+  if (env === "mono") return;
+  envColors.forEach((el, k) => {
+    el.title = ENV_TITLES[env][k];
+    el.setAttribute("aria-label", `${ENV_TITLES[env][k]} colour`);
+  });
+}
+const hexToRgb = (hex) => [1, 3, 5].map((k) => parseInt(hex.slice(k, k + 2), 16) / 255);
+const BG_VS = `#version 300 es
+out vec2 vUV;
+void main() {
+  vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+  vUV = p;
+  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+}`;
+const BG_FS = `#version 300 es
+precision highp float;
+in vec2 vUV;
+out vec4 outColor;
+${ENV_GLSL}
+void main() {
+  outColor = vec4(envColor(vUV), 1.0);
+}`;
+const bgProg = gl.createProgram();
+gl.attachShader(bgProg, compile(gl.VERTEX_SHADER, BG_VS));
+gl.attachShader(bgProg, compile(gl.FRAGMENT_SHADER, BG_FS));
+gl.linkProgram(bgProg);
+if (!gl.getProgramParameter(bgProg, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(bgProg));
+const BU = envUniforms(bgProg);
+const bgVao = gl.createVertexArray(); // aucun attribut : les sommets viennent de gl_VertexID
+// à appeler le programme actif : le fond, ou les cartes pour leur brouillard
+function setEnvUniforms(locs) {
+  gl.uniform3fv(locs.c, envColors.flatMap((el) => hexToRgb(el.value)));
+  gl.uniform1f(locs.horizon, num(controls.horizon));
+  gl.uniform1f(locs.aspect, aspect);
+  gl.uniform1i(locs.shape, ENV_SHAPES.indexOf(env));
+  gl.uniform3fv(locs.mono, hexToRgb($("monoColor").value));
+}
+function drawEnvironment() {
+  gl.disable(gl.DEPTH_TEST);
+  gl.useProgram(bgProg);
+  setEnvUniforms(BU);
+  gl.bindVertexArray(bgVao);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.bindVertexArray(null);
+  gl.enable(gl.DEPTH_TEST);
+}
+
+// ── Lignes du relief (courbes de niveau) : traits noirs plus ou moins transparents, qui se fondent dans le fond ──
+const LINE_VS = `#version 300 es
+layout(location=0) in vec3 aPos;
+layout(location=1) in float aShade;  // gris de la ligne (1 = blanc)
+uniform mat4 uProj;
+uniform mat4 uModel;
+out float vShade;
+void main() {
+  vShade = aShade;
+  gl_Position = uProj * uModel * vec4(aPos, 1.0);
+}`;
+const LINE_FS = `#version 300 es
+precision highp float;
+in float vShade;
+uniform float uFade;  // apparition : du fond vers le gris
+out vec4 outColor;
+void main() {
+  // sur fond blanc, exactement le gris vShade ; sur un fond coloré, le même assombrissement
+  outColor = vec4(0.0, 0.0, 0.0, (1.0 - vShade) * uFade);
+}`;
+const lineProg = gl.createProgram();
+gl.attachShader(lineProg, compile(gl.VERTEX_SHADER, LINE_VS));
+gl.attachShader(lineProg, compile(gl.FRAGMENT_SHADER, LINE_FS));
+gl.linkProgram(lineProg);
+if (!gl.getProgramParameter(lineProg, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(lineProg));
+const LU = { proj: gl.getUniformLocation(lineProg, "uProj"), model: gl.getUniformLocation(lineProg, "uModel"), fade: gl.getUniformLocation(lineProg, "uFade") };
+function lineBuffer() {
+  const vao = gl.createVertexArray();
+  const buf = gl.createBuffer();
+  gl.bindVertexArray(vao);
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 16, 0);
+  gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 16, 12);
+  gl.bindVertexArray(null);
+  return { vao, buf, count: 0 };
+}
+const contourLines = lineBuffer();
+
+// Courbes de niveau tous les 100 m (plus marquées tous les 500 m), par carrés marchants sur la grille
+function buildContours() {
+  const out = [];
+  const { cols, rows } = DEM;
+  for (let j = 0; j < rows - 1; j++) {
+    for (let i = 0; i < cols - 1; i++) {
+      // coins dans l'ordre : haut-gauche, haut-droit, bas-droit, bas-gauche
+      const corners = [[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]];
+      const h = corners.map(([a, b]) => demH(a, b));
+      const [x, , z] = gridToLocal(i + 0.5, j + 0.5, 0);
+      const edge = edgeOf(x, z);
+      if (edge > 0.99) continue;
+      // seules les courbes qui traversent la case
+      for (let level = Math.ceil(Math.min(...h) / 100) * 100; level <= Math.max(...h); level += 100) {
+        const shade = (level % 500 === 0 ? 0.74 : 0.86) + edge * (level % 500 === 0 ? 0.26 : 0.14);
+        const pts = [];
+        for (let k = 0; k < 4; k++) {
+          const h0 = h[k], h1 = h[(k + 1) % 4];
+          if ((h0 < level) === (h1 < level)) continue;
+          const t = (level - h0) / (h1 - h0);
+          const [a0, b0] = corners[k], [a1, b1] = corners[(k + 1) % 4];
+          pts.push(gridToLocal(a0 + (a1 - a0) * t, b0 + (b1 - b0) * t, level));
+        }
+        for (let k = 0; k + 1 < pts.length; k += 2) out.push(...pts[k], shade, ...pts[k + 1], shade);
+      }
+    }
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, contourLines.buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(out), gl.STATIC_DRAW);
+  contourLines.count = out.length / 4;
+}
+
+// ── Mesh et Lidar : la surface du relief, ou un nuage de points posés dessus ──
+// Ombrage de carte : un soleil fixe au nord-ouest, qui tourne avec le relief
+const RELIEF_VS = `#version 300 es
+layout(location=0) in vec3 aPos;
+layout(location=1) in vec3 aNormal;
+layout(location=2) in float aEdge;  // 0 au centre, 1 au bord du relief
+uniform mat4 uProj;
+uniform mat4 uModel;
+uniform float uPointSize;  // taille des points à 1 km de la caméra, en pixels
+out float vLight;
+out float vDepth;
+out float vEdge;
+void main() {
+  vec4 eye = uModel * vec4(aPos, 1.0);
+  vLight = max(dot(normalize(aNormal), normalize(vec3(-0.6, 1.0, -0.6))), 0.0);
+  vDepth = -eye.z;
+  vEdge = aEdge;
+  gl_PointSize = clamp(uPointSize / vDepth, 1.0, 6.0);
+  gl_Position = uProj * eye;
+}`;
+const RELIEF_FS = `#version 300 es
+precision highp float;
+in float vLight;
+in float vDepth;
+in float vEdge;
+uniform int uStyle;    // 0 mesh, 1 lidar
+uniform float uFade;   // apparition du relief
+uniform float uDist;   // distance du centre du relief
+out vec4 outColor;
+void main() {
+  float fade = uFade * (1.0 - vEdge);
+  if (uStyle == 0) {
+    // surface noire à 30 %, un peu plus sombre sur les pentes à l'ombre
+    outColor = vec4(0.0, 0.0, 0.0, 0.3 * mix(1.45, 0.55, vLight) * fade);
+    return;
+  }
+  // points gris (sur fond blanc), plus clairs au soleil et au loin : du noir plus ou moins transparent
+  float g = mix(0.12, 0.6, vLight);
+  g = mix(g, 1.0, 0.6 * smoothstep(uDist - 6.0, uDist + 14.0, vDepth));
+  float a = (1.0 - g) * fade;
+  if (a < 0.01) discard;
+  outColor = vec4(0.0, 0.0, 0.0, a);
+}`;
+const reliefProg = gl.createProgram();
+gl.attachShader(reliefProg, compile(gl.VERTEX_SHADER, RELIEF_VS));
+gl.attachShader(reliefProg, compile(gl.FRAGMENT_SHADER, RELIEF_FS));
+gl.linkProgram(reliefProg);
+if (!gl.getProgramParameter(reliefProg, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(reliefProg));
+const RU = Object.fromEntries(["proj", "model", "pointSize", "style", "fade", "dist"]
+  .map((k) => [k, gl.getUniformLocation(reliefProg, "u" + k[0].toUpperCase() + k.slice(1))]));
+// position + normale + bord par sommet
+const RELIEF_FLOATS = 7;
+function reliefBuffer() {
+  const vao = gl.createVertexArray();
+  const buf = gl.createBuffer();
+  gl.bindVertexArray(vao);
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, RELIEF_FLOATS * 4, 0);
+  gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, RELIEF_FLOATS * 4, 12);
+  gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 1, gl.FLOAT, false, RELIEF_FLOATS * 4, 24);
+  gl.bindVertexArray(null);
+  return { vao, buf, count: 0 };
+}
+const reliefMesh = reliefBuffer();
+const reliefPoints = reliefBuffer();
+const LIDAR_POINTS = 220000; // nuage aéré : on lit le relief par les crêtes, pas par la masse
+
+function buildRelief() {
+  const { cols, rows } = DEM;
+  const ex = ((DEM.east - DEM.west) / (cols - 1)) * KM_LON;   // km entre deux colonnes
+  const ez = ((DEM.north - DEM.south) / (rows - 1)) * KM_LAT; // km entre deux lignes
+  // normales tirées d'un relief adouci (moyenne 3 × 3) : la surface paraît lissée, les sommets restent à leur place
+  const soft = new Float32Array(cols * rows);
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < cols; i++) {
+      let s = 0;
+      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) s += demH(i + di, j + dj);
+      soft[j * cols + i] = (s / 9000) * TERRAIN_EXAG;
+    }
+  }
+  const softH = (i, j) => soft[Math.max(0, Math.min(rows - 1, j)) * cols + Math.max(0, Math.min(cols - 1, i))];
+  const normalAt = (i, j) => normalize([
+    -(softH(i + 1, j) - softH(i - 1, j)) / (2 * ex), 1, -(softH(i, j + 1) - softH(i, j - 1)) / (2 * ez),
+  ]);
+
+  // Mesh : un sommet par point de la grille, deux triangles par case
+  const verts = new Float32Array(cols * rows * RELIEF_FLOATS);
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < cols; i++) {
+      const p = gridToLocal(i, j, demH(i, j));
+      verts.set([...p, ...normalAt(i, j), edgeOf(p[0], p[2])], (j * cols + i) * RELIEF_FLOATS);
+    }
+  }
+  const idx = new Uint32Array((cols - 1) * (rows - 1) * 6); // plus de 65 535 sommets : index 32 bits
+  let o = 0;
+  for (let j = 0; j < rows - 1; j++) {
+    for (let i = 0; i < cols - 1; i++) {
+      const a = j * cols + i, b = a + 1, c = a + cols, d = c + 1;
+      idx.set([a, c, b, b, c, d], o);
+      o += 6;
+    }
+  }
+  gl.bindVertexArray(reliefMesh.vao);
+  gl.bindBuffer(gl.ARRAY_BUFFER, reliefMesh.buf);
+  gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+  gl.bindVertexArray(null);
+  reliefMesh.count = idx.length;
+
+  // Lidar : des points tirés au hasard sur la surface (altitude interpolée entre les points de la grille)
+  const rnd = mulberry32(2026);
+  const pts = new Float32Array(LIDAR_POINTS * RELIEF_FLOATS);
+  for (let k = 0; k < LIDAR_POINTS; k++) {
+    const x = rnd() * (cols - 1), y = rnd() * (rows - 1);
+    const i = Math.floor(x), j = Math.floor(y), fx = x - i, fy = y - j;
+    const h = (demH(i, j) * (1 - fx) + demH(i + 1, j) * fx) * (1 - fy) + (demH(i, j + 1) * (1 - fx) + demH(i + 1, j + 1) * fx) * fy;
+    const p = gridToLocal(x, y, h);
+    pts.set([...p, ...normalAt(Math.round(x), Math.round(y)), edgeOf(p[0], p[2])], k * RELIEF_FLOATS);
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, reliefPoints.buf);
+  gl.bufferData(gl.ARRAY_BUFFER, pts, gl.STATIC_DRAW);
+  reliefPoints.count = LIDAR_POINTS;
+}
+
+// Mesh : d'abord la profondeur seule, puis la couleur, pour qu'un seul pli (le plus proche) se dessine
+// et que la surface garde partout ses 30 %
+function drawRelief(T, fade) {
+  gl.useProgram(reliefProg);
+  gl.uniformMatrix4fv(RU.proj, false, proj);
+  gl.uniformMatrix4fv(RU.model, false, T.model);
+  gl.uniform1f(RU.fade, fade);
+  gl.uniform1f(RU.dist, T.dist);
+  if (relief === "mesh") {
+    gl.uniform1i(RU.style, 0);
+    gl.bindVertexArray(reliefMesh.vao);
+    gl.enable(gl.BLEND);
+    gl.colorMask(false, false, false, false);
+    gl.drawElements(gl.TRIANGLES, reliefMesh.count, gl.UNSIGNED_INT, 0);
+    gl.colorMask(true, true, true, true);
+    gl.depthFunc(gl.LEQUAL);
+    gl.drawElements(gl.TRIANGLES, reliefMesh.count, gl.UNSIGNED_INT, 0);
+    gl.depthFunc(gl.LESS);
+  } else {
+    gl.uniform1i(RU.style, 1);
+    gl.uniform1f(RU.pointSize, (canvas.width / cssW) * 1.6 * T.dist); // ≈ 1,6 px au centre du relief
+    // du noir transparent s'empile dans n'importe quel ordre : pas besoin d'écrire la profondeur
+    gl.enable(gl.BLEND);
+    gl.depthMask(false);
+    gl.bindVertexArray(reliefPoints.vao);
+    gl.drawArrays(gl.POINTS, 0, reliefPoints.count);
+    gl.depthMask(true);
+  }
+  gl.bindVertexArray(null);
+}
+
+fetch("data/montblanc_dem.bin")
+  .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(r.status))))
+  .then((buf) => {
+    dem = new Int16Array(buf);
+    buildContours();
+    buildRelief();
+    terrainSpotsCache = null; // les places suivent maintenant le vrai relief
+    if (mode === "terrain") buildAtlas();
+  })
+  .catch((err) => console.error("Could not load the Mont Blanc terrain:", err));
+let lastGrid = null;        // dernière grille du plan 2D : ses répétitions s'effacent en quittant le mode
+let lastSphere = null;      // mesures de la boule (fit, R), pour son focus
+let lastTerrain = null;     // dernière vue du relief : il pâlit sur place en quittant le mode
+let lastCount = 0;          // instances dessinées à la dernière image (pour retrouver la carte cliquée)
+
+// ── Taille de l'écran ──
+let cssW = 1, cssH = 1, proj = perspective(1);
+// la scène n'est plus tout l'écran : le rendu suit la taille de son cadre (panneau masqué par H, téléphone…)
+const overlay = $("overlay");
+const octx = overlay.getContext("2d");
+function resize() {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cssW = Math.max(1, stage.clientWidth);
+  cssH = Math.max(1, stage.clientHeight);
+  canvas.width = overlay.width = Math.round(cssW * dpr);
+  canvas.height = overlay.height = Math.round(cssH * dpr);
+  aspect = cssW / cssH;
+  proj = perspective(aspect);
+}
+new ResizeObserver(resize).observe(stage);
+resize();
+// position du pointeur dans la scène
+const toLocal = (e) => {
+  const r = canvas.getBoundingClientRect();
+  return [e.clientX - r.left, e.clientY - r.top];
+};
+
+// ── Souris : glisser, molette, survol, clic ──
+const pointer = { x: -1, y: -1, inside: false, down: false, lastX: 0, lastY: 0, lastT: 0, startX: 0, startY: 0, startT: 0, moved: 0 };
+let hovered = -1;      // carte survolée
+let hoveredCell = -1;  // sa case sur le plan 2D (-1 ailleurs)
+let currentDepth = 10; // profondeur de référence du mode, pour convertir les pixels en unités
+
+// Focus de la boule et du relief : la vue garde son zoom d'avant, et y revient en ressortant
+function focusCard(i) {
+  const v = view[mode];
+  if (v.back === null) v.back = v.zoom;
+  v.focus = i;
+  v.velYaw = v.velPitch = 0;
+}
+function unfocus() {
+  view.grid.focus = view.space.focus = -1;
+  for (const key of ["sphere", "terrain"]) view[key].focus = -1;
+}
+// Zoom (molette, ou pincement à deux doigts) : k > 1 rapproche
+function zoomBy(k) {
+  // pendant un focus, ou en y revenant, la molette reprend la main sur le zoom
+  if (mode === "sphere" || mode === "terrain") Object.assign(view[mode], { focus: -1, back: null });
+  // plan 2D : jamais en dessous du repos, sinon on verrait le bord de la grille enroulée
+  if (mode === "grid") view.grid.zoom = Math.max(1, Math.min(2.5, view.grid.zoom * k));
+  else if (mode === "sphere") view.sphere.zoom = Math.max(0.35, Math.min(4, view.sphere.zoom * k));
+  else if (mode === "terrain") view.terrain.zoom = Math.max(0.5, Math.min(5, view.terrain.zoom * k));
+  else if (mode === "space") {
+    // dans l'espace, écarter les doigts fait avancer (comme la référence : 3 unités par pixel d'écart)
+    const v = view.space;
+    Object.assign(v, { intro: false, focus: -1 });
+    v.camZ = Math.max(-(700 - 160) * SPACE_U, v.camZ - (k - 1) * 8);
+  }
+}
+
+// Doigts posés sur l'écran : à deux, on pince pour zoomer au lieu de glisser
+const touches = new Map();
+let pinchDist = 0;
+const touchSpread = () => { const [a, b] = [...touches.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
+
+canvas.addEventListener("pointerdown", (e) => {
+  touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  canvas.setPointerCapture(e.pointerId);
+  if (touches.size === 2) {
+    pinchDist = touchSpread();
+    pointer.moved = Infinity; // un pincement n'est jamais un clic
+    return;
+  }
+  pointer.down = true;
+  pointer.lastX = pointer.startX = e.clientX;
+  pointer.lastY = pointer.startY = e.clientY;
+  pointer.lastT = pointer.startT = e.timeStamp;
+  pointer.moved = 0;
+  view.grid.velX = view.grid.velY = view.space.vx = view.space.vy = 0;
+  canvas.classList.add("dragging");
+});
+canvas.addEventListener("pointermove", (e) => {
+  if (touches.has(e.pointerId)) touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (touches.size >= 2) {
+    const d = touchSpread();
+    if (pinchDist > 0 && d > 0) zoomBy(d / pinchDist);
+    pinchDist = d;
+    return;
+  }
+  [pointer.x, pointer.y] = toLocal(e);
+  pointer.inside = true;
+  if (!pointer.down) return;
+  const dx = e.clientX - pointer.lastX, dy = e.clientY - pointer.lastY;
+  const dt = Math.max(1, e.timeStamp - pointer.lastT) / 1000;
+  pointer.lastX = e.clientX;
+  pointer.lastY = e.clientY;
+  pointer.lastT = e.timeStamp;
+  pointer.moved += Math.hypot(dx, dy);
+  if (mode === "grid" && pointer.moved > 5) view.grid.focus = -1;
+  dragBy(dx, dy, dt);
+});
+// Glisser de dx, dy pixels en dt secondes (souris, doigt, ou main devant la caméra)
+function dragBy(dx, dy, dt) {
+  const unitsPerPx = (2 * currentDepth * TAN) / cssH;
+  if (mode === "grid") {
+    // le plan suit la main ; la vitesse mesurée continue après le lâcher (élan)
+    const v = view.grid;
+    v.panX += dx * unitsPerPx;
+    v.panY -= dy * unitsPerPx;
+    v.velX = v.velX * 0.6 + ((dx * unitsPerPx) / dt) * 0.4;
+    v.velY = v.velY * 0.6 + ((-dy * unitsPerPx) / dt) * 0.4;
+  } else if (mode === "terrain") {
+    const v = view.terrain;
+    v.focus = -1; // glisser fait ressortir du focus (le relief garde la carte comme pivot)
+    v.yaw += dx * 0.004;
+    v.pitch = Math.max(0.15, Math.min(1.4, v.pitch + dy * 0.004));
+    v.velYaw = dx * 0.25;
+    v.velPitch = dy * 0.25;
+  } else if (mode === "sphere") {
+    const v = view.sphere;
+    v.focus = -1;
+    v.yaw += dx * 0.005;
+    v.pitch = Math.max(-1.3, Math.min(1.3, v.pitch + dy * 0.005));
+    v.velYaw = dx * 0.3;
+    v.velPitch = dy * 0.3;
+  } else {
+    // la caméra glisse à l'opposé de la main : les cartes proches suivent à moitié, les lointaines moins ;
+    // au lâcher, l'élan vaut 0,3 fois la vitesse du glisser, comme la référence
+    const v = view.space, pxU = (2 * SPACE_NEAR * TAN) / cssH;
+    Object.assign(v, { intro: false, focus: -1 });
+    v.camX -= dx * 0.5 * pxU;
+    v.camY += dy * 0.5 * pxU;
+    v.vx = v.vx * 0.5 + ((-0.15 * dx * pxU) / dt) * 0.5;
+    v.vy = v.vy * 0.5 + ((0.15 * dy * pxU) / dt) * 0.5;
+  }
+}
+const endDrag = (e) => {
+  touches.delete(e.pointerId);
+  if (touches.size === 1) {
+    // fin d'un pincement : le doigt restant reprend le glisser sans saut
+    const [rest] = touches.values();
+    pointer.lastX = rest.x;
+    pointer.lastY = rest.y;
+    return;
+  }
+  if (touches.size > 0 || !pointer.down) return;
+  pointer.down = false;
+  canvas.classList.remove("dragging");
+  // lâché sans glisser, ou main arrêtée avant de lâcher : pas d'élan
+  if (e.timeStamp - pointer.lastT > 80) view.grid.velX = view.grid.velY = view.space.vx = view.space.vy = 0;
+  const isClick = pointer.moved <= 5 && e.timeStamp - pointer.startT < 300;
+  if (isClick && e.type === "pointerup") onClick(e);
+};
+canvas.addEventListener("pointerup", endDrag);
+canvas.addEventListener("pointercancel", endDrag);
+canvas.addEventListener("pointerleave", () => { pointer.inside = false; });
+canvas.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  if (mode === "grid") {
+    // la molette pousse le plan (les deux axes, comme un trackpad) et sort du focus
+    const v = view.grid;
+    const k = ((2 * currentDepth * TAN) / cssH) * 6;
+    v.focus = -1;
+    v.velX -= e.deltaX * k;
+    v.velY += e.deltaY * k;
+  } else if (mode === "space") {
+    // la molette pousse la caméra vers l'avant ou l'arrière (élan freiné vite : 0,78 par image)
+    const v = view.space, cap = 250 * 30 * SPACE_U;
+    Object.assign(v, { intro: false, focus: -1 });
+    v.vz = Math.max(-cap, Math.min(cap, v.vz + e.deltaY * 0.17 * 30 * SPACE_U));
+  } else zoomBy(Math.exp(-e.deltaY * 0.0012));
+}, { passive: false });
+canvas.addEventListener("dblclick", () => {
+  if (mode !== "grid") Object.assign(view[mode], structuredClone(freshView[mode]));
+});
+
+// Plan 2D : un clic sur une carte la centre et zoome dessus ; à côté, on ressort.
+// La carte est cherchée sous le point du lâcher (pendant l'appui, le survol est suspendu,
+// et au doigt il n'y a pas de survol du tout).
+// Espace : la caméra vole jusqu'à la carte cliquée ; à côté, elle s'arrête là où elle est.
+// Boule et relief : la carte cliquée vient face à la caméra et grandit jusqu'à remplir la scène.
+function onClick(e) {
+  [pointer.x, pointer.y] = toLocal(e);
+  pointer.inside = true;
+  const hit = pick(instanceData, lastCount);
+  const card = hit >= 0 ? instanceData[hit * FLOATS + 16] : -1;
+  if (mode === "grid") view.grid.focus = hit >= 0 ? instanceCells[hit] : -1;
+  else if (mode === "space") Object.assign(view.space, { focus: card, intro: false });
+  else if (card >= 0) focusCard(card);
+  else view[mode].focus = -1;
+}
+// Flèches : de carte en carte (la grille boucle) ; sans focus, la carte au centre de l'écran
+function stepFocus(key) {
+  const g = lastGrid;
+  if (!g) return;
+  const v = view.grid;
+  const { cols, rows } = g;
+  if (v.focus < 0) {
+    let best = 0, bestD = Infinity;
+    for (let cell = 0; cell < cols * rows; cell++) {
+      const [x, y] = g.cellPos(cell);
+      const d = Math.hypot(x, y);
+      if (d < bestD) { best = cell; bestD = d; }
+    }
+    v.focus = best;
+    return;
+  }
+  let c = v.focus % cols, r = Math.floor(v.focus / cols);
+  if (key === "ArrowRight") c = (c + 1) % cols;
+  if (key === "ArrowLeft") c = (c - 1 + cols) % cols;
+  if (key === "ArrowDown") r = (r + 1) % rows;
+  if (key === "ArrowUp") r = (r - 1 + rows) % rows;
+  v.focus = r * cols + c;
+}
+
+// La carte sous la souris : les 4 coins de chaque instance projetés à l'écran, la plus proche gagne.
+// Renvoie le numéro de l'instance (-1 si aucune).
+function pick(models, count) {
+  if (!pointer.inside || pointer.down) return -1;
+  let best = -1, bestDepth = Infinity;
+  const corners = [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]];
+  for (let i = 0; i < count; i++) {
+    const o = i * FLOATS;
+    const pts = [];
+    let depth = 0, ok = true;
+    for (const [px, py] of corners) {
+      const wx = models[o] * px + models[o + 4] * py + models[o + 12];
+      const wy = models[o + 1] * px + models[o + 5] * py + models[o + 13];
+      const wz = models[o + 2] * px + models[o + 6] * py + models[o + 14];
+      if (-wz < NEAR * 4) { ok = false; break; }
+      const cw = -wz;
+      pts.push([((proj[0] * wx) / cw + 1) * 0.5 * cssW, (1 - (proj[5] * wy) / cw) * 0.5 * cssH]);
+      depth += cw;
+    }
+    if (!ok || models[o + 16 + 2] < 0.5) continue;
+    let pos = 0, neg = 0;
+    for (let k = 0; k < 4; k++) {
+      const [ax, ay] = pts[k], [bx, by] = pts[(k + 1) % 4];
+      const c = (bx - ax) * (pointer.y - ay) - (by - ay) * (pointer.x - ax);
+      if (c >= 0) pos++; else neg++;
+    }
+    if ((pos === 4 || neg === 4) && depth < bestDepth) { best = i; bestDepth = depth; }
+  }
+  return best;
+}
+
+// ── Main devant la caméra (option) : MediaPipe Tasks Vision, chargé seulement quand on l'active ──
+// Pincer (pouce contre index) attrape la carte : elle suit la paume, et garde son élan au lâcher.
+// Main pincée, la rapprocher de la caméra zoome, l'éloigner dézoome.
+const MEDIAPIPE = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+const HAND_MODEL = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
+const WRIST = 0, THUMB_TIP = 4, INDEX_MCP = 5, INDEX_TIP = 8, MIDDLE_MCP = 9, RING_MCP = 13, PINKY_MCP = 17;
+const PINCH_ON = 0.3, PINCH_OFF = 0.45; // écart pouce–index rapporté à la taille de la main ; deux seuils, pour ne pas clignoter
+const HAND_GAIN = 1.6;                  // la main n'a pas à traverser tout le champ de la caméra
+const HAND_REF = 0.18;                  // taille de la main à l'image (poignet → base du majeur) à distance habituelle
+const HAND_ZOOM_GAIN = 5;               // main deux fois plus près : zoom ≈ × 6,5
+const HAND_LOST_MS = 300;               // une détection ratée ne lâche pas la carte
+const hands = {
+  landmarker: null, stream: null, token: 0, lastVideoTime: -1,
+  tracked: false, x: 0, y: 0, size: 0, tx: 0, ty: 0, tsize: 0, px: 0, py: 0, psize: 0, seen: -Infinity, grab: false, moved: 0,
+};
+const handVideo = $("handVideo");
+const handCursor = $("handCursor");
+const handInfo = (text) => { $("handsInfo").textContent = text; };
+const HANDS_IDLE = "Off. Uses your camera, analysed only in this browser.";
+const HANDS_READY = "Pinch to grab and move. Pinched, bring your hand closer to zoom in, further to zoom out.";
+const ptDist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+async function enableHands() {
+  const token = ++hands.token;
+  try {
+    if (!hands.landmarker) {
+      handInfo("Loading the hand model…");
+      const { HandLandmarker, FilesetResolver } = await import(MEDIAPIPE);
+      HAND_LINKS = HandLandmarker.HAND_CONNECTIONS.map(({ start, end }) => [start, end]);
+      const vision = await FilesetResolver.forVisionTasks(`${MEDIAPIPE}/wasm`);
+      hands.landmarker = await HandLandmarker.createFromOptions(vision, {
+        baseOptions: { modelAssetPath: HAND_MODEL, delegate: "GPU" },
+        runningMode: "VIDEO",
+        numHands: 1,
+      });
+    }
+    if (token !== hands.token) return;
+    handInfo("Opening the camera…");
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false,
+    });
+    if (token !== hands.token) { stream.getTracks().forEach((t) => t.stop()); return; }
+    handVideo.srcObject = stream;
+    await handVideo.play();
+    hands.stream = stream;
+    handPreview.hidden = false;
+    handInfo(HANDS_READY);
+  } catch (err) {
+    console.error("Hand control unavailable:", err);
+    if (token !== hands.token) return;
+    $("handsToggle").checked = false;
+    handInfo(err?.name === "NotAllowedError" ? "Camera access refused." : "Hand control could not start on this device.");
+  }
+}
+function disableHands() {
+  hands.token++; // un chargement en cours s'arrête là
+  hands.stream?.getTracks().forEach((t) => t.stop());
+  hands.stream = null;
+  handVideo.srcObject = null;
+  hands.lastVideoTime = -1;
+  hands.landmarks = null;
+  handPreview.hidden = true;
+  releaseHand();
+  handInfo(HANDS_IDLE);
+}
+function releaseHand() {
+  hands.grab = false;
+  hands.tracked = false;
+  handCursor.classList.remove("visible", "grab");
+}
+
+// Aperçu de la caméra : l'image en noir et blanc, retournée comme dans une glace (comme le repère à l'écran),
+// et le squelette de MediaPipe sur la main, en vert quand elle pince (la carte est attrapée)
+const handPreview = $("handPreview");
+const pctx = handPreview.getContext("2d");
+let HAND_LINKS = []; // paires de points reliés (poignet → doigts), fournies par MediaPipe
+function drawHandPreview() {
+  const W = handPreview.width, H = handPreview.height;
+  pctx.save();
+  pctx.setTransform(-1, 0, 0, 1, W, 0); // miroir
+  pctx.filter = "grayscale(1) contrast(1.1)";
+  // l'image remplit l'aperçu, recadrée au centre
+  const vw = handVideo.videoWidth || W, vh = handVideo.videoHeight || H;
+  const k = Math.max(W / vw, H / vh), dw = vw * k, dh = vh * k, ox = (W - dw) / 2, oy = (H - dh) / 2;
+  pctx.drawImage(handVideo, ox, oy, dw, dh);
+  pctx.filter = "none";
+  const lm = hands.landmarks;
+  if (lm) {
+    const pt = (q) => [ox + q.x * dw, oy + q.y * dh];
+    const ink = hands.grab ? "#e4fb02" : "#fff";
+    pctx.strokeStyle = ink;
+    pctx.lineWidth = 2;
+    pctx.beginPath();
+    for (const [a, b] of HAND_LINKS) {
+      pctx.moveTo(...pt(lm[a]));
+      pctx.lineTo(...pt(lm[b]));
+    }
+    pctx.stroke();
+    pctx.fillStyle = "#000";
+    for (const q of lm) {
+      const [x, y] = pt(q);
+      pctx.beginPath();
+      pctx.arc(x, y, 4, 0, Math.PI * 2);
+      pctx.fill();
+      pctx.stroke();
+    }
+  }
+  pctx.restore();
+}
+
+// Appelé à chaque image de l'écran. La caméra ne donne qu'≈ 30 détections par seconde, qui tremblent :
+// chaque détection pose seulement une cible (tx, ty, tsize), et la main lissée la rejoint en douceur
+// à chaque image ; le glisser et le zoom suivent cette main lissée, donc sans à-coups.
+const HAND_SMOOTH_S = 0.12;   // temps de réponse du déplacement (s)
+const SIZE_SMOOTH_S = 0.25;   // celui du zoom, plus doux : la taille de la main tremble davantage
+const SIZE_DEADBAND = 0.01;   // variation de taille ignorée (1 %) : la main immobile ne zoome pas
+function trackHand(now, dt) {
+  if (!hands.stream) return;
+  if (handVideo.currentTime !== hands.lastVideoTime) {
+    hands.lastVideoTime = handVideo.currentTime;
+    detectHand(now);
+    drawHandPreview();
+  }
+  if (!hands.tracked) return;
+  const a = 1 - Math.exp(-dt / HAND_SMOOTH_S), b = 1 - Math.exp(-dt / SIZE_SMOOTH_S);
+  hands.x += (hands.tx - hands.x) * a;
+  hands.y += (hands.ty - hands.y) * a;
+  hands.size += (hands.tsize - hands.size) * b;
+  if (hands.grab && dt > 0) {
+    // Distance de la main à la caméra (1 = distance habituelle, 0,5 = deux fois plus près) : la main
+    // paraît plus grande et bouge plus vite à l'image quand elle est proche. On la compense (× d),
+    // et on atténue encore un peu plus près (× √d) : moins sensible plus on est proche.
+    const d = Math.max(0.3, Math.min(1.6, HAND_REF / hands.size));
+    const dPrev = Math.max(0.3, Math.min(1.6, HAND_REF / hands.psize));
+    // la boule et le massif tournent : zoomé, le même angle paraît plus grand, on le réduit d'autant
+    const turn = mode === "sphere" || mode === "terrain" ? 1 / Math.sqrt(view[mode].zoom) : 1;
+    const k = HAND_GAIN * d ** 1.5 * turn;
+    const dx = (hands.x - hands.px) * k, dy = (hands.y - hands.py) * k;
+    hands.moved += Math.hypot(dx, dy);
+    if (mode === "grid" && hands.moved > 10) view.grid.focus = -1;
+    dragBy(dx, dy, dt);
+    // zoom proportionnel au chemin parcouru vers la caméra, pas au rapport des tailles à l'image
+    zoomBy(Math.exp(-(d - dPrev) * HAND_ZOOM_GAIN * d));
+  }
+  hands.px = hands.x;
+  hands.py = hands.y;
+  hands.psize = hands.size;
+  handCursor.style.transform = `translate(${hands.x}px, ${hands.y}px)`;
+}
+function detectHand(now) {
+  const lm = hands.landmarker.detectForVideo(handVideo, now).landmarks?.[0];
+  hands.landmarks = lm ?? null;
+  if (!lm) {
+    if (now - hands.seen > HAND_LOST_MS) releaseHand();
+    return;
+  }
+  hands.seen = now;
+  // paume : moyenne du poignet et des bases des doigts, plus stable que le bout des doigts qui pincent ;
+  // image de la caméra frontale en miroir, comme dans une glace
+  const palm = [WRIST, INDEX_MCP, MIDDLE_MCP, RING_MCP, PINKY_MCP];
+  const x = (1 - palm.reduce((s, k) => s + lm[k].x, 0) / palm.length) * cssW;
+  const y = (palm.reduce((s, k) => s + lm[k].y, 0) / palm.length) * cssH;
+  const size = ptDist(lm[WRIST], lm[MIDDLE_MCP]);
+  const pinch = ptDist(lm[THUMB_TIP], lm[INDEX_TIP]) / size;
+  if (!hands.tracked) {
+    Object.assign(hands, { x, y, size, tx: x, ty: y, tsize: size, px: x, py: y, psize: size, tracked: true });
+  }
+  hands.tx = x;
+  hands.ty = y;
+  if (Math.abs(size / hands.tsize - 1) > SIZE_DEADBAND) hands.tsize = size;
+  const grab = hands.grab ? pinch < PINCH_OFF : pinch < PINCH_ON;
+  if (grab && !hands.grab) {
+    hands.moved = 0;
+    view.grid.velX = view.grid.velY = 0;
+  }
+  hands.grab = grab;
+  handCursor.classList.add("visible");
+  handCursor.classList.toggle("grab", grab);
+}
+
+// ── Calque technique, d'après les schémas des fiches produit : au survol, A = la carte visée, cadre barré
+// d'une croix ; B, C, D = ses copies les plus proches à l'écran (plan 2D), cadre en pointillés.
+// Sous A, la rangée A B C D : en noir les lettres présentes, en gris les absentes ──
+// Coins d'une instance à l'écran (px de la scène), dans l'ordre bas-gauche, bas-droit, haut-droit, haut-gauche
+function projectCard(models, i) {
+  const o = i * FLOATS;
+  if (models[o + 18] < 0.5) return null;
+  const pts = [];
+  for (const [px, py] of [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]]) {
+    const wx = models[o] * px + models[o + 4] * py + models[o + 12];
+    const wy = models[o + 1] * px + models[o + 5] * py + models[o + 13];
+    const wz = models[o + 2] * px + models[o + 6] * py + models[o + 14];
+    if (-wz < NEAR * 4) return null;
+    pts.push([((proj[0] * wx) / -wz + 1) * 0.5 * cssW, (1 - (proj[5] * wy) / -wz) * 0.5 * cssH]);
+  }
+  return pts;
+}
+const LETTERS = ["A", "B", "C", "D"];
+const centreOf = (p) => [(p[0][0] + p[2][0]) / 2, (p[0][1] + p[2][1]) / 2];
+const onScreen = (p) => p.some(([x, y]) => x > 0 && x < cssW && y > 0 && y < cssH);
+// Légendes à l'écran, toujours affichées : dézoomé, elles gardent la proportion de la carte ;
+// en zoomant, elles grandissent avec elle jusqu'à 11 px, puis ne grandissent plus (carte de 110 px de large).
+const CAP_MAX = 11, CAP_FULL_W = 110;
+const capSize = (w) => CAP_MAX * Math.min(1, w / CAP_FULL_W);
+// distance sous le bord bas de la carte où poser une lettre A B C D : sous sa légende (taille fs)
+const belowCaption = (fs) => (controls.labels.checked ? fs * 3.9 + 6 : 14);
+const fitText = (text, maxW) => {
+  if (octx.measureText(text).width <= maxW) return text;
+  while (text.length > 1 && octx.measureText(text + "…").width > maxW) text = text.slice(0, -1);
+  return text + "…";
+};
+function drawCaptions(count) {
+  const n = cards.length;
+  const spots = mode === "terrain" ? terrainSpots(n) : null;
+  const list = [];
+  for (let k = 0; k < count; k++) {
+    const p = projectCard(instanceData, k);
+    if (!p || !onScreen(p)) continue;
+    // vue de dos (l'arrière de la boule) : pas de légende
+    const cross = (p[1][0] - p[0][0]) * (p[3][1] - p[0][1]) - (p[1][1] - p[0][1]) * (p[3][0] - p[0][0]);
+    if (cross >= 0) continue;
+    const w = Math.hypot(p[1][0] - p[0][0], p[1][1] - p[0][1]);
+    const o = k * FLOATS;
+    // opacité de la légende (survol) et brouillard de l'espace, comme dans le rendu
+    const fog = spaceFog * Math.min(1, Math.max(0, -instanceData[o + 14] / SPACE_FOG));
+    const alpha = instanceData[o + 17] * (1 - fog);
+    if (alpha < 0.03) continue;
+    list.push({ p, w, i: instanceData[o + 16], alpha, depth: -instanceData[o + 14] });
+  }
+  list.sort((a, b) => b.depth - a.depth); // les plus lointaines d'abord : les proches passent devant
+  octx.textBaseline = "top";
+  for (const { p, w, i, alpha } of list) {
+    // taille du texte, de l'interligne, de l'écart et de la pastille : tout suit fs
+    const fs = capSize(w), line = fs * 1.3, gap = fs * 0.55, r = fs * 0.35;
+    octx.font = `500 ${fs.toFixed(2)}px "Roboto Mono", Menlo, monospace`;
+    const x0 = p[0][0], y0 = Math.max(p[0][1], p[1][1]) + gap;
+    const spot = spots?.[i];
+    const tone = images[i]?.tone;
+    const right = numberOf(i, n);
+    const right2 = spot?.alt ? `${spot.alt.toLocaleString("en-GB").replace(/,/g, " ")} m` : "";
+    octx.globalAlpha = alpha;
+    octx.fillStyle = "#000";
+    octx.textAlign = "right";
+    octx.fillText(right, x0 + w, y0);
+    if (right2) octx.fillText(right2, x0 + w, y0 + line);
+    octx.textAlign = "left";
+    octx.fillText(fitText(captionOf(i, n), w - octx.measureText(right).width - fs * 0.8), x0, y0);
+    let x2 = x0;
+    if (!spot) {
+      // la teinte de l'image, en pastille
+      octx.fillStyle = tone?.css ?? "#8d8f92";
+      octx.beginPath();
+      octx.arc(x0 + r, y0 + line + fs * 0.5, r, 0, Math.PI * 2);
+      octx.fill();
+      octx.fillStyle = "#000";
+      x2 += r * 2 + fs * 0.45;
+    }
+    const second = spot ? spot.name : tone?.name ?? (images[i] ? "Reading…" : "Blank");
+    octx.fillText(fitText(second, w - (x2 - x0) - (right2 ? octx.measureText(right2).width + fs * 0.8 : 0)), x2, y0 + line);
+  }
+  octx.globalAlpha = 1;
+}
+function outline(p, cross) {
+  octx.beginPath();
+  p.forEach(([x, y], k) => (k ? octx.lineTo(x, y) : octx.moveTo(x, y)));
+  octx.closePath();
+  if (cross) {
+    octx.moveTo(...p[0]); octx.lineTo(...p[2]);
+    octx.moveTo(...p[1]); octx.lineTo(...p[3]);
+  }
+  octx.stroke();
+}
+function drawOverlay(count, hit) {
+  const dpr = overlay.width / cssW;
+  octx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  octx.clearRect(0, 0, cssW, cssH);
+  if (controls.labels.checked) drawCaptions(count);
+  if (!controls.frame.checked || hit < 0) return;
+  const pA = projectCard(instanceData, hit);
+  if (!pA) return;
+  const ink = "#000", dim = "rgba(0, 0, 0, 0.35)";
+  octx.font = `500 13px "Roboto Mono", Menlo, monospace`; // même taille que les textes du panneau
+  octx.textBaseline = "middle";
+  octx.textAlign = "left";
+  octx.lineWidth = 1;
+  octx.strokeStyle = octx.fillStyle = ink;
+  // B, C, D : les autres instances de la même carte (ses copies sur le plan 2D), les plus proches de A
+  const card = instanceData[hit * FLOATS + 16];
+  const [ax, ay] = centreOf(pA);
+  const copies = [];
+  for (let k = 0; k < count; k++) {
+    if (k === hit || instanceData[k * FLOATS + 16] !== card) continue;
+    const p = projectCard(instanceData, k);
+    if (!p || !onScreen(p)) continue;
+    const [cx, cy] = centreOf(p);
+    copies.push({ p, d: Math.hypot(cx - ax, cy - ay) });
+  }
+  copies.sort((a, b) => a.d - b.d);
+  const found = copies.slice(0, 3);
+  octx.setLineDash([4, 3]);
+  found.forEach(({ p }, k) => {
+    outline(p, false);
+    octx.fillText(LETTERS[k + 1], p[0][0], Math.max(p[0][1], p[1][1]) + belowCaption(capSize(Math.hypot(p[1][0] - p[0][0], p[1][1] - p[0][1]))));
+  });
+  octx.setLineDash([]);
+  // A : la carte visée, cadre barré, et la rangée de lettres
+  outline(pA, true);
+  const y = Math.max(pA[0][1], pA[1][1]) + belowCaption(capSize(Math.hypot(pA[1][0] - pA[0][0], pA[1][1] - pA[0][1])));
+  LETTERS.forEach((l, k) => {
+    octx.fillStyle = k <= found.length ? ink : dim;
+    octx.fillText(l, pA[0][0] + k * 17, y);
+  });
+}
+
+// ── Boucle ──
+const DRIFT = 0.3; // dérive lente : rotation de la boule et du massif
+let spaceFog = 0;  // brouillard de l'espace, fondu en entrant et en sortant du mode
+let last = performance.now();
+function frame(now) {
+  const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); // la première image peut dater d'avant `last`
+  last = now;
+  const speed = reducedMotion ? 0 : DRIFT;
+  trackHand(now, dt);
+  const held = pointer.down || hands.grab; // tenu à la souris, au doigt ou à la main : pas d'élan ni de dérive
+
+  // mouvement propre à chaque mode
+  const sv = view.sphere;
+  const ease = (rate) => 1 - Math.exp(-rate * dt);
+  const angleTo = (from, to) => Math.atan2(Math.sin(to - from), Math.cos(to - from)); // par le plus court chemin
+  if (sv.focus >= 0 && sv.focus < cards.length && lastSphere) {
+    // la carte (point de Fibonacci n° focus) vient face à nous : lacet puis tangage qui l'amènent sur l'axe
+    const n0 = cards.length, y0 = 1 - (2 * (sv.focus + 0.5)) / n0, r0 = Math.sqrt(1 - y0 * y0);
+    const th = sv.focus * Math.PI * (3 - Math.sqrt(5));
+    const x0 = Math.cos(th) * r0, z0 = Math.sin(th) * r0;
+    const yaw = Math.atan2(-x0, z0), pitch = Math.max(-1.3, Math.min(1.3, Math.atan2(y0, Math.hypot(x0, z0))));
+    const { fit, R } = lastSphere;
+    sv.yaw += angleTo(sv.yaw, yaw) * ease(4);
+    sv.pitch += (pitch - sv.pitch) * ease(4);
+    sv.zoom += (fit / (focusDist(num(controls.size)) + R) - sv.zoom) * ease(3.5);
+  } else if (!held) {
+    if (sv.back !== null) {
+      sv.zoom += (sv.back - sv.zoom) * ease(3);
+      if (Math.abs(sv.back - sv.zoom) < 0.002) sv.back = null;
+    }
+    sv.yaw += (speed * 0.25 + sv.velYaw) * dt;
+    sv.pitch = Math.max(-1.3, Math.min(1.3, sv.pitch + sv.velPitch * dt));
+    const damp = Math.exp(-3 * dt);
+    sv.velYaw *= damp;
+    sv.velPitch *= damp;
+  }
+  // Espace : arrivée de l'entrée, vol jusqu'à une carte cliquée, ou élan du glisser et de la molette.
+  // Les amortis de la référence (par image à 30 images/s) sont ramenés à la seconde.
+  const pv = view.space;
+  if (pv.focus >= 0 && pv.focus < cards.length) {
+    const [x, y, z] = spacePlan(cards.length)[pv.focus];
+    const a = 1 - Math.exp(-3.8 * dt); // 0,12 par image
+    pv.camX += (x - pv.camX) * a;
+    pv.camY += (y - pv.camY) * a;
+    pv.camZ += (z + spaceFocusDist() - pv.camZ) * a;
+    pv.vx = pv.vy = pv.vz = 0;
+  } else if (pv.intro) {
+    pv.camZ += (0 - pv.camZ) * (1 - Math.exp(-2.2 * dt)); // 0,07 par image
+    if (Math.abs(pv.camZ) < 2 * SPACE_U) Object.assign(pv, { camZ: 0, intro: false });
+  } else if (!held) {
+    pv.camX += pv.vx * dt;
+    pv.camY += pv.vy * dt;
+    pv.camZ = Math.min(SPACE_BACK, pv.camZ + pv.vz * dt);
+    if (pv.camZ >= SPACE_BACK) pv.vz = Math.min(0, pv.vz);
+    const damp = Math.exp(-1.22 * dt); // 0,96 par image
+    pv.vx *= damp;
+    pv.vy *= damp;
+    pv.vz *= Math.exp(-7.45 * dt);    // 0,78 par image
+  }
+
+  // Mont Blanc : tour lent du massif (ralenti au survol), élan du glisser, relief qui apparaît
+  const tv = view.terrain;
+  if (tv.focus >= 0 && tv.focus < cards.length) {
+    // le relief se recentre sur la carte et s'en approche ; elle devient le pivot de la rotation
+    const [x, y, z] = terrainCardLocal(tv.focus, cards[tv.focus], terrainSpots(cards.length));
+    const a = ease(3.5);
+    tv.cx += (x - tv.cx) * a;
+    tv.cy += (y - tv.cy) * a;
+    tv.cz += (z - tv.cz) * a;
+    tv.zoom += (terrainBase() / focusDist(num(controls.size) * TERRAIN_SCALE) - tv.zoom) * a;
+  } else if (!held) {
+    if (tv.back !== null) {
+      // en ressortant : retour au zoom d'avant et au centre du massif
+      const a = ease(2.5);
+      tv.zoom += (tv.back - tv.zoom) * a;
+      tv.cx += -tv.cx * a; tv.cy += -tv.cy * a; tv.cz += -tv.cz * a;
+      if (Math.abs(tv.back - tv.zoom) < 0.002) tv.back = null;
+    }
+    tv.yaw += (speed * 0.08 * (hovered >= 0 && mode === "terrain" ? 0.15 : 1) + tv.velYaw) * dt;
+    tv.pitch = Math.max(0.15, Math.min(1.4, tv.pitch + tv.velPitch * dt));
+    const damp = Math.exp(-3 * dt);
+    tv.velYaw *= damp;
+    tv.velPitch *= damp;
+  }
+  tv.fade += ((mode === "terrain" ? 1 : 0) - tv.fade) * (1 - Math.exp(-(mode === "terrain" ? 1.2 : 6) * dt));
+
+  // plan 2D : entrée, élan, appui du glisser, focus
+  const gv = view.grid;
+  if (gv.introT < Infinity) {
+    gv.introT += dt;
+    const p = Math.max(0, Math.min(1, (gv.introT - 0.4) / 2));
+    const e = p < 0.5 ? 8 * p ** 4 : 1 - (-2 * p + 2) ** 4 / 2; // power4.inOut
+    gv.spread = 0.12 + 0.88 * e;
+    gv.pull = 1.35 - 0.35 * e;
+    if (p >= 1) gv.introT = Infinity;
+  }
+  gv.press += ((held && mode === "grid" ? 0.95 : 1) - gv.press) * (1 - Math.exp(-3 * dt));
+  if (gv.focus >= 0 && lastGrid) {
+    // le plan glisse pour amener la case au centre (par le plus court chemin sur le tore)
+    const [x, y] = lastGrid.unwrapped(gv.focus);
+    const a = 1 - Math.exp(-4.5 * dt);
+    gv.panX += wrap(-(x + gv.panX), lastGrid.TW / 2) * a;
+    gv.panY += wrap(-(y + gv.panY), lastGrid.TH / 2) * a;
+    gv.velX = gv.velY = 0;
+  } else if (!held) {
+    gv.panX += gv.velX * dt;
+    gv.panY += gv.velY * dt;
+    const damp = Math.exp(-3 * dt); // ≈ 0,95 par image, comme la référence
+    gv.velX *= damp;
+    gv.velY *= damp;
+  }
+  // focus : le zoom qui amène la carte à la distance de focus (depth = rest × pull × press / zoom)
+  const gridFocusZoom = lastGrid ? (lastGrid.rest * gv.pull * gv.press) / focusDist(num(controls.size)) : 2.6;
+  gv.zoomCur += ((gv.focus >= 0 ? Math.max(gridFocusZoom, gv.zoom) : gv.zoom) - gv.zoomCur) * (1 - Math.exp(-3.5 * dt));
+  $("arrowHint").classList.toggle("visible", mode === "grid" && gv.focus >= 0);
+
+  const n = cards.length;
+  const layout = LAYOUTS[mode](n);
+  currentDepth = layout.depth;
+  const size = num(controls.size);
+  const labelsOn = controls.labels.checked;
+
+  // une instance = une carte dessinée (la carte elle-même, ou une de ses répétitions sur le plan 2D)
+  let count = 0;
+  const addInstance = (i, c, pos, scale, cell = -1) => {
+    if (count >= MAX_INSTANCES) return;
+    const o = count * FLOATS;
+    if (instanceData.length < o + FLOATS) {
+      const grown = new Float32Array(Math.min(MAX_INSTANCES, Math.max(64, count * 2)) * FLOATS);
+      grown.set(instanceData);
+      instanceData = grown;
+    }
+    writeModel(instanceData, o, c.quat, scale * size * (1 + 0.08 * c.hover), pos);
+    instanceData[o + 16] = i;
+    // la carte visée dans l'espace montre sa légende en entier, comme l'étiquette de la référence
+    const lit = Math.max(c.hover, mode !== "grid" && i === view[mode].focus ? 1 : 0);
+    instanceData[o + 17] = (labelsOn ? 0.5 + 0.5 * lit : lit) * Math.min(1, scale * 1.5);
+    instanceData[o + 18] = scale > 0.02 ? 1 : 0;
+    instanceData[o + 19] = images[i]?.bitmap ? 1 : 0;
+    instanceCells[count] = cell;
+    count++;
+  };
+  const g = layout.grid ?? lastGrid;
+  if (layout.grid) lastGrid = layout.grid;
+  if (layout.sphere) lastSphere = layout.sphere;
+
+  for (let i = 0; i < n; i++) {
+    const c = cards[i];
+    c.t += dt;
+    const target = layout.place(i, c);
+    c.hover += ((i === hovered ? 1 : 0) - c.hover) * (1 - Math.exp(-12 * dt));
+    if (c.t >= c.delay) {
+      // en transition : lent et doux ; une fois arrivée : suit sa place de près
+      const settled = c.t > c.delay + 1.6;
+      const a = 1 - Math.exp(-(settled ? 30 : 4.5) * dt);
+      // une carte qui boucle (plan infini, ou espace : passée derrière nous, sortie sur un côté)
+      // reprend sa place d'un coup au lieu de traverser l'écran
+      const jumpDist = typeof layout.jumpDist === "function" ? layout.jumpDist(target) : layout.jumpDist;
+      const jump = jumpDist && settled
+        && Math.hypot(target.pos[0] - c.pos[0], target.pos[1] - c.pos[1], target.pos[2] - c.pos[2]) > jumpDist;
+      for (let k = 0; k < 3; k++) c.pos[k] = jump ? target.pos[k] : c.pos[k] + (target.pos[k] - c.pos[k]) * a;
+      quatTowards(c.quat, target.quat, a);
+      c.scale = jump ? target.scale ?? 1 : c.scale + ((target.scale ?? 1) - c.scale) * a;
+    }
+    // les répétitions grandissent une fois la carte presque arrivée, et s'effacent en quittant le plan
+    const copiesOn = layout.grid && c.t > c.delay + 0.9 ? 1 : 0;
+    c.copies += (copiesOn - c.copies) * (1 - Math.exp(-(copiesOn ? 5 : 10) * dt));
+    addInstance(i, c, c.pos, c.scale, layout.grid ? g.plan.primary[i] : -1);
+  }
+
+  // Plan infini : les autres cases de chaque carte, seulement celles qu'on voit
+  if (g) {
+    const margin = CARD_H * 1.5 * size;
+    for (let i = 0; i < n; i++) {
+      const c = cards[i];
+      if (c.copies < 0.01 || !g.plan.cellsOf[i]) continue;
+      for (const cell of g.plan.cellsOf[i]) {
+        if (cell === g.plan.primary[i]) continue;
+        const pos = g.cellPos(cell);
+        if (Math.abs(pos[0]) > g.halfW + margin || Math.abs(pos[1]) > g.halfH + margin) continue;
+        addInstance(i, c, pos, c.scale * c.copies, cell);
+      }
+    }
+  }
+  lastCount = count;
+  const hit = pick(instanceData, count);
+  hovered = hit >= 0 ? instanceData[hit * FLOATS + 16] : -1;
+  hoveredCell = hit >= 0 ? instanceCells[hit] : -1;
+  canvas.classList.toggle("hovering", hovered >= 0);
+
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.clear(gl.DEPTH_BUFFER_BIT);
+  drawEnvironment();
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  gl.useProgram(prog);
+  gl.uniformMatrix4fv(U.proj, false, proj);
+  spaceFog += ((mode === "space" ? 1 : 0) - spaceFog) * (1 - Math.exp(-3 * dt));
+  gl.uniform1f(U.fogFar, SPACE_FOG);
+  gl.uniform1f(U.fogMix, spaceFog);
+  gl.uniform2f(U.viewport, canvas.width, canvas.height);
+  setEnvUniforms(UE);
+  gl.uniform2f(U.atlasGrid, ATLAS_COLS, atlasRows);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, atlasTex);
+  gl.uniform1i(U.atlas, 0);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D_ARRAY, imageTex);
+  gl.uniform1i(U.images, 1);
+  gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuf);
+  gl.bufferData(gl.ARRAY_BUFFER, instanceData.subarray(0, count * FLOATS), gl.DYNAMIC_DRAW);
+  gl.uniform1i(U.pass, 0);
+  gl.bindVertexArray(vao);
+  gl.drawElementsInstanced(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0, count);
+  gl.bindVertexArray(null);
+
+  // Mont Blanc : le relief (courbes, mesh ou lidar), après les cartes : elles cachent ce qui est derrière
+  if (layout.terrain) lastTerrain = layout.terrain;
+  if (lastTerrain && tv.fade > 0.01) {
+    if (relief !== "contours" && reliefMesh.count) drawRelief(lastTerrain, tv.fade);
+    if (relief === "contours") {
+      gl.enable(gl.BLEND);
+      gl.useProgram(lineProg);
+      gl.uniformMatrix4fv(LU.proj, false, proj);
+      gl.uniformMatrix4fv(LU.model, false, lastTerrain.model);
+      gl.uniform1f(LU.fade, tv.fade);
+      gl.bindVertexArray(contourLines.vao);
+      gl.drawArrays(gl.LINES, 0, contourLines.count);
+      gl.bindVertexArray(null);
+    }
+  }
+
+  // Les légendes ne sont plus peintes sur les cartes en 3D : drawOverlay les écrit à taille fixe à l'écran
+  drawOverlay(count, hit);
+  requestAnimationFrame(frame);
+}
+
+// ── Contrôles ──
+modeButtons.forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
+reliefButtons.forEach((b) => b.addEventListener("click", () => setRelief(b.dataset.relief)));
+envButtons.forEach((b) => b.addEventListener("click", () => setEnv(b.dataset.env)));
+$("handsToggle").addEventListener("change", (e) => (e.target.checked ? enableHands() : disableHands()));
+controls.count.addEventListener("input", () => { setCount(num(controls.count)); updateImageUi(); });
+
+// Images : sélection multiple, ou glisser-déposer sur toute la page
+$("addImagesBtn").addEventListener("click", () => $("imageInput").click());
+$("imageInput").addEventListener("change", (e) => {
+  addImages(Array.from(e.target.files));
+  e.target.value = ""; // pouvoir reprendre les mêmes fichiers
+});
+$("clearImagesBtn").addEventListener("click", clearImages);
+window.addEventListener("dragover", (e) => e.preventDefault());
+window.addEventListener("drop", (e) => {
+  e.preventDefault();
+  addImages(Array.from(e.dataTransfer.files));
+});
+controls.facing.addEventListener("change", () => stagger(0.3));
+
+const togglePanel = () => document.body.classList.toggle("panel-hidden");
+const toggleFullscreen = () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen?.();
+};
+window.addEventListener("keydown", (e) => {
+  if (e.target.closest?.("input, textarea, select")) return;
+  if (e.key === "h" || e.key === "H") togglePanel();
+  if (e.key === "f" || e.key === "F") toggleFullscreen();
+  if (mode === "grid" && e.key.startsWith("Arrow")) {
+    e.preventDefault();
+    stepFocus(e.key);
+  }
+  if (e.key === "Escape") unfocus();
+});
+
+$("resetBtn").addEventListener("click", () => {
+  resetFields();
+  for (const key of Object.keys(view)) Object.assign(view[key], structuredClone(freshView[key]));
+  setCount(images.length || num(controls.count)); // les images chargées restent (« Clear » les retire)
+  updateImageUi();
+  setMode(DEFAULT_MODE);
+  setRelief(DEFAULT_RELIEF);
+  setEnv(DEFAULT_ENV);
+  if (hands.stream || hands.token) disableHands(); // la case vient d'être décochée : on coupe la caméra
+});
+
+const privacyDialog = $("privacyDialog");
+$("privacyBtn").addEventListener("click", () => privacyDialog.showModal());
+
+// ── Départ : les cartes jaillissent du centre, une à une ──
+setCount(num(controls.count));
+updateImageUi();
+setMode(DEFAULT_MODE);
+setRelief(DEFAULT_RELIEF);
+setEnv(DEFAULT_ENV);
+for (const c of cards) c.delay = reducedMotion ? 0 : 0.25 + c.rank * 0.9;
+// légendes en Roboto Mono Medium (déclarée dans style.css), comme les métadonnées des fiches techniques
+document.fonts.load('500 32px "Roboto Mono"').then(buildAtlas, (err) => console.error("Could not load Roboto Mono:", err));
+canvas.classList.add("ready");
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
