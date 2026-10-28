@@ -42,15 +42,18 @@
   --fs-title: calc(clamp(3.5rem, 2.6rem + 2.4vw, 4.75rem) * 0.85);
   --fs-text: 14px;
   --fs-small: 11px;
-  --fs-mono: 13px;
+  --fs-mono: 11.5px;
   --track-mono: 0.02em;
   /* verre : gris foncé très léger (en 000 : gris 190 à 70 %, flou 20 px) */
-  --glass: rgba(110, 110, 110, 0.2);
+  --glass: rgba(145, 145, 145, 0.2);
   --blur: 8px;
-  --page: #e9e9eb;                  /* fond des pages : gris très clair */
+  --page: #f0f0f0;                  /* fond des pages : gris très clair */
   --dash: rgba(0, 0, 0, 0.45);      /* filets pointillés */
   --lime: #e4fb02;                  /* action principale */
   --pill: rgba(255, 255, 255, 0.35); /* pilule au repos */
+  --crop-gap: 8px;                  /* traits de coupe : écart à l'affiche */
+  --crop-len: 12px;                 /* et longueur de chaque trait */
+  --picker: rgba(214, 214, 216, 0.88); /* liste ouverte d'un menu : le verre, plus dense pour se lire sur tout */
   --text: #000;
   --line: #000;
   --line-faint: rgba(0, 0, 0, 0.2);
@@ -72,7 +75,7 @@ html, body {
   font-family: var(--sans);
   font-size: var(--fs-text);
   font-weight: 400;
-  line-height: 1.4;
+  line-height: 1.3;
   letter-spacing: -0.02em;
   text-transform: uppercase;
   color: var(--text);
@@ -92,7 +95,7 @@ dialog h3 {
   font-size: var(--fs-small);
   letter-spacing: 0.02em;
 }
-/* Aides et données : Roboto Mono Medium 13 px, en minuscules, alignées à gauche
+/* Aides et données : Roboto Mono Medium 11,5 px, interligne 1,3, casse d'origine, alignées à gauche
    (une mono justifiée creuse des blancs) */
 .hint,
 .mono,
@@ -104,7 +107,7 @@ dialog h3 {
   font-family: var(--mono);
   font-weight: 500;
   font-size: var(--fs-mono);
-  line-height: 1.4;
+  line-height: 1.3;
   letter-spacing: var(--track-mono);
   text-transform: none;
   text-align: left;
@@ -122,10 +125,14 @@ dialog h3 {
   scrollbar-width: thin;
   scrollbar-color: var(--line-faint) transparent;
 }
+/* le panneau suit la hauteur de ses réglages, en haut de la page ; s'il est plus long que l'écran, il défile */
 #panel {
-  flex: 0 0 19vw;
-  width: 19vw;
-  min-width: 290px;
+  /* même largeur que la Matrice d'images : 24 % de l'écran, entre 300 et 420 px */
+  flex: 0 0 auto;
+  width: clamp(300px, 24vw, 420px);
+  align-self: flex-start;
+  max-height: calc(100% - 20px);
+  scrollbar-gutter: stable;
   margin: 10px;
   display: flex;
   flex-direction: column;
@@ -227,6 +234,8 @@ dialog h3 {
   align-items: center;
   column-gap: 8px;
 }
+/* rangée avec un menu : le libellé prend sa largeur, le menu le reste (les noms de police sont longs) */
+.row:has(> select:not([hidden])) { grid-template-columns: auto minmax(0, 1fr); column-gap: 16px; }
 .row:has(> output) {
   grid-template-columns: 42% minmax(0, 1fr) 4.2em;
   grid-template-areas: "label ctl value";
@@ -238,6 +247,14 @@ dialog h3 {
   text-overflow: ellipsis;
 }
 .row > :not(label):not(output) { grid-area: ctl; min-width: 0; }
+/* Un libellé suivi de pilules (select.asPills, ui_001.js) : les pilules passent dessous, pleine largeur */
+.row:has(> .pills) {
+  grid-template-columns: 1fr;
+  grid-template-areas: "label" "ctl";
+  row-gap: 6px;
+}
+.row > .pills { grid-area: ctl; }
+.row > .pills button { flex: 1 1 auto; }
 .row > output {
   grid-area: value;
   text-align: right;
@@ -389,8 +406,205 @@ select {
   padding: 4px 26px 4px 12px;
   background: var(--pill) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5'%3E%3Cpath d='M.5.5l4 4 4-4' fill='none' stroke='black' stroke-width='1'/%3E%3C/svg%3E") no-repeat right 11px center;
   cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
-option, optgroup { text-transform: none; color: #000; background: #fff; }
+select:disabled { opacity: 0.4; cursor: default; }
+/* Liste native (navigateurs sans menus personnalisables) : même casse que la pilule */
+option, optgroup { text-transform: uppercase; color: #000; background: #fff; }
+
+/* Menus personnalisables (Chrome, Edge) : la liste ouverte est une plaque de verre comme le panneau,
+   chaque choix une pilule, le choix actif en blanc comme dans les rangées de pilules */
+@supports (appearance: base-select) {
+  select,
+  ::picker(select) { appearance: base-select; }
+  select {
+    display: flex;
+    align-items: center;
+    padding: 4px 11px 4px 12px;
+    background-image: none;
+  }
+  /* bouton du menu, ajouté par ui_001.js : le nom choisi, coupé par « … » s'il est trop long, puis la flèche */
+  #panel select > button,
+  #rightPanel select > button,
+  select > button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    text-align: left;
+    color: inherit;
+    border: none;
+    border-radius: 0;
+    background: none;
+  }
+  select > button selectedcontent {
+    display: block;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  select::picker-icon,
+  select > button::after {
+    content: "";
+    flex: none;
+    width: 9px;
+    height: 5px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5'%3E%3Cpath d='M.5.5l4 4 4-4' fill='none' stroke='black' stroke-width='1'/%3E%3C/svg%3E") no-repeat center;
+    transition: rotate 0.2s cubic-bezier(0.4, 0, 0, 1);
+  }
+  select:has(> button)::picker-icon { display: none; } /* la flèche est alors celle du bouton */
+  select:open::picker-icon,
+  select:open > button::after { rotate: 180deg; }
+  ::picker(select) {
+    margin: 4px 0;
+    padding: 4px;
+    max-height: min(60vh, 420px);
+    overflow-y: auto;
+    color: var(--text);
+    border: none;
+    border-radius: var(--radius-panel);
+    background: var(--picker);
+    -webkit-backdrop-filter: blur(var(--blur));
+    backdrop-filter: blur(var(--blur));
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-faint) transparent;
+    opacity: 0;
+    translate: 0 -4px;
+    transition: opacity 0.18s cubic-bezier(0.4, 0, 0, 1), translate 0.18s cubic-bezier(0.4, 0, 0, 1),
+      overlay 0.18s allow-discrete, display 0.18s allow-discrete;
+  }
+  ::picker(select):popover-open { opacity: 1; translate: 0 0; }
+  @starting-style {
+    ::picker(select):popover-open { opacity: 0; translate: 0 -4px; }
+  }
+  option {
+    display: flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 2px 12px;
+    font-family: var(--sans);
+    font-size: var(--fs-text);
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: var(--text);
+    border-radius: 999px;
+    background: transparent;
+    cursor: pointer;
+  }
+  option + option { margin-top: 2px; }
+  option:hover,
+  option:focus-visible { background: var(--pill); outline: none; }
+  option:checked { background: var(--ink); }
+  option::checkmark { display: none; }
+  option:disabled { opacity: 0.4; cursor: default; }
+  /* groupes (3D kinetic : formes) : l'intitulé en mono minuscule, comme les aides */
+  optgroup {
+    padding: 6px 0 0;
+    font-family: var(--mono);
+    font-size: var(--fs-small);
+    font-weight: 400;
+    text-transform: lowercase;
+    color: var(--text);
+    background: transparent;
+  }
+}
+/* Menus faits maison (Firefox, Safari : ui_001.js) : la même pilule et la même plaque de verre
+   que les menus personnalisables de Chrome ci-dessus ; le <select> d'origine reste caché */
+select.uiMenuSource { display: none !important; }
+#panel .uiMenu > button,
+#rightPanel .uiMenu > button,
+.uiMenu > button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 4px 11px 4px 12px;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--text);
+  border: none;
+  border-radius: 999px;
+  background: var(--pill);
+  cursor: pointer;
+}
+.uiMenu > button > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.uiMenu > button::after {
+  content: "";
+  flex: none;
+  width: 9px;
+  height: 5px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5'%3E%3Cpath d='M.5.5l4 4 4-4' fill='none' stroke='black' stroke-width='1'/%3E%3C/svg%3E") no-repeat center;
+  transition: rotate 0.2s cubic-bezier(0.4, 0, 0, 1);
+}
+.uiMenu > button[aria-expanded="true"]::after { rotate: 180deg; }
+.uiMenu > button:disabled { opacity: 0.4; cursor: default; }
+.uiMenuList {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  font-family: var(--sans);
+  font-size: var(--fs-text);
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--text);
+  border: none;
+  border-radius: var(--radius-panel);
+  background: var(--picker);
+  -webkit-backdrop-filter: blur(var(--blur));
+  backdrop-filter: blur(var(--blur));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  outline: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-faint) transparent;
+}
+.uiMenuList:popover-open { animation: uiMenuIn 0.18s cubic-bezier(0.4, 0, 0, 1); }
+@keyframes uiMenuIn { from { opacity: 0; translate: 0 -4px; } }
+.uiMenuList [role="option"] {
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 2px 12px;
+  white-space: nowrap;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.uiMenuList [role="option"] + [role="option"] { margin-top: 2px; }
+.uiMenuList [role="option"].active { background: var(--pill); }
+.uiMenuList [role="option"][aria-selected="true"] { background: var(--ink); }
+.uiMenuList [role="option"][aria-disabled="true"] { opacity: 0.4; cursor: default; }
+.uiMenuGroup {
+  padding: 6px 12px 2px;
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+  text-transform: lowercase;
+}
+@media (prefers-reduced-motion: reduce) {
+  .uiMenuList:popover-open { animation: none; }
+}
 ::placeholder { color: rgba(0, 0, 0, 0.6); } /* lisible sur le verre (contraste ≈ 4,8:1), plus pâle que le texte saisi */
 
 /* Interrupteurs (cases à cocher) : libellé à gauche, bouton à droite */
@@ -467,7 +681,8 @@ input[type="range"]::-moz-range-thumb {
   border: none;
 }
 
-/* Pastilles de couleur et aperçu de dégradé */
+/* Pastilles de couleur et aperçu de dégradé (#gradientColors ou toute rangée .swatches) */
+.swatches,
 #gradientColors {
   display: flex;
   gap: 4px;
@@ -503,12 +718,51 @@ input[type="color"]:disabled { opacity: 0.4; cursor: default; }
   background: rgba(0, 0, 0, 0.25);
 }
 
-/* Barre caméra */
+/* Caméra (comme la Matrice d'images) : la vidéo sert à la détection, jamais affichée ;
+   le retour est un canvas 480 × 360 dessiné par drawCameraPreview (ui_001.js), caché caméra coupée */
+video.camVideo {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+canvas.camPreview {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Traits de coupe autour des affiches (élément [data-crop], ui_001.js) : un cadre posé par-dessus,
+   un peu plus grand que l'affiche, qui dessine les huit traits d'imprimeur dans le prolongement des bords */
+.cropMarks {
+  --e: calc(var(--crop-gap) + var(--crop-len));
+  --ink-line: linear-gradient(var(--text), var(--text));
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    var(--ink-line) left var(--e) top 0 / 1px var(--crop-len) no-repeat,
+    var(--ink-line) right var(--e) top 0 / 1px var(--crop-len) no-repeat,
+    var(--ink-line) left var(--e) bottom 0 / 1px var(--crop-len) no-repeat,
+    var(--ink-line) right var(--e) bottom 0 / 1px var(--crop-len) no-repeat,
+    var(--ink-line) left 0 top var(--e) / var(--crop-len) 1px no-repeat,
+    var(--ink-line) right 0 top var(--e) / var(--crop-len) 1px no-repeat,
+    var(--ink-line) left 0 bottom var(--e) / var(--crop-len) 1px no-repeat,
+    var(--ink-line) right 0 bottom var(--e) / var(--crop-len) 1px no-repeat;
+}
+
+/* Barre caméra : les pilules passent à la ligne entières, jamais leur texte */
 #bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
 }
+#bar > button { white-space: nowrap; }
 #readout {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -598,7 +852,7 @@ input[type="color"]:disabled { opacity: 0.4; cursor: default; }
     overflow: visible;
   }
   body[data-layout="panels"] #rightPanel { order: 1; align-self: stretch; }
-  body[data-layout="panels"] #panel { order: 2; margin-bottom: 10px; }
+  body[data-layout="panels"] #panel { order: 2; align-self: stretch; margin-bottom: 10px; }
 
   body[data-layout="fullscreen"] #panel {
     top: auto;
@@ -642,7 +896,7 @@ dialog {
   overflow-y: auto;
   color: var(--text);
   background: #fff;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 dialog[open] { animation: drawerIn 0.6s cubic-bezier(0.4, 0, 0, 1); }
 @keyframes drawerIn {

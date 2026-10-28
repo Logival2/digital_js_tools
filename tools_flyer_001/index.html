@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Type flyer</title>
+<!-- interface commune des outils (verre, typo, sliders), puis la mise en page propre à l'outil -->
+<link rel="stylesheet" href="../ui/ui_001.css" />
+<link rel="stylesheet" href="style.css" />
+<script defer src="../ui/ui_001.js"></script>
+</head>
+<body data-mobile="ok" data-layout="panels">
+
+<!-- Panneau latéral (paramètres) -->
+<aside id="panel">
+
+  <!-- En-tête : retour au menu, titre (dessiné en MingLiU Prop par ui_001.js) -->
+  <header id="panelHead">
+    <p class="eyebrow"><a class="badge backLink" href="../" title="Back to all tools">← Digital tools</a></p>
+    <h1 class="toolTitle">Type flyer</h1>
+  </header>
+
+  <!-- Textes : titre (collé en haut, d'une marge à l'autre), milieu, bas.
+       Mise en page fixe, calquée sur l'affiche de référence ; une police par bloc
+       (les options des menus sont remplies depuis FONTS). -->
+  <div class="section">
+    <h2>Text</h2>
+    <div class="row">
+      <label for="titleFont">Title font</label>
+      <select id="titleFont" class="fontSelect"></select>
+    </div>
+    <textarea id="titleInput" rows="3" maxlength="400" placeholder="Title, one line per row">MAKE
+THE TOOLS
+OUR OWN</textarea>
+    <div class="row">
+      <label for="middleFont">Middle font</label>
+      <select id="middleFont" class="fontSelect"></select>
+    </div>
+    <textarea id="middleInput" rows="1" maxlength="200" placeholder="Middle">→ DIGITAL TOOLS ←</textarea>
+    <div class="row">
+      <label for="bottomFont">Bottom font</label>
+      <select id="bottomFont" class="fontSelect"></select>
+    </div>
+    <textarea id="bottomInput" rows="2" maxlength="400" placeholder="Bottom">valentinmaynadie.com
+/tools</textarea>
+  </div>
+
+  <!-- Rendu : à plat, ou plaque de métal emboutie (WebGL, metal.js) -->
+  <div class="section">
+    <h2>Render</h2>
+    <div class="row">
+      <label for="renderSelect">Style</label>
+      <select id="renderSelect" class="asPills">
+        <option value="flat">Flat</option>
+        <option value="metal" selected>Metal plate</option>
+        <option value="skin">Skin</option>
+        <option value="gloss">Gloss</option>
+      </select>
+    </div>
+    <!-- métal : relief, profondeur, arrondi, lumière, brillance ; peau (coup de soleil) : bord diffus et rougeur -->
+    <div id="metalControls">
+      <div class="row" id="reliefRow">
+        <label for="reliefSelect">Relief</label>
+        <select id="reliefSelect" class="asPills">
+          <option value="deboss" selected>Debossed</option>
+          <option value="emboss">Embossed</option>
+        </select>
+      </div>
+      <div class="row" id="depthRow"><label for="depthSlider" title="How far the letters are pressed">Depth</label><input id="depthSlider" type="range" min="0" max="1" step="0.01" value="0.25" /></div>
+      <div class="row"><label for="softSlider" title="Width of the rounded edge">Softness</label><input id="softSlider" type="range" min="0" max="1" step="0.01" value="0.41" /></div>
+      <div class="row" id="lightRow"><label for="lightSlider" title="Direction of the light, in degrees">Light</label><input id="lightSlider" type="range" min="0" max="360" step="1" value="95" /></div>
+      <div class="row" id="shineRow"><label for="shineSlider" title="Satin to polished">Shine</label><input id="shineSlider" type="range" min="0" max="1" step="0.01" value="0.6" /></div>
+      <div class="row" id="rednessRow"><label for="rednessSlider" title="How sunburnt the letters are">Redness</label><input id="rednessSlider" type="range" min="0" max="1" step="0.01" value="0.9" /></div>
+      <p class="hint" id="metalInfo">Rendered with WebGL in your browser.</p>
+    </div>
+  </div>
+
+  <!-- Couleurs : fond et texte, puis l'inversion (rendu à plat) -->
+  <div class="section" id="colourSection" hidden>
+    <h2>Colours</h2>
+    <div class="swatches">
+      <input id="bgColor" type="color" value="#e4fb02" title="Background" aria-label="Background colour" />
+      <input id="textColor" type="color" value="#000000" title="Text" aria-label="Text colour" />
+    </div>
+    <div class="btnRow">
+      <button id="swapBtn" type="button" title="Background ↔ text">Swap</button>
+    </div>
+  </div>
+
+  <footer id="panelFooter">
+    <button id="resetBtn" type="button">Reset</button>
+    <button id="privacyBtn" type="button">Privacy · GDPR</button>
+  </footer>
+</aside>
+
+<!-- Notice de confidentialité (RGPD) -->
+<dialog id="privacyDialog" aria-labelledby="privacyTitle">
+  <h2 id="privacyTitle">Privacy · GDPR</h2>
+
+  <h3>Data controller</h3>
+  <p>Valentin Maynadié — contact: <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
+
+  <h3>Texts and exports</h3>
+  <p>What you type stays in your browser and disappears when you close the page. PNG files are made locally.</p>
+
+  <h3>Cookies and tracking</h3>
+  <p>This site uses no cookies, no analytics, no user accounts and no third-party service: fonts are served with the page.</p>
+
+  <h3>Your rights</h3>
+  <p>This site keeps no personal data. For any question about your rights (access, rectification, erasure, objection), write to the address above. You can also contact the CNIL, the French data protection authority (cnil.fr).</p>
+
+  <form method="dialog">
+    <button type="submit">Close</button>
+  </form>
+</dialog>
+
+<!-- Zone principale : l'affiche -->
+<div id="main">
+  <canvas id="scene" data-crop hidden></canvas>
+  <canvas id="metalScene" data-crop></canvas>
+</div>
+
+<!-- Panneau de droite, calé en bas : format de l'affiche, export -->
+<aside id="rightPanel">
+  <div id="formatButtons">
+    <button type="button" data-format="din">A4</button>
+    <button type="button" data-format="square">1:1</button>
+    <button type="button" data-format="portrait">4:5</button>
+    <button type="button" data-format="story">9:16</button>
+  </div>
+  <p id="formatInfo"></p>
+  <div id="exportRow">
+    <button id="exportBtn" type="button">Export PNG</button>
+  </div>
+</aside>
+
+<script type="module">
+import { createMetal } from "./metal.js";
+const mainEl = document.getElementById("main");
+const scene  = document.getElementById("scene");
+const metalScene = document.getElementById("metalScene");
+const $ = (id) => document.getElementById(id);
+const formatButtons = Array.from(document.querySelectorAll("#formatButtons button"));
+const formatInfo = $("formatInfo");
+const panelFields = Array.from(document.querySelectorAll("#panel input, #panel textarea, #panel select"));
+
+// Polices proposées (dossier ../fonts), au choix pour chacun des trois blocs.
+// MingLiU garde le traitement des autres outils : capitales, faux gras arrondi
+// (contour de 2,5 % de la taille) et chasse élargie (bien plus étroite que le Times de la référence).
+const FONTS = {
+  "Happy Times":             { file: "happy-times-at-the-ikob.ttf" },
+  "Flor de Ruina":           { file: "FlorDeRuina-Flor.ttf" },
+  "Roboto Mono":             { shared: true }, // déclarée par ui_001.css (fichier variable)
+  "MingLiU-01":              { file: "MingLiU-01.ttf", label: "MingLiU", width: 1.2, embolden: 0.025, upper: true },
+  "SangBleu Kingdom":        { file: "SangBleuKingdom-Regular.otf" },
+  "Century Schoolbook Mono": { file: "Century-Schoolbook-Monospace-BT.otf" },
+};
+const DEFAULT_FONT = "Century Schoolbook Mono";
+for (const select of document.querySelectorAll(".fontSelect")) {
+  for (const [name, { label }] of Object.entries(FONTS)) {
+    select.add(new Option(label ?? name, name, name === DEFAULT_FONT));
+  }
+}
+
+// Au rechargement, le navigateur restaure les anciens réglages dans les champs :
+// on repart toujours des valeurs écrites dans le HTML (sinon un nouveau défaut ne s'applique pas)
+function resetFields() {
+  for (const el of panelFields) {
+    if (el.type === "checkbox") el.checked = el.defaultChecked;
+    else if (el.tagName === "SELECT") el.value = (Array.from(el.options).find((o) => o.defaultSelected) ?? el.options[0]).value;
+    else el.value = el.defaultValue;
+  }
+}
+resetFields();
+
+for (const [name, { file, shared }] of Object.entries(FONTS)) {
+  const loading = shared
+    ? document.fonts.load(`400 100px "${name}"`)
+    : new FontFace(name, `url('../fonts/${file}')`).load().then((loaded) => document.fonts.add(loaded));
+  loading.then(() => update()).catch((err) => {
+    console.error(`Could not load the ${name} font:`, err);
+  });
+}
+// Police du bloc en cours de dessin (choisie par setType)
+let fontName = DEFAULT_FONT;
+const font = () => FONTS[fontName];
+
+// Formats d'affiche : taille réelle d'export en px
+const FORMATS = {
+  portrait: { w: 1080, h: 1350 }, // 4:5 portrait Instagram (format de la référence)
+  din:      { w: 1240, h: 1754 }, // DIN A4 portrait (1:√2), 150 dpi
+  square:   { w: 1080, h: 1080 }, // 1:1
+  story:    { w: 1080, h: 1920 }, // 9:16 story
+};
+let currentFormat = "portrait";
+
+// Repère de dessin : le PETIT côté vaut toujours 800 unités, quel que soit le format.
+// Toutes les tailles des sliders sont dans ce repère ; seul le grand côté s'allonge.
+const SCENE_SHORT_SIDE = 800;
+let sceneW = 800;
+let sceneH = 1000;
+let ctx = scene.getContext("2d"); // remplacé le temps d'un export PNG
+let pixelScale = 1;               // pixels physiques par unité du repère
+const SCENE_MARGIN = 40;          // marge autour de l'affiche à l'écran, en px CSS
+
+function applyFormat(key) {
+  currentFormat = key;
+  const { w, h } = FORMATS[key];
+  const scale = SCENE_SHORT_SIDE / Math.min(w, h);
+  sceneW = w * scale;
+  sceneH = h * scale;
+  formatButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.format === key));
+  formatInfo.textContent = `${w} × ${h} px`;
+  resizeScene();
+}
+
+function resizeScene() {
+  const maxW = mainEl.clientWidth - SCENE_MARGIN * 2;
+  const maxH = mainEl.clientHeight - SCENE_MARGIN * 2;
+  const k = Math.min(maxW / sceneW, maxH / sceneH);
+  const displayW = sceneW * k;
+  const displayH = sceneH * k;
+  scene.style.width = displayW + "px";
+  scene.style.height = displayH + "px";
+  // buffer = pixels physiques affichés, pour des lettres nettes
+  const dpr = window.devicePixelRatio || 1;
+  scene.width = Math.round(displayW * dpr);
+  scene.height = Math.round(displayH * dpr);
+  pixelScale = scene.width / sceneW;
+  metalScene.style.width = scene.style.width;
+  metalScene.style.height = scene.style.height;
+  metalScene.width = scene.width;
+  metalScene.height = scene.height;
+  update();
+}
+
+// ── Dessin ──
+// Typo et mise en page fixes, calquées sur l'affiche de référence
+const MARGIN_PX = 20;        // marge tout autour, en px de l'image exportée
+const TITLE_LEADING = 0.95;  // interligne du titre (× sa taille)
+const MIDDLE_RATIO = 0.45;   // taille du milieu (× celle du titre)
+const MIDDLE_POS = 0.755;    // ligne de base du milieu (× la hauteur de l'affiche)
+const BOTTOM_RATIO = 0.17;   // taille du bas (× celle du titre)
+const BOTTOM_LEADING = 1.25; // interligne du bas (× sa taille)
+const TITLE_TOP = 0.07;     // marge au-dessus du titre (× la hauteur de la page)
+const TRACKING =-0.03;     // interlettrage des trois blocs, en em
+
+// Lignes d'un bloc, dans la police choisie pour lui (à appeler après setType)
+const linesOf = (id) => (font().upper ? $(id).value.toUpperCase() : $(id).value).split("\n");
+const inkWidth = (m) => m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
+
+// Une ligne centrée sur cx d'après le contour réel des lettres, élargie selon la police,
+// remplie puis (MingLiU) épaissie par un contour arrondi de la même couleur.
+function drawLine(line, cx, baseline) {
+  if (!line.trim()) return;
+  const m = ctx.measureText(line);
+  const x = -inkWidth(m) / 2 + m.actualBoundingBoxLeft;
+  ctx.save();
+  ctx.translate(cx, baseline);
+  ctx.scale(font().width ?? 1, 1);
+  ctx.fillText(line, x, 0);
+  if (strokeW > 0) ctx.strokeText(line, x, 0);
+  ctx.restore();
+}
+
+let strokeW = 0; // épaisseur du faux gras de la taille en cours
+function setType(size, selectId) {
+  fontName = $(selectId).value;
+  ctx.font = `${size}px "${fontName}", serif`;
+  ctx.letterSpacing = `${size * TRACKING}px`;
+  strokeW = size * (font().embolden ?? 0); // 0 = pas de faux gras (le canvas refuse un lineWidth de 0)
+  ctx.lineWidth = strokeW || 1;
+}
+
+// colors : { bg, ink } imposées (masque du métal : texte blanc sur noir), sinon celles du panneau
+function draw(colors) {
+  ctx.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
+  ctx.fillStyle = colors?.bg ?? $("bgColor").value;
+  ctx.fillRect(0, 0, sceneW, sceneH);
+
+  const ink = colors?.ink ?? $("textColor").value;
+  ctx.fillStyle = ink;
+  ctx.strokeStyle = ink;
+  ctx.lineJoin = "round";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  const { w, h } = FORMATS[currentFormat];
+  const margin = (MARGIN_PX * SCENE_SHORT_SIDE) / Math.min(w, h);
+  const cx = sceneW / 2;
+
+  // Titre : la ligne la plus large va d'une marge à l'autre (contour compris),
+  // le haut des capitales de la 1re ligne est à TITLE_TOP de la hauteur de la page.
+  // Les deux autres blocs suivent sa taille : tout s'adapte à la page.
+  const REF = 100;
+  setType(REF, "titleFont");
+  const title = linesOf("titleInput");
+  const widest = Math.max(0, ...title.map((l) => inkWidth(ctx.measureText(l))));
+  const titleSize = widest > 0 ? (REF * (sceneW - margin * 2)) / ((font().width ?? 1) * (widest + strokeW)) : REF;
+  const firstLine = title.find((l) => l.trim());
+  if (firstLine) {
+    setType(titleSize, "titleFont");
+    const top = sceneH * TITLE_TOP + ctx.measureText(firstLine).actualBoundingBoxAscent + strokeW / 2;
+    title.forEach((line, i) => drawLine(line, cx, top + i * titleSize * TITLE_LEADING));
+  }
+
+  // Milieu : la ligne de base du bloc à MIDDLE_POS de la hauteur
+  const middleSize = titleSize * MIDDLE_RATIO;
+  setType(middleSize, "middleFont");
+  const middle = linesOf("middleInput");
+  middle.forEach((line, i) =>
+    drawLine(line, cx, sceneH * MIDDLE_POS - (middle.length - 1 - i) * middleSize * 1.1));
+
+  // Bas : dernière ligne posée sur la marge basse
+  const bottomSize = titleSize * BOTTOM_RATIO;
+  setType(bottomSize, "bottomFont");
+  const bottom = linesOf("bottomInput");
+  const lastBaseline = sceneH - margin - strokeW / 2;
+  bottom.forEach((line, i) =>
+    drawLine(line, cx, lastBaseline - (bottom.length - 1 - i) * bottomSize * BOTTOM_LEADING));
+}
+
+// ── Plaque de métal : l'affiche redessinée en blanc sur noir sert de relief (metal.js) ──
+let metal = null;
+try {
+  metal = createMetal(metalScene);
+} catch (err) {
+  console.error("Metal render unavailable:", err);
+}
+if (!metal) {
+  // sans WebGL2 : l'affiche à plat devient le rendu par défaut
+  const flat = $("renderSelect").querySelector('option[value="flat"]');
+  flat.defaultSelected = true;
+  $("renderSelect").value = "flat";
+  $("renderSelect").querySelector('option[value="metal"]').disabled = true;
+  $("renderSelect").querySelector('option[value="skin"]').disabled = true;
+  $("metalInfo").textContent = "Your browser cannot draw the metal plate or the skin (WebGL2 needed).";
+}
+// le relief est calculé à 2 × la taille de l'image (arêtes nettes), sans dépasser 4096 px de côté
+const MASK_SUPERSAMPLE = 2;
+const MASK_MAX = 4096;
+// relief calculé (métal ou peau), ou affiche à plat
+const metalOn = () => metal && $("renderSelect").value !== "flat";
+// les photos (dossier texture/) et les réglages de départ de chaque matière, appliqués quand on la choisit :
+// métal = acier brossé éclairé par le haut, arêtes fines ; peau = dos, marques douces et peu profondes
+const MATERIALS = {
+  metal: { file: "Panneau d’acier brossé dégradé.png", depth: 0.25, soft: 0.41, light: 95 },
+  skin: { file: "Texture macro réaliste de peau dorsale.png", depth: 0.5, soft: 0.35, light: 95 },
+  // laque noire brillante, lettres rondes en relief sur un fond gris (couleurs : section Colours)
+  gloss: { depth: 0.4, soft: 0.45, light: 110, bg: "#d2d4ce", ink: "#000000" },
+};
+const material = () => MATERIALS[$("renderSelect").value] ?? MATERIALS.metal;
+const textureUrl = () => `texture/${encodeURIComponent(material().file)}`;
+$("renderSelect").addEventListener("change", () => {
+  const m = MATERIALS[$("renderSelect").value];
+  if (!m) return;
+  $("depthSlider").value = m.depth;
+  $("softSlider").value = m.soft;
+  $("lightSlider").value = m.light;
+  if (m.bg) { $("bgColor").value = m.bg; $("textColor").value = m.ink; }
+  update();
+});
+const metalOptions = () => ({
+  material: $("renderSelect").value,
+  redness: Number($("rednessSlider").value),
+  relief: $("reliefSelect").value,
+  bg: $("bgColor").value,
+  ink: $("textColor").value,
+  depth: Number($("depthSlider").value),
+  softness: Number($("softSlider").value),
+  light: Number($("lightSlider").value),
+  shine: Number($("shineSlider").value),
+});
+// le masque à la taille voulue, sans toucher à l'affiche à l'écran
+function drawMask(w, h) {
+  const k = Math.min(MASK_SUPERSAMPLE, MASK_MAX / Math.max(w, h));
+  const mask = document.createElement("canvas");
+  mask.width = Math.round(w * k);
+  mask.height = Math.round(h * k);
+  const saved = { ctx, pixelScale };
+  ctx = mask.getContext("2d");
+  pixelScale = mask.width / sceneW;
+  try {
+    draw({ bg: "#000", ink: "#fff" });
+  } finally {
+    ({ ctx, pixelScale } = saved);
+  }
+  return mask;
+}
+// la photo choisie, décodée une fois puis gardée ; le métal la reçoit dès qu'elle est prête
+const textures = new Map();
+let plateUrl = null;
+function useTexture(url) {
+  plateUrl = url;
+  const give = (img) => {
+    if (plateUrl !== url) return; // un autre choix est arrivé entre-temps
+    try {
+      metal.setPlate(img);
+      $("metalInfo").textContent = "Rendered with WebGL in your browser.";
+    } catch (err) {
+      console.error("Texture unusable:", err);
+      $("metalInfo").textContent = "This texture cannot be read when the tool is opened as a local file: open it from its web address.";
+    }
+    update();
+  };
+  if (textures.has(url)) return give(textures.get(url));
+  const img = new Image();
+  img.src = url;
+  img.decode().then(() => {
+    textures.set(url, img);
+    give(img);
+  }).catch((err) => {
+    console.error("Could not load the texture:", err);
+    $("metalInfo").textContent = "Could not load this texture.";
+  });
+}
+
+let metalFrame = 0;
+function renderMetal() {
+  metalFrame = 0;
+  if (metalOn()) metal.render(drawMask(metalScene.width, metalScene.height), metalOptions());
+}
+
+// Tout changement redessine l'affiche à plat et, en mode métal, la plaque (une fois par image au plus)
+function update() {
+  const on = !!metalOn();
+  scene.hidden = on;
+  metalScene.hidden = !on;
+  $("metalControls").hidden = !on;
+  const style = $("renderSelect").value;
+  const isMetal = style === "metal";
+  $("reliefRow").hidden = !isMetal;
+  for (const id of ["depthRow", "lightRow", "shineRow"]) $(id).hidden = !(isMetal || style === "gloss");
+  $("rednessRow").hidden = $("renderSelect").value !== "skin";
+  $("colourSection").hidden = on && style !== "gloss";
+  draw();
+  if (metal && material().file && textureUrl() !== plateUrl) useTexture(textureUrl());
+  if (on && !metalFrame) metalFrame = requestAnimationFrame(renderMetal);
+}
+
+// ── Contrôles ──
+for (const el of panelFields) el.addEventListener("input", update);
+
+$("swapBtn").addEventListener("click", () => {
+  const bg = $("bgColor").value;
+  $("bgColor").value = $("textColor").value;
+  $("textColor").value = bg;
+  update();
+});
+
+formatButtons.forEach((btn) => btn.addEventListener("click", () => applyFormat(btn.dataset.format)));
+window.addEventListener("resize", resizeScene);
+
+$("resetBtn").addEventListener("click", () => {
+  resetFields();
+  applyFormat("portrait");
+});
+
+const privacyDialog = $("privacyDialog");
+$("privacyBtn").addEventListener("click", () => privacyDialog.showModal());
+
+// ── Export PNG : la même affiche, redessinée à la taille réelle du format ──
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+$("exportBtn").addEventListener("click", () => {
+  const { w, h } = FORMATS[currentFormat];
+  if (metalOn()) {
+    // la plaque est recalculée à la taille réelle du format, puis l'écran revient à sa taille
+    const shown = [metalScene.width, metalScene.height];
+    metalScene.width = w;
+    metalScene.height = h;
+    metal.render(drawMask(w, h), metalOptions());
+    metalScene.toBlob((blob) => {
+      downloadBlob(blob, `flyer-${$("renderSelect").value}-${currentFormat}-${w}x${h}.png`);
+      [metalScene.width, metalScene.height] = shown;
+      renderMetal();
+    }, "image/png");
+    return;
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const saved = { ctx, pixelScale };
+  ctx = canvas.getContext("2d");
+  pixelScale = w / sceneW;
+  try {
+    draw();
+  } finally {
+    ({ ctx, pixelScale } = saved);
+  }
+  canvas.toBlob((blob) => downloadBlob(blob, `flyer-${currentFormat}-${w}x${h}.png`), "image/png");
+});
+
+applyFormat(currentFormat);
+</script>
+</body>
+</html>

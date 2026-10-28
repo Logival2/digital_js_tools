@@ -29,14 +29,13 @@
 #gl.hovering { cursor: pointer; }
 #overlay { pointer-events: none; }
 
-/* ── Panneau : en verre, au premier plan au-dessus du rendu (comme la 001), posé à droite de la scène ;
+/* ── Panneau : en verre, au premier plan au-dessus du rendu (comme la 001), posé à gauche de la scène ;
    le flou du verre laisse deviner les cartes derrière lui. H le masque ── */
 #panel {
   position: fixed;
   top: 10px;
-  right: 10px;
+  left: 10px;
   z-index: 2;
-  width: clamp(300px, 24vw, 420px);
   max-height: calc(100vh - 20px);
   margin: 0;
   transition: opacity 0.3s cubic-bezier(0.4, 0, 0, 1), transform 0.6s cubic-bezier(0.4, 0, 0, 1), visibility 0.6s;
@@ -44,7 +43,7 @@
 body.panel-hidden #panel {
   opacity: 0;
   visibility: hidden;
-  transform: translateX(16px);
+  transform: translateX(-16px);
 }
 
 /* En-tête : le nombre de cartes à droite du retour, en mono (classe .mono de ui_001) */
@@ -72,14 +71,7 @@ body.panel-hidden #panel {
 }
 #arrowHint.visible { opacity: 0.35; }
 
-/* Contrôle à la main : la vidéo sert à la détection, jamais affichée ; un rond suit la paume */
-#handVideo {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-}
+/* Contrôle à la main : la vidéo (cachée) et le retour caméra viennent de ui_001.css ; un rond suit la paume */
 #handCursor {
   position: absolute;
   left: 0;
@@ -95,15 +87,6 @@ body.panel-hidden #panel {
 }
 #handCursor.visible { opacity: 1; }
 #handCursor.grab { background: var(--lime); }
-
-/* Retour caméra (main), dans la section Hands du panneau, sur toute sa largeur */
-#handPreview {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 4 / 3;
-  border-radius: var(--radius);
-}
 
 /* Pas de WebGL2 : un message au centre de la scène */
 #noGl {

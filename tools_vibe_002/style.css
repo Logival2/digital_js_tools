@@ -25,13 +25,3 @@
 }
 #overlay { cursor: crosshair; touch-action: none; }
 
-/* Recopie de la caméra (vue selfie), au format 4:3 */
-#panel #preview { aspect-ratio: 4 / 3; }
-#preview video { display: none; }
-#preview canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scaleX(-1);
-}

@@ -21,7 +21,7 @@
   <!-- Plan 2D, carte au centre : comme la référence, une invite discrète en bas -->
   <p id="arrowHint">Use your arrows<br>to move around</p>
   <!-- Contrôle à la main (option) : la caméra, jamais affichée, et un repère qui suit la paume -->
-  <video id="handVideo" playsinline muted></video>
+  <video id="handVideo" class="camVideo" playsinline muted></video>
   <div id="handCursor" aria-hidden="true"></div>
 </main>
 
@@ -34,33 +34,12 @@
     <h1 class="toolTitle">Image matrice</h1>
   </header>
 
-  <!-- Mode de représentation : les cartes passent d'une forme à l'autre -->
-  <div class="section">
-    <h2>Mode</h2>
-    <div id="modeSwitch" class="pills">
-      <button type="button" data-mode="grid">Grid</button>
-      <button type="button" data-mode="sphere">Sphere</button>
-      <button type="button" data-mode="space">Space</button>
-      <button type="button" data-mode="terrain">Mont Blanc</button>
-    </div>
-    <label class="check" id="facingRow">
-      <input id="facing" type="checkbox" />
-      <span>Cards face the camera</span>
-    </label>
-    <!-- Mont Blanc : trois façons de dessiner le relief -->
-    <div id="reliefSwitch" class="pills" hidden>
-      <button type="button" data-relief="contours">Contours</button>
-      <button type="button" data-relief="mesh">Mesh</button>
-      <button type="button" data-relief="lidar">Lidar</button>
-    </div>
-  </div>
-
   <!-- Cartes : le gros bloc vert pour les images, puis les réglages -->
   <div class="section">
     <h2>Cards</h2>
     <!-- Images : plusieurs à la fois depuis le Finder / l'explorateur, ou déposées sur la page -->
     <input id="imageInput" type="file" multiple accept="image/*" hidden />
-    <button id="addImagesBtn" class="cta" type="button">Add images</button>
+    <button id="addImagesBtn" class="cta" type="button">Import images</button>
     <p class="hint" id="imageInfo">No image: 50 blank cards. Several at once, or drop them on the page.</p>
     <div class="row" id="countRow">
       <label for="count">Count</label>
@@ -85,6 +64,27 @@
     <button id="clearImagesBtn" class="pill" type="button" disabled>Clear images</button>
   </div>
 
+  <!-- Mode de représentation : les cartes passent d'une forme à l'autre -->
+  <div class="section">
+    <h2>Mode</h2>
+    <div id="modeSwitch" class="pills">
+      <button type="button" data-mode="grid">Grid</button>
+      <button type="button" data-mode="sphere">Sphere</button>
+      <button type="button" data-mode="space">Space</button>
+      <button type="button" data-mode="terrain">Mont Blanc</button>
+    </div>
+    <label class="check" id="facingRow">
+      <input id="facing" type="checkbox" />
+      <span>Cards face the camera</span>
+    </label>
+    <!-- Mont Blanc : trois façons de dessiner le relief -->
+    <div id="reliefSwitch" class="pills" hidden>
+      <button type="button" data-relief="contours">Contours</button>
+      <button type="button" data-relief="mesh">Mesh</button>
+      <button type="button" data-relief="lidar">Lidar</button>
+    </div>
+  </div>
+
   <!-- Environnement : le fond derrière les cartes, un dégradé à trois couleurs ou une couleur unie -->
   <div class="section">
     <h2>Environment</h2>
@@ -103,7 +103,7 @@
     </div>
     <!-- Mono : un gris très clair, celui du studio de la variante archivée (00-OLD) -->
     <div id="monoColors" hidden>
-      <input id="monoColor" type="color" class="gradColor" value="#e9e9eb" title="Colour" aria-label="Background colour" />
+      <input id="monoColor" type="color" class="gradColor" value="#f0f0f0" title="Colour" aria-label="Background colour" />
     </div>
     <div class="row" id="horizonRow">
       <label for="horizon">Horizon</label>
@@ -111,16 +111,16 @@
     </div>
   </div>
 
-  <!-- Main devant la caméra : en option, rien n'est chargé tant que la case n'est pas cochée -->
+  <!-- Caméra : la main pilote le zoom et le déplacement ; rien n'est chargé avant « Start camera » -->
   <div class="section">
-    <h2>Hands</h2>
-    <label class="check">
-      <input id="handsToggle" type="checkbox" />
-      <span>Hand control</span>
-    </label>
+    <h2>Camera</h2>
+    <div id="bar">
+      <button id="handsStartBtn" type="button">Start camera</button>
+      <button id="handsStopBtn" type="button" hidden>Stop camera</button>
+    </div>
     <p class="hint" id="handsInfo">Off. Uses your camera, analysed only in this browser.</p>
     <!-- Retour caméra quand la main pilote : noir et blanc, en miroir, squelette de la main par-dessus -->
-    <canvas id="handPreview" width="480" height="360" aria-hidden="true" hidden></canvas>
+    <canvas id="handPreview" class="camPreview" width="480" height="360" aria-hidden="true" hidden></canvas>
   </div>
 
   <!-- Commandes : la souris, le clavier ; la dérive des modes a une vitesse fixe -->
@@ -146,9 +146,9 @@
   <p>The images you add are read and drawn inside your browser. They are never uploaded or stored, and disappear when you close the page.</p>
 
   <h3>Camera</h3>
-  <p>The camera only turns on when you tick “Hand control”, after your browser asks for permission.
+  <p>The camera only turns on when you click “Start camera”, after your browser asks for permission.
   The video stream is analysed only in your browser, to find the position of your hand, and shown in a small black and white preview: no image or video is recorded, kept or sent to a server.
-  Untick it to turn the camera off at any time.</p>
+  You can turn it off at any time with “Stop camera”.</p>
 
   <h3>Cookies and tracking</h3>
   <p>This site uses no cookies, no analytics and no user accounts. Fonts and terrain data are served with the page.</p>
@@ -1627,7 +1627,6 @@ async function enableHands() {
     if (!hands.landmarker) {
       handInfo("Loading the hand model…");
       const { HandLandmarker, FilesetResolver } = await import(MEDIAPIPE);
-      HAND_LINKS = HandLandmarker.HAND_CONNECTIONS.map(({ start, end }) => [start, end]);
       const vision = await FilesetResolver.forVisionTasks(`${MEDIAPIPE}/wasm`);
       hands.landmarker = await HandLandmarker.createFromOptions(vision, {
         baseOptions: { modelAssetPath: HAND_MODEL, delegate: "GPU" },
@@ -1650,7 +1649,7 @@ async function enableHands() {
   } catch (err) {
     console.error("Hand control unavailable:", err);
     if (token !== hands.token) return;
-    $("handsToggle").checked = false;
+    showHandsButtons(false);
     handInfo(err?.name === "NotAllowedError" ? "Camera access refused." : "Hand control could not start on this device.");
   }
 }
@@ -1671,43 +1670,11 @@ function releaseHand() {
   handCursor.classList.remove("visible", "grab");
 }
 
-// Aperçu de la caméra : l'image en noir et blanc, retournée comme dans une glace (comme le repère à l'écran),
-// et le squelette de MediaPipe sur la main, en vert quand elle pince (la carte est attrapée)
+// Aperçu de la caméra : noir et blanc, en miroir, squelette de MediaPipe en vert quand la main pince
+// (la carte est attrapée) — le dessin est commun à tous les outils caméra : ../ui/ui_001.js
 const handPreview = $("handPreview");
-const pctx = handPreview.getContext("2d");
-let HAND_LINKS = []; // paires de points reliés (poignet → doigts), fournies par MediaPipe
 function drawHandPreview() {
-  const W = handPreview.width, H = handPreview.height;
-  pctx.save();
-  pctx.setTransform(-1, 0, 0, 1, W, 0); // miroir
-  pctx.filter = "grayscale(1) contrast(1.1)";
-  // l'image remplit l'aperçu, recadrée au centre
-  const vw = handVideo.videoWidth || W, vh = handVideo.videoHeight || H;
-  const k = Math.max(W / vw, H / vh), dw = vw * k, dh = vh * k, ox = (W - dw) / 2, oy = (H - dh) / 2;
-  pctx.drawImage(handVideo, ox, oy, dw, dh);
-  pctx.filter = "none";
-  const lm = hands.landmarks;
-  if (lm) {
-    const pt = (q) => [ox + q.x * dw, oy + q.y * dh];
-    const ink = hands.grab ? "#e4fb02" : "#fff";
-    pctx.strokeStyle = ink;
-    pctx.lineWidth = 2;
-    pctx.beginPath();
-    for (const [a, b] of HAND_LINKS) {
-      pctx.moveTo(...pt(lm[a]));
-      pctx.lineTo(...pt(lm[b]));
-    }
-    pctx.stroke();
-    pctx.fillStyle = "#000";
-    for (const q of lm) {
-      const [x, y] = pt(q);
-      pctx.beginPath();
-      pctx.arc(x, y, 4, 0, Math.PI * 2);
-      pctx.fill();
-      pctx.stroke();
-    }
-  }
-  pctx.restore();
+  drawCameraPreview(handPreview, handVideo, { landmarks: hands.landmarks, active: hands.grab });
 }
 
 // Appelé à chaque image de l'écran. La caméra ne donne qu'≈ 30 détections par seconde, qui tremblent :
@@ -2155,7 +2122,13 @@ function frame(now) {
 modeButtons.forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
 reliefButtons.forEach((b) => b.addEventListener("click", () => setRelief(b.dataset.relief)));
 envButtons.forEach((b) => b.addEventListener("click", () => setEnv(b.dataset.env)));
-$("handsToggle").addEventListener("change", (e) => (e.target.checked ? enableHands() : disableHands()));
+// Start / Stop camera, comme dans les autres outils
+function showHandsButtons(on) {
+  $("handsStartBtn").hidden = on;
+  $("handsStopBtn").hidden = !on;
+}
+$("handsStartBtn").addEventListener("click", () => { showHandsButtons(true); enableHands(); });
+$("handsStopBtn").addEventListener("click", () => { showHandsButtons(false); disableHands(); });
 controls.count.addEventListener("input", () => { setCount(num(controls.count)); updateImageUi(); });
 
 // Images : sélection multiple, ou glisser-déposer sur toute la page
@@ -2196,7 +2169,7 @@ $("resetBtn").addEventListener("click", () => {
   setMode(DEFAULT_MODE);
   setRelief(DEFAULT_RELIEF);
   setEnv(DEFAULT_ENV);
-  if (hands.stream || hands.token) disableHands(); // la case vient d'être décochée : on coupe la caméra
+  if (hands.stream || hands.token) { showHandsButtons(false); disableHands(); } // Reset coupe la caméra
 });
 
 const privacyDialog = $("privacyDialog");

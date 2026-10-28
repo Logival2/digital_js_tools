@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Hand-controlled card ring</title>
+<title>Card ring</title>
 <!-- interface commune des outils (verre, typo, sliders), puis la mise en page propre à l'outil -->
 <link rel="stylesheet" href="../ui/ui_001.css" />
 <link rel="stylesheet" href="style.css" />
@@ -34,7 +34,7 @@ CHALLENGED.</textarea>
     </div>
     <div id="bigFontControl" class="row">
       <label for="bigFontSelect">Font</label>
-      <select id="bigFontSelect">
+      <select id="bigFontSelect" class="asPills">
         <option value="MingLiU-01">MingLiU</option>
         <option value="HN Roman">Helvetica Regular</option>
         <option value="HN Black Extended">Helvetica Black Extended</option>
@@ -52,25 +52,6 @@ CHALLENGED.</textarea>
     <div id="letterSpacingControl" class="row">
       <label for="letterSpacingSlider">Letter spacing</label>
       <input id="letterSpacingSlider" type="range" min="-0.2" max="1" step="0.01" value="0" />
-    </div>
-  </div>
-
-  <!-- Fond : dégradé vertical à 3 couleurs (haut, milieu, bas), grille -->
-  <div class="section" id="bgControl">
-    <h2>Background</h2>
-    <label class="check" for="gradientToggle"><input id="gradientToggle" type="checkbox" checked /> Gradient</label>
-    <div id="gradientColors">
-      <input type="color" class="gradColor" value="#e4fb02" title="Top" aria-label="Top colour" />
-      <input type="color" class="gradColor" value="#f2fd81" title="Middle" aria-label="Middle colour" />
-      <input type="color" class="gradColor" value="#ffffff" title="Bottom" aria-label="Bottom colour" />
-    </div>
-    <div id="gradientPreview" aria-hidden="true"></div>
-    <div id="gradientActions" class="btnRow">
-      <button id="gradientReverseBtn" type="button" title="Flips the gradient: top ↔ bottom">Swap</button>
-      <button id="gradientNegativeBtn" type="button" title="Replaces each colour with its complement">Negative</button>
-    </div>
-    <div id="gridControl">
-      <label class="check" for="gridToggle"><input id="gridToggle" type="checkbox" /> Grid</label>
     </div>
   </div>
 
@@ -93,18 +74,36 @@ CHALLENGED.</textarea>
     </div>
   </div>
 
+  <!-- Rendu : fond en dégradé vertical à 3 couleurs (haut, milieu, bas), grille -->
+  <div class="section" id="bgControl">
+    <h2>Render</h2>
+    <label class="check" for="gradientToggle"><input id="gradientToggle" type="checkbox" /> Gradient</label>
+    <div id="gradientColors">
+      <input type="color" class="gradColor" value="#e4fb02" title="Top" aria-label="Top colour" />
+      <input type="color" class="gradColor" value="#f2fd81" title="Middle" aria-label="Middle colour" />
+      <input type="color" class="gradColor" value="#ffffff" title="Bottom" aria-label="Bottom colour" />
+    </div>
+    <div id="gradientPreview" aria-hidden="true"></div>
+    <div id="gradientActions" class="btnRow">
+      <button id="gradientReverseBtn" type="button" title="Flips the gradient: top ↔ bottom">Swap</button>
+      <button id="gradientNegativeBtn" type="button" title="Replaces each colour with its complement">Negative</button>
+    </div>
+    <div id="gridControl">
+      <label class="check" for="gridToggle"><input id="gridToggle" type="checkbox" /> Grid</label>
+    </div>
+  </div>
+
   <!-- Caméra : la main fait tourner l'anneau -->
   <div class="section">
     <h2>Camera</h2>
     <div id="bar">
-      <button id="startBtn" class="primary" disabled>Start camera</button>
+      <button id="startBtn" type="button">Start camera</button>
       <button id="stopBtn" type="button" hidden>Stop camera</button>
-      <span id="readout"><span class="status" id="status">Waiting…</span></span>
     </div>
-    <div id="preview">
-      <video id="cam" playsinline muted></video>
-      <canvas id="previewCanvas"></canvas>
-    </div>
+    <p class="hint" id="status">Off. Uses your camera, analysed only in this browser.</p>
+    <!-- Retour caméra, comme la Matrice d'images : noir et blanc, en miroir, squelette de la main par-dessus -->
+    <video id="cam" class="camVideo" playsinline muted></video>
+    <canvas id="previewCanvas" class="camPreview" width="480" height="360" aria-hidden="true" hidden></canvas>
   </div>
 
   <footer id="panelFooter">
@@ -122,7 +121,7 @@ CHALLENGED.</textarea>
 
   <h3>Camera</h3>
   <p>The camera only turns on when you click “Start camera”, after your browser asks for permission.
-  The video stream is analysed only in your browser, to find the position of your hand: no image or video is recorded, kept or sent to a server.
+  The video stream is analysed only in your browser, to find the position of your hand, and shown in a small black and white preview: no image or video is recorded, kept or sent to a server.
   You can turn it off at any time with “Stop camera”.</p>
 
   <h3>Images and exports</h3>
@@ -134,7 +133,7 @@ CHALLENGED.</textarea>
   <h3>Third-party services</h3>
   <p>To work, your browser downloads files from:</p>
   <ul>
-    <li>jsDelivr — the hand tracking library (MediaPipe) and, for MP4 exports, the video muxer;</li>
+    <li>jsDelivr — the hand tracking library (MediaPipe), loaded when the camera starts, and, for MP4 exports, the video muxer;</li>
     <li>Google Cloud Storage — hand tracking model.</li>
   </ul>
   <p>These services receive your IP address, which they need to send the files, under their own privacy policies.</p>
@@ -149,9 +148,9 @@ CHALLENGED.</textarea>
 
 <!-- Zone principale : scène au format DIN portrait (1 : √2), fond blanc, cartes noires -->
 <div id="main">
-  <canvas id="scene"></canvas>
+  <canvas id="scene" data-crop></canvas>
   <!-- 2e frame, même format : la première image de la série en plein cadre -->
-  <canvas id="scene2"></canvas>
+  <canvas id="scene2" data-crop></canvas>
 </div>
 
 <!-- Panneau de droite, calé en bas : mode, format de l'affiche, lecteur, export -->
@@ -208,11 +207,9 @@ let sctx          = scene.getContext("2d"); // remplacé le temps d'un export PN
 const scene2      = document.getElementById("scene2");
 const s2ctx       = scene2.getContext("2d");
 const pcv         = document.getElementById("previewCanvas");
-const pctx        = pcv.getContext("2d");
 const startBtn    = document.getElementById("startBtn");
 const stopBtn     = document.getElementById("stopBtn");
 const statusEl    = document.getElementById("status");
-const readout     = document.getElementById("readout");
 const textInputs  = Array.from(document.querySelectorAll("#textFields .posterLine"));
 const bigTextInput = document.getElementById("bigTextInput");
 const fontSizeSlider = document.getElementById("fontSizeSlider");
@@ -465,7 +462,7 @@ function applyFormat(key) {
 // Pixels physiques d'écran par unité du repère de la page
 let pixelScale = 1;
 
-const FRAME_GAP = 20; // espace entre les deux frames (px CSS)
+const FRAME_GAP = 56; // espace entre les deux frames (px CSS) : leurs traits de coupe ne se touchent pas
 
 function resizeScene() {
   // deux frames côte à côte, de même taille
@@ -507,9 +504,19 @@ window.addEventListener("resize", resizeScene);
 applyFormat(currentFormat);
 requestAnimationFrame(loop); // démarre la boucle d'animation (rotation incluse) dès le chargement
 
-async function init() {
-  statusEl.textContent = "Loading the model…";
-  // import à la demande : si le CDN ne répond pas, l'affiche marche quand même (sans la main)
+// Caméra, comme la Matrice d'images : rien n'est chargé avant « Start camera »
+const CAM_IDLE = "Off. Uses your camera, analysed only in this browser.";
+const CAM_READY = "Thumb and index finger open or close the ring, thumb and little finger set the number of cards.";
+let camToken = 0; // chaque clic annule le démarrage précédent
+function showCamButtons(on) {
+  startBtn.hidden = on;
+  stopBtn.hidden = !on;
+}
+
+async function loadHandModel() {
+  if (handLandmarker) return;
+  statusEl.textContent = "Loading the hand model…";
+  // import à la demande : si le CDN ne répond pas, l'outil marche quand même (sans la main)
   const { HandLandmarker, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14");
   const vision = await FilesetResolver.forVisionTasks(
     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
@@ -523,31 +530,35 @@ async function init() {
     runningMode: "VIDEO",
     numHands: 1,
   });
-  statusEl.textContent = "Model ready. Click “Start camera”.";
-  startBtn.disabled = false;
 }
 
 async function startCamera() {
-  startBtn.disabled = true;
-  statusEl.textContent = "Opening the camera…";
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 960 } },
-    audio: false,
-  });
-  video.srcObject = stream;
-  await video.play();
-
-  // le canvas de preview suit la résolution réelle de la vidéo
-  pcv.width = video.videoWidth;
-  pcv.height = video.videoHeight;
-
-  running = true;
-  startBtn.hidden = true;
-  stopBtn.hidden = false;
-  readout.textContent = "";
+  const token = ++camToken;
+  showCamButtons(true);
+  try {
+    await loadHandModel();
+    if (token !== camToken) return;
+    statusEl.textContent = "Opening the camera…";
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false,
+    });
+    if (token !== camToken) { stream.getTracks().forEach((t) => t.stop()); return; }
+    video.srcObject = stream;
+    await video.play();
+    running = true;
+    pcv.hidden = false;
+    statusEl.textContent = CAM_READY;
+  } catch (err) {
+    console.error("Hand control unavailable:", err);
+    if (token !== camToken) return;
+    stopCamera();
+    statusEl.textContent = err?.name === "NotAllowedError" ? "Camera access refused." : "Hand control could not start on this device.";
+  }
 }
 
 function stopCamera() {
+  camToken++; // un démarrage en cours s'arrête là
   if (video.srcObject) {
     video.srcObject.getTracks().forEach((track) => track.stop());
     video.srcObject = null;
@@ -556,12 +567,10 @@ function stopCamera() {
   lastVideoTime = -1;
   lastLandmarks = null;
   lastHandTime = -Infinity; // repasse tout de suite sur les sliders
-  pctx.clearRect(0, 0, pcv.width, pcv.height);
+  pcv.hidden = true;
 
-  startBtn.hidden = false;
-  startBtn.disabled = false;
-  stopBtn.hidden = true;
-  readout.textContent = "Camera stopped.";
+  showCamButtons(false);
+  statusEl.textContent = CAM_IDLE;
 }
 
 // Boucle d'animation permanente : tourne dès le chargement de la page (cartes
@@ -922,35 +931,12 @@ function drawGrid() {
   sctx.stroke();
 }
 
+// Retour caméra : noir et blanc, en miroir, squelette de la main (../ui/ui_001.js)
 function drawPreview(landmarks) {
-  if (!video.videoWidth) return;
-  pctx.drawImage(video, 0, 0, pcv.width, pcv.height);
-
-  if (!landmarks) return;
-  const px = (p) => [p.x * pcv.width, p.y * pcv.height];
-
-  pctx.fillStyle = "#00ff26";
-  for (const p of landmarks) {
-    const [x, y] = px(p);
-    pctx.beginPath();
-    pctx.arc(x, y, 4, 0, Math.PI * 2);
-    pctx.fill();
-  }
-
-  const [tx, ty] = px(landmarks[THUMB_TIP]);
-  const [ix, iy] = px(landmarks[INDEX_TIP]);
-  pctx.beginPath();
-  pctx.moveTo(tx, ty);
-  pctx.lineTo(ix, iy);
-  pctx.lineWidth = 3;
-  pctx.strokeStyle = "#ffcf6b";
-  pctx.stroke();
+  drawCameraPreview(pcv, video, { landmarks });
 }
 
-startBtn.addEventListener("click", () => startCamera().catch(err => {
-  statusEl.textContent = "Camera error: " + err.message;
-  startBtn.disabled = false;
-}));
+startBtn.addEventListener("click", startCamera);
 
 stopBtn.addEventListener("click", stopCamera);
 
@@ -1080,7 +1066,7 @@ async function exportMP4() {
   exportMp4Btn.disabled = true;
   exportMp4Btn.textContent = "Export… 0 %";
 
-  const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5/+esm");
+  const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/+esm");
   const { w, h } = FORMATS[currentFormat];
 
   // H.264 High profile, niveau 5.1 : couvre jusqu'aux grandes tailles (A4 1240×1754)
@@ -1388,9 +1374,6 @@ document.getElementById("extraBtn").addEventListener("click", () => {
 
 setMode("image"); // on arrive en mode image, avec l'ouverture de l'anneau jouée une fois
 
-init().catch(err => {
-  statusEl.textContent = "Initialisation error: " + err.message;
-});
 </script>
 </body>
 </html>

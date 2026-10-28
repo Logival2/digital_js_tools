@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mirror effect</title>
+<!-- interface commune des outils (verre, typo, sliders), puis la mise en page propre à l'outil -->
+<link rel="stylesheet" href="../ui/ui_001.css" />
+<link rel="stylesheet" href="style.css" />
+<script defer src="../ui/ui_001.js"></script>
+</head>
+<body data-mobile="ok" data-layout="panels">
+
+<!-- Panneau latéral (paramètres) -->
+<aside id="panel">
+
+  <header id="panelHead">
+    <p class="eyebrow"><a class="badge backLink" href="../" title="Back to all tools">← Digital tools</a></p>
+    <h1 class="toolTitle">Mirror effect</h1>
+  </header>
+
+  <!-- Source : un texte (police au choix) ou une image importée, collée ou glissée sur l'affiche -->
+  <div class="section">
+    <h2>Source</h2>
+    <div class="row">
+      <label for="sourceSelect">Source</label>
+      <select id="sourceSelect" class="asPills">
+        <option value="text" selected>Text</option>
+        <option value="image">Image</option>
+      </select>
+    </div>
+    <div id="textControls">
+      <div class="row">
+        <label for="fontSelect">Font</label>
+        <select id="fontSelect"></select>
+      </div>
+      <textarea id="textInput" rows="2" maxlength="200" placeholder="Text, one line per row">NORD</textarea>
+      <div class="row"><label for="trackingSlider" title="Space between the letters, in em">Tracking</label><input id="trackingSlider" type="range" min="-0.2" max="0.6" step="0.005" value="-0.08" /></div>
+    </div>
+    <div id="imageControls" hidden>
+      <div class="row">
+        <label for="fitSelect">Fit</label>
+        <select id="fitSelect" class="asPills">
+          <option value="cover" selected>Cover</option>
+          <option value="contain">Contain</option>
+        </select>
+      </div>
+      <div class="btnRow">
+        <button id="imageBtn" type="button">Import an image</button>
+      </div>
+      <input id="imageInput" type="file" accept="image/*" hidden />
+      <p class="hint" id="imageInfo">Or paste (Ctrl+V) or drop an image on the poster.</p>
+    </div>
+    <div class="row"><label for="sizeSlider" title="Size of the text or the image">Size</label><input id="sizeSlider" type="range" min="0.2" max="1.6" step="0.01" value="0.65" /></div>
+  </div>
+
+  <!-- Découpe : colonnes et rangées ; chaque morceau montre la source décalée,
+       d'autant plus qu'il est loin du centre -->
+  <div class="section">
+    <h2>Slices</h2>
+    <div class="row"><label for="colsSlider" title="Number of vertical strips">Columns</label><input id="colsSlider" type="range" min="1" max="40" step="1" value="15" /></div>
+    <div class="row"><label for="rowsSlider" title="Number of horizontal strips">Rows</label><input id="rowsSlider" type="range" min="1" max="40" step="1" value="1" /></div>
+    <div class="row"><label for="shiftXSlider" title="Horizontal shift, added at each column away from the centre">Shift X</label><input id="shiftXSlider" type="range" min="-120" max="120" step="1" value="17" /></div>
+    <div class="row"><label for="shiftYSlider" title="Vertical shift, added at each row away from the centre">Shift Y</label><input id="shiftYSlider" type="range" min="-120" max="120" step="1" value="0" /></div>
+    <div class="row">
+      <label for="distSelect">Widths</label>
+      <select id="distSelect" class="asPills">
+        <option value="equal" selected>Equal</option>
+        <option value="center">Wide centre</option>
+        <option value="edges">Wide edges</option>
+      </select>
+    </div>
+    <div class="row" id="weightRow"><label for="weightSlider" title="How much wider the centre or the edges are">Weight</label><input id="weightSlider" type="range" min="1" max="8" step="0.1" value="3" /></div>
+    <div class="row"><label for="squeezeSlider" title="Squeezes or stretches the content inside each slice">Squeeze</label><input id="squeezeSlider" type="range" min="0.3" max="2" step="0.01" value="1" /></div>
+    <div class="row"><label for="gapSlider" title="Empty space between the slices">Gap</label><input id="gapSlider" type="range" min="0" max="20" step="0.5" value="0" /></div>
+    <div class="row">
+      <label for="mirrorSelect">Mirror</label>
+      <select id="mirrorSelect" class="asPills">
+        <option value="off" selected>Off</option>
+        <option value="alternate">Alternate</option>
+        <option value="halves">Halves</option>
+      </select>
+    </div>
+    <div class="row"><label for="motionSlider" title="The slices sway in a loop; 0 = still">Motion</label><input id="motionSlider" type="range" min="0" max="1" step="0.01" value="0" /></div>
+  </div>
+
+  <!-- Couleurs : fond et texte, puis l'inversion -->
+  <div class="section">
+    <h2>Colours</h2>
+    <div class="swatches">
+      <input id="bgColor" type="color" value="#ffffff" title="Background" aria-label="Background colour" />
+      <input id="textColor" type="color" value="#000000" title="Text" aria-label="Text colour" />
+    </div>
+    <div class="btnRow">
+      <button id="swapBtn" type="button" title="Background ↔ text">Swap</button>
+    </div>
+  </div>
+
+  <footer id="panelFooter">
+    <button id="resetBtn" type="button">Reset</button>
+    <button id="privacyBtn" type="button">Privacy · GDPR</button>
+  </footer>
+</aside>
+
+<!-- Notice de confidentialité (RGPD) -->
+<dialog id="privacyDialog" aria-labelledby="privacyTitle">
+  <h2 id="privacyTitle">Privacy · GDPR</h2>
+
+  <h3>Data controller</h3>
+  <p>Valentin Maynadié — contact: <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
+
+  <h3>Texts, images and exports</h3>
+  <p>What you type and the images you import stay in your browser: nothing is sent anywhere, and everything disappears when you close the page. PNG files are made locally.</p>
+
+  <h3>Cookies and tracking</h3>
+  <p>This site uses no cookies, no analytics, no user accounts and no third-party service: fonts are served with the page.</p>
+
+  <h3>Your rights</h3>
+  <p>This site keeps no personal data. For any question about your rights (access, rectification, erasure, objection), write to the address above. You can also contact the CNIL, the French data protection authority (cnil.fr).</p>
+
+  <form method="dialog">
+    <button type="submit">Close</button>
+  </form>
+</dialog>
+
+<!-- Zone principale : l'affiche -->
+<div id="main">
+  <canvas id="scene" data-crop></canvas>
+</div>
+
+<!-- Panneau de droite, calé en bas : format de l'affiche, export -->
+<aside id="rightPanel">
+  <div id="formatButtons">
+    <button type="button" data-format="din">A4</button>
+    <button type="button" data-format="square">1:1</button>
+    <button type="button" data-format="portrait">4:5</button>
+    <button type="button" data-format="story">9:16</button>
+  </div>
+  <p id="formatInfo"></p>
+  <div id="exportRow">
+    <button id="exportBtn" type="button">Export PNG</button>
+  </div>
+</aside>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const mainEl = $("main");
+const scene = $("scene");
+const formatButtons = Array.from(document.querySelectorAll("#formatButtons button"));
+const panelFields = Array.from(document.querySelectorAll("#panel input:not([type=file]), #panel textarea, #panel select"));
+
+// Polices proposées (dossier ../fonts), comme dans Type flyer
+const FONTS = {
+  "Happy Times":             { file: "happy-times-at-the-ikob.ttf" },
+  "Flor de Ruina":           { file: "FlorDeRuina-Flor.ttf" },
+  "Roboto Mono":             { shared: true }, // déclarée par ui_001.css (fichier variable)
+  "MingLiU-01":              { file: "MingLiU-01.ttf", label: "MingLiU", upper: true },
+  "SangBleu Kingdom":        { file: "SangBleuKingdom-Regular.otf" },
+  "Century Schoolbook Mono": { file: "Century-Schoolbook-Monospace-BT.otf" },
+  "HN Roman":                { file: "Helvetica Neue LT Std/HelveticaNeueLTStd-Roman.otf", label: "Helvetica Roman" },
+  "HN Black Extended":       { file: "Helvetica Neue LT Std/HelveticaNeueLTStd-BlkEx.otf", label: "Helvetica Black Extended" },
+};
+const DEFAULT_FONT = "HN Black Extended";
+for (const [name, { label }] of Object.entries(FONTS)) $("fontSelect").add(new Option(label ?? name, name, name === DEFAULT_FONT));
+
+// Au rechargement, le navigateur restaure les anciens réglages : on repart des valeurs du HTML
+function resetFields() {
+  for (const el of panelFields) {
+    if (el.type === "checkbox") el.checked = el.defaultChecked;
+    else if (el.tagName === "SELECT") el.value = (Array.from(el.options).find((o) => o.defaultSelected) ?? el.options[0]).value;
+    else el.value = el.defaultValue;
+  }
+}
+resetFields();
+
+for (const [name, { file, shared }] of Object.entries(FONTS)) {
+  const loading = shared
+    ? document.fonts.load(`400 100px "${name}"`)
+    : new FontFace(name, `url('${encodeURI(`../fonts/${file}`)}')`).load().then((loaded) => document.fonts.add(loaded));
+  loading.then(() => update()).catch((err) => console.error(`Could not load the ${name} font:`, err));
+}
+
+// Formats d'affiche : taille réelle d'export en px
+const FORMATS = {
+  portrait: { w: 1080, h: 1350 },
+  din:      { w: 1240, h: 1754 },
+  square:   { w: 1080, h: 1080 },
+  story:    { w: 1080, h: 1920 },
+};
+let currentFormat = "portrait";
+
+// Repère : le petit côté vaut 800 unités, les sliders (décalage, écart) sont dans ce repère
+const SHORT = 800;
+let sceneW = 800, sceneH = 1000;
+const SCENE_MARGIN = 40;
+
+function applyFormat(key) {
+  currentFormat = key;
+  const { w, h } = FORMATS[key];
+  const s = SHORT / Math.min(w, h);
+  sceneW = w * s;
+  sceneH = h * s;
+  formatButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.format === key));
+  $("formatInfo").textContent = `${w} × ${h} px`;
+  resizeScene();
+}
+
+function resizeScene() {
+  const k = Math.min((mainEl.clientWidth - SCENE_MARGIN * 2) / sceneW, (mainEl.clientHeight - SCENE_MARGIN * 2) / sceneH);
+  scene.style.width = sceneW * k + "px";
+  scene.style.height = sceneH * k + "px";
+  const dpr = window.devicePixelRatio || 1;
+  scene.width = Math.round(sceneW * k * dpr);
+  scene.height = Math.round(sceneH * k * dpr);
+  update();
+}
+
+// ── La source : le texte ou l'image, dessinés à plat sur le fond, à la taille de sortie ──
+// l'image de départ (dossier sources_img/), remplacée par celle qu'on importe
+const DEFAULT_IMAGE = "Portrait éditorial en studio rétro.png";
+let image = null;
+{
+  const img = new Image();
+  img.src = `sources_img/${encodeURIComponent(DEFAULT_IMAGE)}`;
+  img.decode().then(() => {
+    if (image) return;   // une image importée entre-temps garde la priorité
+    image = img;
+    $("imageInfo").textContent = `${DEFAULT_IMAGE} · ${img.naturalWidth} × ${img.naturalHeight} px`;
+    update();
+  }).catch((err) => console.error("Could not load the default image:", err));
+}
+const source = document.createElement("canvas");
+
+function drawSource(W, H) {
+  source.width = W;
+  source.height = H;
+  const c = source.getContext("2d");
+  c.fillStyle = $("bgColor").value;
+  c.fillRect(0, 0, W, H);
+  const size = Number($("sizeSlider").value);
+  if ($("sourceSelect").value === "image") {
+    if (!image) return;
+    const iw = image.naturalWidth || image.width, ih = image.naturalHeight || image.height;
+    const fit = $("fitSelect").value === "cover" ? Math.max(W / iw, H / ih) : Math.min(W / iw, H / ih);
+    const s = fit * size;
+    c.drawImage(image, (W - iw * s) / 2, (H - ih * s) / 2, iw * s, ih * s);
+    return;
+  }
+  // texte : Size = la part de la largeur (ou de la hauteur) occupée par le bloc
+  const name = $("fontSelect").value;
+  const raw = FONTS[name].upper ? $("textInput").value.toUpperCase() : $("textInput").value;
+  const lines = raw.split("\n");
+  if (!raw.trim()) return;
+  const REF = 100, LEADING = 0.92;
+  const tracking = Number($("trackingSlider").value);
+  c.font = `${REF}px "${name}", serif`;
+  c.letterSpacing = `${REF * tracking}px`;
+  const ms = lines.map((l) => c.measureText(l));
+  const widest = Math.max(1, ...ms.map((m) => m.actualBoundingBoxLeft + m.actualBoundingBoxRight));
+  const asc = Math.max(...ms.map((m) => m.actualBoundingBoxAscent)), desc = Math.max(...ms.map((m) => m.actualBoundingBoxDescent));
+  const blockH = asc + desc + (lines.length - 1) * REF * LEADING;
+  const fs = REF * Math.min((W * size) / widest, (H * size) / blockH);
+  const k = fs / REF;
+  c.font = `${fs}px "${name}", serif`;
+  c.letterSpacing = `${fs * tracking}px`;
+  c.fillStyle = $("textColor").value;
+  c.textBaseline = "alphabetic";
+  let y = H / 2 - (blockH * k) / 2 + asc * k;
+  lines.forEach((l, i) => {
+    const m = c.measureText(l);
+    c.fillText(l, W / 2 - (m.actualBoundingBoxLeft + m.actualBoundingBoxRight) / 2 + m.actualBoundingBoxLeft, y + i * fs * LEADING);
+  });
+}
+
+// ── La découpe ──
+// bords des n bandes sur une longueur L, selon la répartition des largeurs
+function edges(n, L) {
+  const mode = $("distSelect").value, wgt = Number($("weightSlider").value);
+  const c = (n - 1) / 2, far = Math.max(c, 0.5);
+  const w = Array.from({ length: n }, (_, i) => {
+    const d = Math.abs(i - c) / far;                          // 0 au centre, 1 au bord
+    if (mode === "center") return 1 + (wgt - 1) * Math.max(0, 1 - d * 1.6) ** 2;
+    if (mode === "edges") return 1 + (wgt - 1) * d * d;
+    return 1;
+  });
+  const sum = w.reduce((a, b) => a + b, 0);
+  const e = [0];
+  for (const x of w) e.push(e[e.length - 1] + (x / sum) * L);
+  return e.map(Math.round);   // bords sur des pixels entiers : pas de filet clair entre deux bandes
+}
+
+// out : contexte de sortie de W × H px ; t : temps en secondes (balancement)
+function compose(out, W, H, t) {
+  const u = W / sceneW;                                         // px par unité du repère
+  drawSource(W, H);
+  out.setTransform(1, 0, 0, 1, 0, 0);
+  out.fillStyle = $("bgColor").value;
+  out.fillRect(0, 0, W, H);
+
+  const cols = Number($("colsSlider").value), rows = Number($("rowsSlider").value);
+  const ex = edges(cols, W), ey = edges(rows, H);
+  const cx = (cols - 1) / 2, cy = (rows - 1) / 2;
+  const sx = Number($("shiftXSlider").value) * u, sy = Number($("shiftYSlider").value) * u;
+  const squeeze = Number($("squeezeSlider").value);
+  const gap = Number($("gapSlider").value) * u;
+  const mirror = $("mirrorSelect").value;
+  const motion = Number($("motionSlider").value);
+
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+    const x0 = ex[i] + gap / 2, x1 = ex[i + 1] - gap / 2, y0 = ey[j] + gap / 2, y1 = ey[j + 1] - gap / 2;
+    if (x1 <= x0 || y1 <= y0) continue;
+    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    // décalage : proportionnel à la distance au centre ; le contenu est poussé vers l'extérieur,
+    // si bien que le centre se répète en échos vers les bords
+    let dx = (i - cx) * sx, dy = (j - cy) * sy;
+    if (motion > 0) {
+      dx += Math.sin(t * 1.3 + i * 0.55 + j * 0.3) * motion * 60 * u;
+      dy += Math.sin(t * 1.1 + j * 0.55 + i * 0.3) * motion * (rows > 1 ? 60 : 0) * u;
+    }
+    out.save();
+    out.beginPath();
+    out.rect(x0, y0, x1 - x0, y1 - y0);
+    out.clip();
+    out.translate(mx, my);
+    const flipX = mirror === "alternate" && cols > 1 && Math.round(i - cx) % 2 !== 0;
+    const flipY = mirror === "alternate" && rows > 1 && Math.round(j - cy) % 2 !== 0;
+    out.scale((flipX ? -1 : 1) * squeeze, flipY ? -1 : 1);
+    out.translate(-mx + dx, -my + dy);
+    out.drawImage(source, 0, 0);
+    out.restore();
+  }
+
+  // moitiés : la moitié gauche se reflète à droite, comme dans un miroir posé au milieu
+  if (mirror === "halves") {
+    const half = document.createElement("canvas");
+    half.width = Math.ceil(W / 2);
+    half.height = H;
+    half.getContext("2d").drawImage(out.canvas, 0, 0);
+    out.save();
+    out.translate(W, 0);
+    out.scale(-1, 1);
+    out.drawImage(half, 0, 0);
+    out.restore();
+  }
+}
+
+// ── Rendu : une image à chaque changement, en boucle tant que Motion > 0 ──
+const sceneCtx = scene.getContext("2d");
+let frame = 0;
+function render(now) {
+  frame = 0;
+  compose(sceneCtx, scene.width, scene.height, (now ?? performance.now()) / 1000);
+  if (Number($("motionSlider").value) > 0) frame = requestAnimationFrame(render);
+}
+function update() {
+  const isImage = $("sourceSelect").value === "image";
+  $("textControls").hidden = isImage;
+  $("imageControls").hidden = !isImage;
+  $("weightRow").hidden = $("distSelect").value === "equal";
+  if (!frame) frame = requestAnimationFrame(render);
+}
+
+// réglages de départ de chaque source, appliqués quand on passe de l'une à l'autre
+// (ceux du texte sont aussi les valeurs du HTML)
+const SOURCE_DEFAULTS = {
+  text:  { sizeSlider: 0.65, colsSlider: 15, rowsSlider: 1, shiftXSlider: 17, shiftYSlider: 0, distSelect: "equal",
+           weightSlider: 3, squeezeSlider: 1, gapSlider: 0, mirrorSelect: "off", motionSlider: 0 },
+  image: { fitSelect: "cover", sizeSlider: 1.03, colsSlider: 11, rowsSlider: 1, shiftXSlider: 52, shiftYSlider: -120, distSelect: "center",
+           weightSlider: 1.7, squeezeSlider: 0.99, gapSlider: 0, mirrorSelect: "off", motionSlider: 0 },
+};
+$("sourceSelect").addEventListener("change", () => {
+  for (const [id, v] of Object.entries(SOURCE_DEFAULTS[$("sourceSelect").value])) {
+    $(id).value = v;
+    $(id).dispatchEvent(new Event("input"));   // la valeur affichée à côté du curseur suit
+  }
+  update();
+});
+
+// ── Image : bouton, coller, glisser ──
+function useImage(file) {
+  if (!file || !file.type.startsWith("image/")) return;
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+  img.src = url;
+  img.decode().then(() => {
+    image = img;
+    $("imageInfo").textContent = `${file.name || "Pasted image"} · ${img.naturalWidth} × ${img.naturalHeight} px`;
+    if ($("sourceSelect").value !== "image") {   // passage du texte à l'image : ses réglages de départ, une seule fois
+      $("sourceSelect").value = "image";
+      $("sourceSelect").dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    update();
+  }).catch((err) => {
+    console.error("Could not read the image:", err);
+    $("imageInfo").textContent = "This file could not be read as an image.";
+    URL.revokeObjectURL(url);
+  });
+}
+$("imageBtn").addEventListener("click", () => $("imageInput").click());
+$("imageInput").addEventListener("change", (e) => {
+  useImage(e.target.files[0]);
+  e.target.value = "";
+});
+window.addEventListener("paste", (e) => {
+  const item = Array.from(e.clipboardData?.items ?? []).find((it) => it.type.startsWith("image/"));
+  if (item) { e.preventDefault(); useImage(item.getAsFile()); }
+});
+mainEl.addEventListener("dragover", (e) => { e.preventDefault(); mainEl.classList.add("over"); });
+mainEl.addEventListener("dragleave", () => mainEl.classList.remove("over"));
+mainEl.addEventListener("drop", (e) => {
+  e.preventDefault();
+  mainEl.classList.remove("over");
+  useImage(e.dataTransfer.files[0]);
+});
+
+// ── Contrôles ──
+for (const el of panelFields) {
+  el.addEventListener("input", update);
+  el.addEventListener("change", update);
+}
+$("swapBtn").addEventListener("click", () => {
+  [$("bgColor").value, $("textColor").value] = [$("textColor").value, $("bgColor").value];
+  update();
+});
+formatButtons.forEach((btn) => btn.addEventListener("click", () => applyFormat(btn.dataset.format)));
+window.addEventListener("resize", resizeScene);
+$("resetBtn").addEventListener("click", () => {
+  resetFields();
+  applyFormat("portrait");
+});
+const privacyDialog = $("privacyDialog");
+$("privacyBtn").addEventListener("click", () => privacyDialog.showModal());
+
+// ── Export PNG : la même image, recalculée à la taille réelle du format ──
+$("exportBtn").addEventListener("click", () => {
+  const { w, h } = FORMATS[currentFormat];
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  compose(canvas.getContext("2d"), w, h, performance.now() / 1000);
+  canvas.toBlob((blob) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `mirror-${currentFormat}-${w}x${h}.png`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }, "image/png");
+});
+
+applyFormat(currentFormat);
+</script>
+</body>
+</html>

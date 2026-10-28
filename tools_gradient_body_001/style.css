@@ -37,17 +37,7 @@ body.panel-hidden #panel {
   transform: translateX(-16px);
 }
 
-/* Bloc d'action : caméra, vidéo, messages */
-#cta {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 0 var(--pad) 12px;
-}
-#bar > button { flex: 1; }
-#readout:has(#status:empty) { display: none; }
-
-/* Vignettes : recopie caméra, détourage, blobs (vue selfie) */
+/* Vignettes : détourage, blobs (vue selfie) ; le retour caméra vient de ui_001.css */
 .previewBox video,
 .previewBox canvas {
   display: block;

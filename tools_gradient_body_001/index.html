@@ -27,26 +27,20 @@
     <h1 class="toolTitle">Gradient<br>body</h1>
   </header>
 
-  <!-- Action principale : la source -->
-  <div id="cta">
-    <div id="bar">
-      <button id="startBtn" class="primary" type="button">Start camera</button>
-      <button id="stopBtn" class="primary" type="button" hidden>Stop</button>
-    </div>
-    <button id="fileBtn" type="button">Load an MP4 video</button>
-    <input id="fileInput" type="file" accept="video/mp4,video/*" hidden />
-    <!-- messages de chargement / erreur seulement, caché quand il n'y a rien à dire -->
-    <p id="readout"><span class="status" id="status"></span></p>
-  </div>
-
-  <!-- Caméra : détourage du corps en direct (MediaPipe) -->
+  <!-- Source : la webcam ou une vidéo ; boutons et retour caméra comme la Matrice d'images -->
   <div class="section">
     <h2>Source</h2>
-    <div id="preview" class="previewBox mirror">
-      <video id="cam" playsinline muted></video>
+    <div id="bar">
+      <button id="startBtn" type="button">Start camera</button>
+      <button id="stopBtn" type="button" hidden>Stop camera</button>
+      <button id="fileBtn" type="button">Import a video</button>
     </div>
+    <input id="fileInput" type="file" accept="video/mp4,video/*" hidden />
+    <p class="hint" id="status">Webcam or MP4 video, analysed only in this browser. Without a source, a demo silhouette moves on screen.</p>
+    <!-- noir et blanc, en miroir si « Mirror » est coché -->
+    <video id="cam" class="camVideo" playsinline muted></video>
+    <canvas id="camCanvas" class="camPreview" width="480" height="360" aria-hidden="true" hidden></canvas>
     <label class="check"><input id="mirrorToggle" type="checkbox" checked /><span>Mirror</span></label>
-    <p class="hint">Webcam or MP4 video. Without a source, a demo silhouette moves on screen.</p>
   </div>
 
   <!-- Détourage : ce que MediaPipe voit, après seuil (blanc = corps) -->
@@ -118,8 +112,8 @@
     <div class="btnRow">
       <button class="palette" type="button" data-colors="#070006,#4a063f,#c414bc,#e2003c,#e00000">Fire</button>
       <button class="palette" type="button" data-colors="#02060d,#0c2c4a,#3d8cc4,#a8e3f2,#f3fbff">Glacier</button>
+      <button id="reverseBtn" type="button" title="The core becomes the background and vice versa">Swap</button>
     </div>
-    <button id="reverseBtn" type="button" title="The core becomes the background and vice versa">Swap</button>
   </div>
 
   <!-- Affichage -->
@@ -146,7 +140,7 @@
 
   <h3>Camera</h3>
   <p>The camera only turns on when you click “Start camera”, after your browser asks for permission.
-  The video stream is analysed only in your browser, to cut out your silhouette: no image or video is recorded, kept or sent to a server.
+  The video stream is analysed only in your browser, to cut out your silhouette, and shown in a small black and white preview: no image or video is recorded, kept or sent to a server.
   A loaded MP4 video also stays on your computer.</p>
 
   <h3>Cookies and tracking</h3>
@@ -173,6 +167,7 @@ const $ = (id) => document.getElementById(id);
 // ── Éléments de l'interface ──
 const glCanvas = $("gl");
 const video = $("cam");
+const camCanvas = $("camCanvas");
 const startBtn = $("startBtn");
 const stopBtn = $("stopBtn");
 const statusEl = $("status");
@@ -537,28 +532,39 @@ async function loadSegmenter() {
   });
 }
 
+const SOURCE_IDLE = "Webcam or MP4 video, analysed only in this browser. Without a source, a demo silhouette moves on screen.";
+let sourceToken = 0; // chaque clic annule le démarrage précédent
+function showSourceButtons(on) {
+  startBtn.hidden = on;
+  stopBtn.hidden = !on;
+}
+
 async function startCamera() {
-  startBtn.disabled = true;
+  const token = ++sourceToken;
+  showSourceButtons(true);
   await loadSegmenter();
+  if (token !== sourceToken) return;
   statusEl.textContent = "Opening the camera…";
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 360 } },
     audio: false,
   });
+  if (token !== sourceToken) { stream.getTracks().forEach((t) => t.stop()); return; }
   video.srcObject = stream;
   await video.play();
   running = true;
-  startBtn.hidden = true;
-  stopBtn.hidden = false;
-  statusEl.textContent = "";
+  camCanvas.hidden = false;
+  statusEl.textContent = "Camera on: your silhouette is cut out live.";
 }
 
 // Vidéo MP4 choisie par l'utilisateur : lue en boucle, à la place de la webcam
 let fileUrl = null;
 async function loadVideoFile(file) {
   stopCamera();
-  startBtn.disabled = true;
+  const token = ++sourceToken;
+  showSourceButtons(true);
   await loadSegmenter();
+  if (token !== sourceToken) return;
   fileUrl = URL.createObjectURL(file);
   video.src = fileUrl;
   video.loop = true;
@@ -568,12 +574,12 @@ async function loadVideoFile(file) {
   controls.mirror.checked = false;
   applyMirror();
   running = true;
-  startBtn.hidden = true;
-  stopBtn.hidden = false;
+  camCanvas.hidden = false;
   statusEl.textContent = file.name;
 }
 
 function stopCamera() {
+  sourceToken++; // un démarrage en cours s'arrête là
   if (video.srcObject) {
     video.srcObject.getTracks().forEach((t) => t.stop());
     video.srcObject = null;
@@ -590,10 +596,9 @@ function stopCamera() {
   lastVideoTime = -1;
   clearMaskPreview();
   clearBlobs();
-  startBtn.hidden = false;
-  startBtn.disabled = false;
-  stopBtn.hidden = true;
-  statusEl.textContent = "";
+  camCanvas.hidden = true;
+  showSourceButtons(false);
+  statusEl.textContent = SOURCE_IDLE;
 }
 
 function segment(now) {
@@ -786,9 +791,6 @@ function trackBlobs(found) {
 // ── Dessin au premier plan, dans le même cadrage que l'aura ──
 const overlay = $("overlay");
 const octx = overlay.getContext("2d");
-new FontFace("Replica Mono", "url('../fonts/Replica-Mono.otf')").load()
-  .then((face) => document.fonts.add(face))
-  .catch((err) => console.error("Could not load the Replica Mono font:", err));
 
 // Mention centrée en bas de l'écran, mêmes proportions que dans l'outil Cercle
 // (11 unités et marge de 10 + 6 sur un petit côté de 800), en blanc sur le fond sombre
@@ -826,7 +828,7 @@ function drawBlobs(dt) {
   const color = controls.blobColor.value;
   octx.strokeStyle = octx.fillStyle = color;
   octx.lineWidth = Math.max(1, dpr);
-  octx.font = `${11 * dpr}px "Replica Mono", monospace`;
+  octx.font = `500 ${11 * dpr}px "Roboto Mono", monospace`; // la mono de l'interface (ui_001.css)
   octx.textBaseline = "bottom";
 
   const shown = blobs.filter((b) => b.miss === 0).sort((a, b) => a.id - b.id);
@@ -904,8 +906,9 @@ function demoTags() {
 }
 
 startBtn.addEventListener("click", () => startCamera().catch((err) => {
-  statusEl.textContent = "Camera error: " + err.message;
-  startBtn.disabled = false;
+  console.error("Camera unavailable:", err);
+  stopCamera();
+  statusEl.textContent = err?.name === "NotAllowedError" ? "Camera access refused." : "Camera error: " + err.message;
 }));
 stopBtn.addEventListener("click", stopCamera);
 $("fileBtn").addEventListener("click", () => $("fileInput").click());
@@ -914,8 +917,8 @@ $("fileInput").addEventListener("change", (e) => {
   e.target.value = ""; // permet de recharger le même fichier
   if (!file) return;
   loadVideoFile(file).catch((err) => {
+    stopCamera();
     statusEl.textContent = "Unreadable video: " + err.message;
-    startBtn.disabled = false;
   });
 });
 
@@ -973,6 +976,7 @@ function loop(now) {
   if (running && segmenter && video.readyState >= 2 && video.currentTime !== lastVideoTime) {
     segment(now);
     if (on("blob")) detectBlobs();
+    drawCameraPreview(camCanvas, video, { mirror: on("mirror") }); // retour caméra : ../ui/ui_001.js
   }
   frame(dt);
   drawBlobs(dt);

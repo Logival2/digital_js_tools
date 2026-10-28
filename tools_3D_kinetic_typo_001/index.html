@@ -26,7 +26,7 @@
     <textarea id="textInput" class="posterLine" rows="3" maxlength="200">NORDWAY</textarea>
     <div class="row">
       <label for="fontSelect">Font</label>
-      <select id="fontSelect">
+      <select id="fontSelect" class="asPills">
         <option value="HN Black Extended">Black Extended</option>
         <option value="HN Roman">Regular</option>
         <option value="MingLiU-01" selected>MingLiU</option>
@@ -80,7 +80,7 @@
     <h2>Motion</h2>
     <div class="row">
       <label for="rhythmSelect">Rhythm</label>
-      <select id="rhythmSelect">
+      <select id="rhythmSelect" class="asPills">
         <option value="snap">Stepped</option>
         <option value="smooth">Smooth</option>
         <option value="pingpong">Ping-pong</option>
@@ -93,12 +93,12 @@
     <label class="check"><input id="altToggle" type="checkbox" checked /> Alternate rows</label>
   </div>
 
-  <!-- Caméra -->
+  <!-- Vue : la caméra virtuelle (le mot « Camera » est réservé à la webcam dans les autres outils) -->
   <div class="section">
-    <h2>Camera</h2>
+    <h2>View</h2>
     <div class="row">
-      <label for="viewSelect">View</label>
-      <select id="viewSelect">
+      <label for="viewSelect">Projection</label>
+      <select id="viewSelect" class="asPills">
         <option value="persp">Perspective</option>
         <option value="iso" selected>Isometric</option>
         <option value="face">Orthographic</option>
@@ -121,9 +121,11 @@
   <!-- Rendu : noir et blanc uniquement, sans lumière -->
   <div class="section">
     <h2>Render</h2>
-    <div class="colorRow">
-      <label>Background <input id="bgColorInput" type="color" value="#00ff26" /></label>
-      <label>Type <input id="inkColorInput" type="color" value="#000000" /></label>
+    <div class="swatches">
+      <input id="bgColorInput" type="color" value="#00ff26" title="Background" aria-label="Background colour" />
+      <input id="inkColorInput" type="color" value="#000000" title="Type" aria-label="Type colour" />
+    </div>
+    <div class="btnRow">
       <button id="swapColorsBtn" type="button" title="Swaps the background and the type">Swap</button>
     </div>
     <label class="check"><input id="fillToggle" type="checkbox" /> Solid band</label>
@@ -157,7 +159,7 @@
 
 <!-- Zone principale : la typo 3D (WebGL) + la grille (2D) -->
 <div id="main">
-  <div id="frame">
+  <div id="frame" data-crop>
     <canvas id="gl"></canvas>
     <canvas id="overlay"></canvas>
   </div>
@@ -201,7 +203,7 @@
 
   <div class="row">
     <label for="durationSelect">Duration</label>
-    <select id="durationSelect">
+    <select id="durationSelect" class="asPills">
       <option value="5">5 s</option>
       <option value="10">10 s</option>
       <option value="15">15 s</option>
@@ -211,8 +213,8 @@
   <div id="exportRow">
     <button id="exportBtn" type="button">Export PNG</button>
     <button id="exportMp4Btn" type="button" hidden>Export MP4</button>
-    <!-- bouton carré noir, sans libellé : son rôle sera défini plus tard -->
-    <button id="extraBtn" type="button" aria-label="Action"></button>
+    <!-- bouton carré noir : enregistre l'onglet entier en vidéo -->
+    <button id="extraBtn" type="button" aria-label="Record the tab as a video" title="Record the tab as a video"></button>
   </div>
 </aside>
 
@@ -1243,7 +1245,7 @@ async function exportMP4() {
   exportMp4Btn.textContent = "Export… 0 %";
   setPlaying(false);
 
-  const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5/+esm");
+  const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/+esm");
   const { w, h } = FORMATS[currentFormat];
   // H.264 High profile, niveau 5.1 : couvre jusqu'au A4 1240×1754
   const config = { codec: "avc1.640033", width: w, height: h, bitrate: 12_000_000, framerate: FPS, avc: { format: "avc" } };

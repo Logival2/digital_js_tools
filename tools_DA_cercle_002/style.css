@@ -8,7 +8,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px; /* = FRAME_GAP dans le script */
+  gap: 56px; /* = FRAME_GAP dans le script */
 }
 #scene,
 #scene2 {
@@ -39,7 +39,7 @@
   padding: 0;
   max-height: 252px; /* ~12 noms visibles, le reste défile */
   overflow-y: auto;
-  border-top: 1px solid var(--line);
+  border-top: 1px dashed var(--dash);
 }
 #imageList li {
   display: flex;
@@ -47,7 +47,7 @@
   justify-content: space-between;
   gap: 6px;
   padding: 3px 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px dashed var(--dash);
 }
 #imageList span {
   overflow: hidden;
@@ -64,13 +64,3 @@
   background: none;
 }
 
-/* Recopie de la caméra (vue selfie), au format 4:3 */
-#panel #preview { aspect-ratio: 4 / 3; }
-#preview video { display: none; }
-#preview canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scaleX(-1);
-}

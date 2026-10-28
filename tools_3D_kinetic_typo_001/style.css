@@ -25,17 +25,3 @@
 }
 #overlay { cursor: grab; touch-action: none; }
 #overlay.dragging { cursor: grabbing; }
-
-/* Couleurs du fond et de la typo : 2 pastilles + Inverser */
-.colorRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.colorRow label {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}

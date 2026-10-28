@@ -26,7 +26,7 @@
     <textarea id="textInput" class="posterLine" rows="3" maxlength="200">NORDWAY</textarea>
     <div class="row">
       <label for="fontSelect">Font</label>
-      <select id="fontSelect">
+      <select id="fontSelect" class="asPills">
         <option value="Replica Mono">Replica Mono</option>
         <option value="MingLiU-01">MingLiU</option>
         <option value="Roboto Mono">Roboto Mono</option>
@@ -37,7 +37,7 @@
     <div class="row"><label for="letterSpacingSlider">Letter spacing</label><input id="letterSpacingSlider" type="range" min="-0.2" max="1" step="0.01" value="-0.04" /></div>
     <div class="row">
       <label for="sourceSelect">Source</label>
-      <select id="sourceSelect">
+      <select id="sourceSelect" class="asPills">
         <option value="text">Text</option>
         <option value="image">Image</option>
         <option value="both">Text + image</option>
@@ -132,14 +132,13 @@
   <div class="section">
     <h2>Camera</h2>
     <div id="bar">
-      <button id="startBtn" class="primary" disabled>Start camera</button>
+      <button id="startBtn" type="button">Start camera</button>
       <button id="stopBtn" type="button" hidden>Stop camera</button>
-      <span id="readout"><span class="status" id="status">Waiting…</span></span>
     </div>
-    <div id="preview">
-      <video id="cam" playsinline muted></video>
-      <canvas id="previewCanvas"></canvas>
-    </div>
+    <p class="hint" id="status">Off. Uses your camera, analysed only in this browser.</p>
+    <!-- Retour caméra, comme la Matrice d'images : noir et blanc, en miroir, squelette de la main par-dessus -->
+    <video id="cam" class="camVideo" playsinline muted></video>
+    <canvas id="previewCanvas" class="camPreview" width="480" height="360" aria-hidden="true" hidden></canvas>
   </div>
 
   <footer id="panelFooter">
@@ -154,14 +153,14 @@
   <p>Valentin Maynadié — contact: <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
   <h3>Camera</h3>
   <p>The camera only turns on when you click “Start camera”, after your browser asks for permission.
-  The video stream is analysed only in your browser, to find the position of your hand: no image or video is recorded, kept or sent to a server.</p>
+  The video stream is analysed only in your browser, to find the position of your hand, and shown in a small black and white preview: no image or video is recorded, kept or sent to a server.</p>
   <h3>Images and exports</h3>
   <p>The image you import stays on your device for the session. PNG and MP4 files are made locally.</p>
   <h3>Cookies and tracking</h3>
   <p>This site uses no cookies, no analytics and no user accounts. Fonts are served with the page.</p>
   <h3>Third-party services</h3>
   <ul>
-    <li>jsDelivr — hand tracking (MediaPipe) and the MP4 video muxer;</li>
+    <li>jsDelivr — hand tracking (MediaPipe), loaded when the camera starts, and the MP4 video muxer;</li>
     <li>Google Cloud Storage — hand tracking model.</li>
   </ul>
   <p>These services receive your IP address, which they need to send the files.</p>
@@ -172,7 +171,7 @@
 
 <!-- Zone principale : la matière (WebGL) + le texte net, la grille et le curseur (2D) -->
 <div id="main">
-  <div id="frame">
+  <div id="frame" data-crop>
     <canvas id="gl"></canvas>
     <canvas id="overlay"></canvas>
   </div>
@@ -213,7 +212,7 @@
 
   <div class="row" id="durationRow" hidden>
     <label for="durationSelect">Duration</label>
-    <select id="durationSelect">
+    <select id="durationSelect" class="asPills">
       <option value="5">5 s</option>
       <option value="10">10 s</option>
       <option value="15">15 s</option>
@@ -244,11 +243,9 @@ const overlay = $("overlay");
 const octx = overlay.getContext("2d");
 const video = $("cam");
 const pcv = $("previewCanvas");
-const pctx = pcv.getContext("2d");
 const startBtn = $("startBtn");
 const stopBtn = $("stopBtn");
 const statusEl = $("status");
-const readout = $("readout");
 const formatButtons = Array.from(document.querySelectorAll("#formatButtons button"));
 const modeButtons = Array.from(document.querySelectorAll("#modeSwitch button"));
 const transportButtons = Array.from(document.querySelectorAll("#transport button"));
@@ -333,7 +330,6 @@ const GRID_MARGIN = 10, GRID_GUTTER = 10, GRID_COLS = 5, GRID_ROWS = 10;
 const FONT_FILES = {
   "Replica Mono": "../fonts/Replica-Mono.otf",
   "MingLiU-01": "../fonts/MingLiU-01.ttf",
-  "Roboto Mono": "../fonts/RobotoMono-Regular.ttf", // servie avec la page (avant : Google Fonts)
 };
 for (const [name, url] of Object.entries(FONT_FILES)) {
   new FontFace(name, `url('${url}')`).load().then((face) => {
@@ -341,6 +337,10 @@ for (const [name, url] of Object.entries(FONT_FILES)) {
     if (controls.font.value === name) reseed(); // la graine est redessinée avec la vraie police
   }).catch((err) => console.error(`Could not load the ${name} font:`, err));
 }
+// Roboto Mono : déclarée par ui_001.css (fichier variable), on attend seulement son chargement
+document.fonts.load('400 100px "Roboto Mono"').then(() => {
+  if (controls.font.value === "Roboto Mono") reseed();
+}).catch((err) => console.error("Could not load the Roboto Mono font:", err));
 
 // ═══════════════════════════════════════════════════════════════════
 // WebGL : simulation de réaction-diffusion (Gray-Scott) sur GPU
@@ -941,9 +941,19 @@ let handStroke = null;
 
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y, (a.z ?? 0) - (b.z ?? 0));
 
-async function init() {
-  statusEl.textContent = "Loading the model…";
-  // import à la demande : sans réseau, l'outil marche quand même (sans la main)
+// Caméra, comme la Matrice d'images : rien n'est chargé avant « Start camera »
+const CAM_IDLE = "Off. Uses your camera, analysed only in this browser.";
+const CAM_READY = "Point with your index finger, pinch thumb and index finger to sow.";
+let camToken = 0; // chaque clic annule le démarrage précédent
+function showCamButtons(on) {
+  startBtn.hidden = on;
+  stopBtn.hidden = !on;
+}
+
+async function loadHandModel() {
+  if (handLandmarker) return;
+  statusEl.textContent = "Loading the hand model…";
+  // import à la demande : si le CDN ne répond pas, l'outil marche quand même (sans la main)
   const { HandLandmarker, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14");
   const vision = await FilesetResolver.forVisionTasks(
     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
@@ -957,28 +967,35 @@ async function init() {
     runningMode: "VIDEO",
     numHands: 1,
   });
-  statusEl.textContent = "Model ready.";
-  startBtn.disabled = false;
 }
 
 async function startCamera() {
-  startBtn.disabled = true;
-  statusEl.textContent = "Opening the camera…";
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 960 } },
-    audio: false,
-  });
-  video.srcObject = stream;
-  await video.play();
-  pcv.width = video.videoWidth;
-  pcv.height = video.videoHeight;
-  running = true;
-  startBtn.hidden = true;
-  stopBtn.hidden = false;
-  readout.textContent = "";
+  const token = ++camToken;
+  showCamButtons(true);
+  try {
+    await loadHandModel();
+    if (token !== camToken) return;
+    statusEl.textContent = "Opening the camera…";
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false,
+    });
+    if (token !== camToken) { stream.getTracks().forEach((t) => t.stop()); return; }
+    video.srcObject = stream;
+    await video.play();
+    running = true;
+    pcv.hidden = false;
+    statusEl.textContent = CAM_READY;
+  } catch (err) {
+    console.error("Hand control unavailable:", err);
+    if (token !== camToken) return;
+    stopCamera();
+    statusEl.textContent = err?.name === "NotAllowedError" ? "Camera access refused." : "Hand control could not start on this device.";
+  }
 }
 
 function stopCamera() {
+  camToken++; // un démarrage en cours s'arrête là
   if (video.srcObject) {
     video.srcObject.getTracks().forEach((t) => t.stop());
     video.srcObject = null;
@@ -989,11 +1006,9 @@ function stopCamera() {
   handPos = null;
   handStroke = null;
   cursor = null;
-  pctx.clearRect(0, 0, pcv.width, pcv.height);
-  startBtn.hidden = false;
-  startBtn.disabled = false;
-  stopBtn.hidden = true;
-  readout.textContent = "Camera stopped.";
+  pcv.hidden = true;
+  showCamButtons(false);
+  statusEl.textContent = CAM_IDLE;
 }
 
 function detectHand(now) {
@@ -1031,29 +1046,12 @@ function applyHandBrush() {
   }
 }
 
+// Retour caméra : noir et blanc, en miroir, squelette de la main (../ui/ui_001.js)
 function drawPreview() {
-  if (!video.videoWidth) return;
-  pctx.drawImage(video, 0, 0, pcv.width, pcv.height);
-  if (!lastLandmarks) return;
-  pctx.fillStyle = "#00ff26";
-  for (const p of lastLandmarks) {
-    pctx.beginPath();
-    pctx.arc(p.x * pcv.width, p.y * pcv.height, 4, 0, Math.PI * 2);
-    pctx.fill();
-  }
-  const t = lastLandmarks[THUMB_TIP], i = lastLandmarks[INDEX_TIP];
-  pctx.beginPath();
-  pctx.moveTo(t.x * pcv.width, t.y * pcv.height);
-  pctx.lineTo(i.x * pcv.width, i.y * pcv.height);
-  pctx.lineWidth = 3;
-  pctx.strokeStyle = handPinching ? "#ff0050" : "#ffcf6b";
-  pctx.stroke();
+  drawCameraPreview(pcv, video, { landmarks: lastLandmarks, active: handPinching });
 }
 
-startBtn.addEventListener("click", () => startCamera().catch((err) => {
-  statusEl.textContent = "Camera error: " + err.message;
-  startBtn.disabled = false;
-}));
+startBtn.addEventListener("click", startCamera);
 stopBtn.addEventListener("click", stopCamera);
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1218,7 +1216,7 @@ async function exportMP4() {
   exportMp4Btn.textContent = "Export… 0 %";
   setPlaying(false);
 
-  const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5/+esm");
+  const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/+esm");
   const { w, h } = FORMATS[currentFormat];
   const config = { codec: "avc1.640033", width: w, height: h, bitrate: 12_000_000, framerate: FPS };
   const { supported } = await VideoEncoder.isConfigSupported(config);
@@ -1339,7 +1337,6 @@ updateGradientPreview();
 applyFormat(currentFormat);
 setPlaying(true);
 requestAnimationFrame(loop);
-init().catch((err) => { statusEl.textContent = "Hand tracking unavailable: " + err.message; });
 </script>
 </body>
 </html>

@@ -4,7 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Digital JS tools</title>
-<!-- même interface que les outils (ui_001) : verre gris, Helvetica en capitales, titre en MingLiU Prop, aides en Roboto Mono -->
+<!-- même interface que les outils (ui_001) : verre gris, Helvetica en capitales, titre en MingLiU Prop, aides en Roboto Mono,
+     filets pointillés ; mise en page d'après raideresearch.com (rubriques sous un filet, fiches nom + numéro) -->
 <link rel="stylesheet" href="ui/ui_001.css" />
 <script defer src="ui/ui_001.js"></script>
 <style>
@@ -17,44 +18,57 @@
     padding: 10px;
   }
 
-  /* en-tête : la même plaque de verre que le panneau des outils */
+  /* en-tête : la même plaque de verre que le panneau des outils, et le même haut de panneau
+     (ligne du nom, titre en MingLiU Prop, puis le texte en mono, le compteur à droite) */
   #top {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-    gap: 12px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     padding: var(--pad);
     background: var(--glass);
     -webkit-backdrop-filter: blur(var(--blur));
     backdrop-filter: blur(var(--blur));
     border-radius: var(--radius-panel);
   }
-  #top .eyebrow { grid-column: 1 / -1; }
-  #top .toolTitle { margin: 0; max-width: 820px; }
+  /* barre du haut (nom, liens) : la même taille que le nom des outils sur les cartes */
+  #top .eyebrow { flex-wrap: wrap; font-size: var(--fs-text); letter-spacing: -0.02em; }
   #top nav {
     display: flex;
     gap: 16px;
-    font-size: var(--fs-small);
-    letter-spacing: 0.02em;
   }
   #top nav a { color: inherit; text-underline-offset: 3px; }
+  #top .toolTitle { margin: 2px 0 0; max-width: 820px; }
+  #top .intro {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 8px 24px;
+  }
+  #top .intro p { margin: 0; max-width: 62ch; }
 
-  /* rubrique : un titre sur sa propre plaque de verre, comme une section du panneau */
-  .groupTitle {
-    margin: 14px 0 0;
-    padding: 8px var(--pad);
+  /* rubrique : un filet pointillé sur toute la largeur, puis le nom et le nombre d'outils
+     (comme « Ski Packs » chez Raide, ou le titre d'une section du panneau) */
+  .group { display: flex; flex-direction: column; gap: 10px; }
+  .group + .group { margin-top: 14px; }
+  .groupHead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 16px;
+    padding: 8px var(--pad) 0;
+    border-top: 1px dashed var(--dash);
+  }
+  .groupHead h2 {
+    margin: 0;
     font-size: var(--fs-text);
     font-weight: 400;
-    background: var(--glass);
-    -webkit-backdrop-filter: blur(var(--blur));
-    backdrop-filter: blur(var(--blur));
-    border-radius: var(--radius-panel);
   }
 
-  /* outils : une plaque de verre par outil, aperçu au format A4 */
+  /* outils : une plaque de verre par outil, aperçu au format A4, puis le nom à gauche
+     et son numéro en mono à droite (le prix d'une fiche Raide) */
   .toolGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(288px, 1fr));
     gap: 10px;
   }
   .tool {
@@ -68,53 +82,82 @@
     -webkit-backdrop-filter: blur(var(--blur));
     backdrop-filter: blur(var(--blur));
     border-radius: var(--radius-panel);
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0, 1);
   }
   .tool .thumb {
     aspect-ratio: 210 / 297; /* A4, comme les affiches */
+    overflow: hidden;
     border-radius: var(--radius);
-    background: #fff center / cover no-repeat;
+    background: #fff;
   }
-  .tool .name { display: block; }
-  .tool .folder,
-  .tool .desc {
-    display: block;
-    font-size: var(--fs-small);
-    letter-spacing: 0.02em;
+  .tool .thumb > div {
+    width: 100%;
+    height: 100%;
+    background: center / cover no-repeat;
   }
-  /* descriptions : des phrases, en minuscules pour se lire */
-  .tool .desc { margin-top: 4px; text-transform: none; }
+  .tool .info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .tool .line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .tool .desc { margin-top: 6px; }
+  .tool:hover { background: rgba(145, 145, 145, 0.3); }
+  .tool:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
-  /* mention, comme sur les affiches */
+  /* mention en bas de page : le style des aides (.hint, Roboto Mono 13 px), centrée */
   #note {
     margin: auto 0 0;
     padding-top: 14px;
     text-align: center;
-    font-family: "MingLiU-01", serif;
-    font-size: var(--fs-small);
-    text-transform: none;
-    letter-spacing: 0;
+  }
+
+  @media (max-width: 760px) {
+    #top .intro { flex-direction: column; align-items: start; }
   }
 </style>
 </head>
 <body data-mobile="ok">
 
 <header id="top">
-  <p class="eyebrow"><span>Valentin Maynadié</span></p>
+  <div class="eyebrow">
+    <span>Valentin Maynadié</span>
+    <nav>
+      <a href="https://valentinmaynadie.com/">Back to the website</a>
+      <a href="https://github.com/Logival2/digital_js_tools">GitHub</a>
+    </nav>
+  </div>
   <h1 class="toolTitle">Digital tools</h1>
-  <nav>
-    <a href="https://valentinmaynadie.com/">Back to the website</a>
-    <a href="https://github.com/Logival2/digital_js_tools">GitHub</a>
-  </nav>
+  <div class="intro">
+    <p class="hint">Tools I make for my own graphic work: posters, type, images and video. Each one runs in your browser, with no account and no install.</p>
+    <span class="mono" id="toolCount"></span>
+  </div>
 </header>
 
 <main>
-  <div class="toolGrid" id="tools"></div>
+  <section class="group" aria-labelledby="toolsTitle">
+    <div class="groupHead">
+      <h2 id="toolsTitle">Tools</h2>
+      <span class="mono count"></span>
+    </div>
+    <div class="toolGrid" id="tools"></div>
+  </section>
   <!-- Pipeline : les outils de préparation et de publication (convertir, monter, publier) -->
-  <h2 class="groupTitle">Pipeline</h2>
-  <div class="toolGrid" id="pipeline"></div>
+  <section class="group" aria-labelledby="pipelineTitle">
+    <div class="groupHead">
+      <h2 id="pipelineTitle">Pipeline</h2>
+      <span class="mono count"></span>
+    </div>
+    <div class="toolGrid" id="pipeline"></div>
+  </section>
 </main>
 
-<footer id="note">[For experimental purposes only]</footer>
+<footer id="note" class="hint">[For experimental purposes only]</footer>
 
 <script>
 // Pour ajouter un outil : une ligne de plus dans TOOLS (outils de création) ou PIPELINE
@@ -128,10 +171,16 @@ const TOOLS = [
     apercu: "apercu/tools_Matrice_images_002.png",
   },
   {
-    dossier: "tools_flyer_000",
+    dossier: "tools_flyer_001",
     nom: "Type flyer",
-    desc: "Typographic flyer: a title stretched from margin to margin, a middle line and a footer, one font per block, PNG export.",
-    apercu: "apercu/tools_flyer_000.png",
+    desc: "Typographic flyer: a title stretched from margin to margin, a middle line and a footer, one font per block. Flat, metal plate, sunburnt skin or glossy black, PNG export.",
+    apercu: "apercu/tools_flyer_001.png",
+  },
+  {
+    dossier: "tools_mirror_effect_001",
+    nom: "Mirror effect",
+    desc: "Text or image cut into strips or a grid, each piece shifted further from the centre: echoes, mirrored strips, motion, PNG export.",
+    apercu: "apercu/tools_mirror_effect_001.png",
   },
   {
     dossier: "tools_DA_cercle_002",
@@ -180,23 +229,30 @@ const PIPELINE = [
   },
 ];
 
+// numéros sur deux chiffres, à la suite d'une rubrique à l'autre (01 à 09), comme une référence
+const pad2 = (n) => String(n).padStart(2, "0");
+let number = 0;
 for (const [listId, entries] of [["tools", TOOLS], ["pipeline", PIPELINE]]) {
   const list = document.getElementById(listId);
-  for (const t of entries) list.appendChild(toolCard(t));
+  for (const t of entries) list.appendChild(toolCard(t, ++number));
+  list.closest(".group").querySelector(".count").textContent = `${entries.length} tools`;
 }
-function toolCard(t) {
+document.getElementById("toolCount").textContent = `${number} tools`;
+
+function toolCard(t, n) {
   const a = document.createElement("a");
   a.className = "tool";
   a.href = t.dossier + "/";
   a.innerHTML = `
-    <div class="thumb"></div>
+    <div class="thumb"><div></div></div>
     <div class="info">
-      <span class="name"></span>
-      <span class="folder"></span>
-      <span class="desc"></span>
+      <span class="line"><span class="name"></span><span class="num mono"></span></span>
+      <span class="folder mono"></span>
+      <span class="desc hint"></span>
     </div>`;
-  if (t.apercu) a.querySelector(".thumb").style.backgroundImage = `url("${t.apercu}")`;
+  if (t.apercu) a.querySelector(".thumb > div").style.backgroundImage = `url("${t.apercu}")`;
   a.querySelector(".name").textContent = t.nom;
+  a.querySelector(".num").textContent = pad2(n);
   a.querySelector(".folder").textContent = t.dossier;
   a.querySelector(".desc").textContent = t.desc;
   return a;

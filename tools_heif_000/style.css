@@ -82,7 +82,7 @@
     min-width: 0;
     margin: 10px 10px 0;
   }
-  #panel { overflow: visible; }
+  #panel { overflow: visible; align-self: stretch; max-height: none; }
   #main { overflow: visible; padding: 10px; }
   #empty { height: auto; padding: 32px 0; }
   #grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

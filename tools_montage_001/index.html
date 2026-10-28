@@ -23,7 +23,7 @@
   <div class="section">
     <h2>Background video</h2>
     <div class="btnRow">
-      <button id="bgBtn" type="button">Load an MP4</button>
+      <button id="bgBtn" type="button">Import a video</button>
       <input id="bgInput" type="file" accept="video/mp4,video/*" hidden />
     </div>
     <p id="bgName" class="hint">No video</p>
@@ -33,7 +33,7 @@
   <div class="section">
     <h2>Frame video</h2>
     <div class="btnRow">
-      <button id="frameBtn" type="button">Load an MP4</button>
+      <button id="frameBtn" type="button">Import a video</button>
       <input id="frameInput" type="file" accept="video/mp4,video/*" hidden />
     </div>
     <p id="frameName" class="hint">No video</p>
@@ -76,7 +76,7 @@
 
 <!-- Zone principale : le format choisi, à l'échelle de l'écran -->
 <div id="main">
-  <canvas id="stage" width="1080" height="1350"></canvas>
+  <canvas id="stage" width="1080" height="1350" data-crop></canvas>
 </div>
 
 <!-- Panneau de droite, calé en bas : mode, format, export -->
@@ -96,10 +96,10 @@
 
   <div class="rpBlock">
     <div class="row">
-      <label for="durationInput">Duration (s)</label>
+      <label for="durationInput">Duration</label>
       <input id="durationInput" type="number" min="0.5" max="600" step="0.1" value="5" />
     </div>
-    <p class="hint">Default: the longer of the two videos.</p>
+    <p class="hint">In seconds. Default: the longer of the two videos.</p>
     <div id="transport">
       <button type="button" data-action="restart" title="Restart" aria-label="Restart">
         <svg viewBox="0 0 16 16"><rect x="3" y="3" width="2" height="10"/><polygon points="13,3 13,13 6,8"/></svg>
@@ -443,7 +443,7 @@ async function exportMP4() {
   exportMp4Btn.textContent = "Export… 0 %";
   setPlaying(false);
 
-  const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5/+esm");
+  const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/+esm");
   const config = { codec: "avc1.640033", width: W, height: H, bitrate: 12_000_000, framerate: FPS, avc: { format: "avc" } };
   const { supported } = await VideoEncoder.isConfigSupported(config);
   if (!supported) throw new Error(`H.264 encoding at ${W}×${H} isn't supported by this browser.`);
