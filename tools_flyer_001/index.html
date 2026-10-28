@@ -152,10 +152,11 @@ const FONTS = {
   "Flor de Ruina":           { file: "FlorDeRuina-Flor.ttf" },
   "Roboto Mono":             { shared: true }, // déclarée par ui_001.css (fichier variable)
   "MingLiU-01":              { file: "MingLiU-01.ttf", label: "MingLiU", width: 1.2, embolden: 0.025, upper: true },
+  "MingLiU Prop":            { shared: true }, // MingLiU-Prop-Regular_1.ttf, déclarée par ui_001.css (police des titres)
   "SangBleu Kingdom":        { file: "SangBleuKingdom-Regular.otf" },
   "Century Schoolbook Mono": { file: "Century-Schoolbook-Monospace-BT.otf" },
 };
-const DEFAULT_FONT = "Century Schoolbook Mono";
+const DEFAULT_FONT = "MingLiU-01";
 for (const select of document.querySelectorAll(".fontSelect")) {
   for (const [name, { label }] of Object.entries(FONTS)) {
     select.add(new Option(label ?? name, name, name === DEFAULT_FONT));

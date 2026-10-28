@@ -37,7 +37,8 @@
     gap: 16px;
   }
   #top nav a { color: inherit; text-underline-offset: 3px; }
-  #top .toolTitle { margin: 2px 0 0; max-width: 820px; }
+  /* le titre a la largeur de celui d'un panneau d'outil (10 px : la place de sa barre de défilement) : même taille, même CSS */
+  #top .toolTitle { margin: 2px 0 0; width: calc(clamp(300px, 24vw, 420px) - var(--pad) * 2 - 10px); max-width: 100%; }
   #top .intro {
     display: flex;
     justify-content: space-between;
@@ -119,6 +120,7 @@
 
   @media (max-width: 760px) {
     #top .intro { flex-direction: column; align-items: start; }
+    #top .toolTitle { width: auto; }   /* sur téléphone, le panneau des outils prend toute la largeur : le titre aussi */
   }
 </style>
 </head>
@@ -195,10 +197,10 @@ const TOOLS = [
     apercu: "apercu/tools_vibe_002.png",
   },
   {
-    dossier: "tools_3D_kinetic_typo_001",
+    dossier: "tools_3D_kinetic_typo_002",
     nom: "3D kinetic type",
     desc: "Text wraps around 3D shapes (stairs, cylinder, helix…) that move in a loop, with image and video export.",
-    apercu: "apercu/tools_3D_kinetic_typo_001.png",
+    apercu: "apercu/tools_3D_kinetic_typo_002.png",
   },
   {
     dossier: "tools_gradient_body_001",

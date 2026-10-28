@@ -149,8 +149,6 @@ CHALLENGED.</textarea>
 <!-- Zone principale : scène au format DIN portrait (1 : √2), fond blanc, cartes noires -->
 <div id="main">
   <canvas id="scene" data-crop></canvas>
-  <!-- 2e frame, même format : la première image de la série en plein cadre -->
-  <canvas id="scene2" data-crop></canvas>
 </div>
 
 <!-- Panneau de droite, calé en bas : mode, format de l'affiche, lecteur, export -->
@@ -204,8 +202,6 @@ const video       = document.getElementById("cam");
 const mainEl      = document.getElementById("main");
 const scene       = document.getElementById("scene");
 let sctx          = scene.getContext("2d"); // remplacé le temps d'un export PNG
-const scene2      = document.getElementById("scene2");
-const s2ctx       = scene2.getContext("2d");
 const pcv         = document.getElementById("previewCanvas");
 const startBtn    = document.getElementById("startBtn");
 const stopBtn     = document.getElementById("stopBtn");
@@ -462,11 +458,8 @@ function applyFormat(key) {
 // Pixels physiques d'écran par unité du repère de la page
 let pixelScale = 1;
 
-const FRAME_GAP = 56; // espace entre les deux frames (px CSS) : leurs traits de coupe ne se touchent pas
-
 function resizeScene() {
-  // deux frames côte à côte, de même taille
-  const maxW = (mainEl.clientWidth - SCENE_MARGIN * 2 - FRAME_GAP) / 2;
+  const maxW = mainEl.clientWidth - SCENE_MARGIN * 2;
   const maxH = mainEl.clientHeight - SCENE_MARGIN * 2;
   const ratio = sceneW / sceneH;
 
@@ -490,13 +483,6 @@ function resizeScene() {
   pixelScale = scene.width / sceneW;
   sctx.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
   sctx.imageSmoothingQuality = "high";
-
-  // 2e frame : exactement la même taille et la même résolution
-  scene2.style.width = scene.style.width;
-  scene2.style.height = scene.style.height;
-  scene2.width = scene.width;
-  scene2.height = scene.height;
-  s2ctx.imageSmoothingQuality = "high";
 
   buildLogo(); // le logo est pré-réduit à la taille écran exacte
 }
@@ -644,7 +630,6 @@ function render(dt, handActive) {
   }
 
   drawScene();
-  drawFrame2();
   if (running) drawPreview(lastLandmarks);
 }
 
@@ -691,63 +676,6 @@ function drawBackground() {
     sctx.fillStyle = "#ffffff";
   }
   sctx.fillRect(0, 0, sceneW, sceneH);
-}
-
-// ── 2e frame : la première image de la série, en plein cadre ──
-// Recadrée (comme object-fit: cover) et réduite une seule fois à la taille
-// exacte de la frame en pixels écran, puis simplement recopiée à chaque image.
-let hero = { entry: null, img: null, baked: null };
-
-function updateHero() {
-  const first = cardImages[0] || null;
-  if (first !== hero.entry) {
-    const target = { entry: first, img: null, baked: null };
-    hero = target;
-    if (first) {
-      decodeImage(first.source)
-        .then((img) => { target.img = img; })
-        .catch((err) => console.error(`Image « ${first.name} » illisible :`, err));
-    }
-  }
-  if (hero.img && (!hero.baked || hero.baked.width !== scene2.width || hero.baked.height !== scene2.height)) {
-    hero.baked = bakeCover(hero.img, scene2.width, scene2.height);
-  }
-}
-
-function bakeCover(img, W, H) {
-  // zone de l'image qui remplit le cadre sans déformation
-  const scale = Math.max(W / img.naturalWidth, H / img.naturalHeight);
-  const sw = W / scale;
-  const sh = H / scale;
-  let src = document.createElement("canvas");
-  src.width = Math.round(sw);
-  src.height = Math.round(sh);
-  src.getContext("2d").drawImage(img, (img.naturalWidth - sw) / 2, (img.naturalHeight - sh) / 2, sw, sh, 0, 0, src.width, src.height);
-  // réduction par moitiés successives (net, sans pixels sautés)
-  let w = src.width;
-  let h = src.height;
-  while (w / 2 > W) {
-    w = Math.round(w / 2);
-    h = Math.round(h / 2);
-    src = drawScaled(src, w, h);
-  }
-  return drawScaled(src, W, H);
-}
-
-function drawFrame2() {
-  updateHero();
-  // le dessin partagé (fond, mention) écrit dans sctx : on pointe sur la 2e frame le temps de ce dessin
-  const saved = sctx;
-  sctx = s2ctx;
-  try {
-    s2ctx.setTransform(1, 0, 0, 1, 0, 0);
-    if (hero.baked) s2ctx.drawImage(hero.baked, 0, 0);
-    s2ctx.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
-    if (!hero.baked) drawBackground(); // pas encore d'image : même fond que la 1re frame
-    drawFooterNote();
-  } finally {
-    sctx = saved;
-  }
 }
 
 function drawScene() {

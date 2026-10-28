@@ -36,7 +36,8 @@
   }
   // Taille du titre : celle de la feuille de style, réduite si la ligne la plus longue dépasse.
   // Dans le panneau des outils, tous les titres prennent la taille de celui de la Matrice d'images
-  // (« IMAGE MATRICE » sur toute la largeur du SVG), même quand leurs lignes sont plus courtes.
+  // (« IMAGE MATRICE » sur toute la largeur du SVG), même quand leurs lignes sont plus courtes ;
+  // l'accueil (#top) aussi, son titre ayant la largeur d'un panneau.
   const REF_TITLE = "IMAGE MATRICE";
   const textWidth = (svg, text) => {
     const t = document.createElementNS(SVG_NS, "text");
@@ -55,7 +56,7 @@
       svg.style.fontSize = `${size}px`;
       const margin = size * 0.03;
       // taille de base : celle de la feuille de style ou, dans un panneau, celle d'« IMAGE MATRICE »
-      const base = h1.closest("#panel") ? Math.min(1, avail / (textWidth(svg, REF_TITLE) + margin)) : 1;
+      const base = h1.closest("#panel, #top") ? Math.min(1, avail / (textWidth(svg, REF_TITLE) + margin)) : 1;
       const oneLine = lines.join(" ");
       const shown = lines.length > 1 && (textWidth(svg, oneLine) + margin) * base <= avail ? [oneLine] : lines;
       setLines(svg, shown);
