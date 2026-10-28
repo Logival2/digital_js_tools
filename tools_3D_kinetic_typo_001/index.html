@@ -1247,8 +1247,8 @@ async function exportMP4() {
 
   const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/+esm");
   const { w, h } = FORMATS[currentFormat];
-  // H.264 High profile, niveau 5.1 : couvre jusqu'au A4 1240×1754
-  const config = { codec: "avc1.640033", width: w, height: h, bitrate: 12_000_000, framerate: FPS, avc: { format: "avc" } };
+  // H.264 Baseline, niveau 5.1 (jusqu'au A4 1240×1754), sans images B : Firefox les rend dans le désordre et le MP4 serait refusé
+  const config = { codec: "avc1.42e033", width: w, height: h, bitrate: 12_000_000, framerate: FPS, avc: { format: "avc" } };
   const { supported } = await VideoEncoder.isConfigSupported(config);
   if (!supported) throw new Error(`H.264 encoding at ${w}×${h} isn't supported by this browser.`);
 
