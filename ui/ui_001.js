@@ -404,8 +404,8 @@
 })();
 
 // ── Retour caméra commun, repris de la Matrice d'images : l'image en noir et blanc, retournée comme dans
-// une glace, recadrée au centre, et le squelette de la main (MediaPipe) par-dessus, en vert quand la main
-// agit (pince, attrape…). L'outil l'appelle à chaque image : drawCameraPreview(canvas, video, { landmarks, active, mirror }) ──
+// une glace, recadrée au centre, et le squelette de la main (MediaPipe) par-dessus : les traits entre les
+// articulations dans le jaune de l'interface (--lime), le contour des points aussi quand la main agit (pince, attrape…). L'outil l'appelle à chaque image : drawCameraPreview(canvas, video, { landmarks, active, mirror }) ──
 window.drawCameraPreview = (() => {
   // paires de points reliés, les mêmes que HandLandmarker.HAND_CONNECTIONS (paume, puis pouce → auriculaire)
   const LINKS = [
@@ -427,7 +427,8 @@ window.drawCameraPreview = (() => {
     ctx.filter = "none";
     if (landmarks) {
       const pt = (q) => [ox + q.x * dw, oy + q.y * dh];
-      ctx.strokeStyle = active ? "#e4fb02" : "#fff";
+      const lime = getComputedStyle(document.documentElement).getPropertyValue("--lime").trim() || "#e4fb02";
+      ctx.strokeStyle = lime;
       ctx.lineWidth = 2;
       ctx.beginPath();
       for (const [a, b] of LINKS) {
@@ -436,6 +437,7 @@ window.drawCameraPreview = (() => {
       }
       ctx.stroke();
       ctx.fillStyle = "#000";
+      ctx.strokeStyle = active ? lime : "#fff";
       for (const q of landmarks) {
         const [x, y] = pt(q);
         ctx.beginPath();
