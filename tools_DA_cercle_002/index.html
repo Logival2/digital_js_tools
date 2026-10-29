@@ -153,7 +153,7 @@ CHALLENGED.</textarea>
 
 <!-- Panneau de droite, calé en bas : mode, format de l'affiche, lecteur, export -->
 <aside id="rightPanel">
-  <!-- Mode de travail : affiche (boucle 5 min, export PNG) ou vidéo (boucle 5 s, export MP4) -->
+  <!-- Mode de travail : affiche (boucle 5 min, export PNG) ou vidéo (boucle 5, 10 ou 15 s, export MP4) -->
   <div id="modeSwitch" role="group" aria-label="Mode">
     <button type="button" data-mode="image" aria-pressed="true">Image</button>
     <button type="button" data-mode="video" aria-pressed="false">Video</button>
@@ -167,7 +167,7 @@ CHALLENGED.</textarea>
   </div>
   <p id="formatInfo"></p>
 
-  <!-- Lecture de la boucle (5 min en image, 5 s en vidéo) -->
+  <!-- Lecture de la boucle (5 min en image, 5 à 15 s en vidéo) -->
   <div id="motionControls">
     <div id="transport">
       <button type="button" data-action="start" title="Start" aria-label="Start">
@@ -187,6 +187,15 @@ CHALLENGED.</textarea>
       </button>
     </div>
     <p id="motionTimeLabel">0.00 / 5.00 s</p>
+  </div>
+
+  <div class="row" id="durationRow" hidden>
+    <label for="durationSelect">Duration</label>
+    <select id="durationSelect" class="asPills">
+      <option value="5">5 s</option>
+      <option value="10">10 s</option>
+      <option value="15">15 s</option>
+    </select>
   </div>
 
   <div id="exportRow">
@@ -221,6 +230,8 @@ const exportBtn   = document.getElementById("exportBtn");
 const exportMp4Btn = document.getElementById("exportMp4Btn");
 const modeButtons = Array.from(document.querySelectorAll("#modeSwitch button"));
 const motionTimeLabel = document.getElementById("motionTimeLabel");
+const durationRow = document.getElementById("durationRow");
+const durationSelect = document.getElementById("durationSelect");
 const transportButtons = Array.from(document.querySelectorAll("#transport button"));
 const importBtn   = document.getElementById("importBtn");
 const imageInput  = document.getElementById("imageInput");
@@ -634,11 +645,10 @@ function render(dt, handActive) {
 }
 
 // ── Lecteur : une horloge commune aux deux modes ──
-// Vidéo : boucle de 5 s entièrement calculée à partir du temps t (pas
+// Vidéo : boucle de 5, 10 ou 15 s entièrement calculée à partir du temps t (pas
 // d'accumulation d'une frame à l'autre), pour que la prévisualisation et
 // l'export MP4 image par image donnent exactement la même animation.
 // Image : boucle de 5 min, l'ouverture de l'anneau rejouée à chaque tour.
-const MOTION_DURATION = 5;    // boucle du mode vidéo (s)
 const IMAGE_DURATION = 300;   // boucle du mode image (s)
 const MOTION_FPS = 30;        // images/s de l'export MP4
 const MOTION_INTRO = 2;       // durée de l'ouverture de l'anneau (s)
@@ -646,7 +656,15 @@ let motionMode = false;
 let motionPlaying = true;
 let motionTime = 0;           // position dans la boucle (s)
 
-const loopDuration = () => (motionMode ? MOTION_DURATION : IMAGE_DURATION);
+const motionDuration = () => Number(durationSelect.value); // boucle du mode vidéo (s)
+const loopDuration = () => (motionMode ? motionDuration() : IMAGE_DURATION);
+const mp4Label = () => `Export MP4 (${motionDuration()} s)`;
+
+// Changer la durée rejoue la boucle depuis le début
+durationSelect.addEventListener("change", () => {
+  motionTime = 0;
+  exportMp4Btn.textContent = mp4Label();
+});
 
 // Courbe de vitesse de l'ouverture : départ et arrivée très doux, accélération
 // au milieu (ease-in-out quartique), pour éviter tout à-coup.
@@ -922,7 +940,7 @@ function exportPNG() {
 }
 
 // ── Sélecteur Image / Vidéo ──
-// Image : affiche fixe, export PNG. Vidéo : boucle de 5 s avec lecteur, export MP4.
+// Image : affiche fixe, export PNG. Vidéo : boucle de 5 à 15 s avec lecteur, export MP4.
 modeButtons.forEach((btn) => {
   btn.addEventListener("click", () => setMode(btn.dataset.mode));
 });
@@ -931,6 +949,7 @@ function setMode(mode) {
   motionMode = mode === "video";
   modeButtons.forEach((btn) => btn.setAttribute("aria-pressed", String(btn.dataset.mode === mode)));
   exportMp4Btn.hidden = !motionMode;
+  durationRow.hidden = !motionMode;
   exportBtn.hidden = motionMode;
   motionTime = 0; // repart du début : l'ouverture de l'anneau est rejouée
   setMotionPlaying(true);
@@ -963,7 +982,7 @@ transportButtons.forEach((btn) => {
   });
 });
 
-// m:ss.cc — lisible pour la boucle de 5 s comme pour celle de 5 min
+// m:ss.cc — lisible pour la boucle vidéo comme pour celle de 5 min
 function formatTime(seconds) {
   const m = Math.floor(seconds / 60);
   const s = (seconds - m * 60).toFixed(2).padStart(5, "0");
@@ -974,7 +993,7 @@ function updateMotionTime() {
   motionTimeLabel.textContent = `${formatTime(motionTime)} / ${formatTime(loopDuration())}`;
 }
 
-// ── Export MP4 : la boucle de 5 s, encodée image par image (WebCodecs) ──
+// ── Export MP4 : la boucle vidéo, encodée image par image (WebCodecs) ──
 // Chaque image est calculée à son temps exact t = i / 30 : pas d'image sautée,
 // quelle que soit la puissance de la machine.
 exportMp4Btn.addEventListener("click", () => {
@@ -983,7 +1002,7 @@ exportMp4Btn.addEventListener("click", () => {
     alert("MP4 export failed: " + err.message);
   }).finally(() => {
     exportMp4Btn.disabled = false;
-    exportMp4Btn.textContent = "Export MP4 (5 s)";
+    exportMp4Btn.textContent = mp4Label();
   });
 });
 
@@ -1015,7 +1034,7 @@ async function exportMP4() {
   encoder.configure(config);
 
   const target = createExportCanvas();
-  const totalFrames = MOTION_DURATION * MOTION_FPS;
+  const totalFrames = motionDuration() * MOTION_FPS;
   const frameDuration = 1e6 / MOTION_FPS; // µs
 
   for (let i = 0; i < totalFrames; i++) {
@@ -1036,7 +1055,7 @@ async function exportMP4() {
   muxer.finalize();
 
   const blob = new Blob([muxer.target.buffer], { type: "video/mp4" });
-  downloadBlob(blob, `affiche-${currentFormat}-${w}x${h}-5s.mp4`);
+  downloadBlob(blob, `affiche-${currentFormat}-${w}x${h}-${motionDuration()}s.mp4`);
 }
 
 importBtn.addEventListener("click", () => imageInput.click());
@@ -1279,12 +1298,12 @@ async function recordWindow() {
     // l'animation repart exactement maintenant, et l'enregistrement dure la durée d'export vidéo
     motionTime = 0;
     setMotionPlaying(true);
-    await new Promise((r) => setTimeout(r, MOTION_DURATION * 1000));
+    await new Promise((r) => setTimeout(r, motionDuration() * 1000));
     recorder.stop();
     await stopped;
 
     const ext = type.includes("mp4") ? "mp4" : "webm";
-    downloadBlob(new Blob(chunks, { type: type || "video/webm" }), `affiche-ecran-${MOTION_DURATION}s.${ext}`);
+    downloadBlob(new Blob(chunks, { type: type || "video/webm" }), `affiche-ecran-${motionDuration()}s.${ext}`);
   } finally {
     stream?.getTracks().forEach((t) => t.stop());
     setMotionPlaying(true);

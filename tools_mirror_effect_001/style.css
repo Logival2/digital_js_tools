@@ -13,6 +13,8 @@
   display: block;
   flex: none;
 }
+/* panneau caché (H) : l'affiche prend toute la place */
+body.panel-hidden #panel { display: none; }
 /* une image glissée sur l'affiche */
 #main.over #scene { outline: 2px dashed var(--text); outline-offset: 6px; }
 

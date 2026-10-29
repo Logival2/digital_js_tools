@@ -96,6 +96,15 @@
     </div>
   </div>
 
+  <!-- Affichage -->
+  <div class="section collapsed">
+    <h2>Display</h2>
+    <div class="btnRow">
+      <button id="fullscreenBtn" type="button">Full screen · F</button>
+      <button id="hidePanelBtn" type="button">Hide · H</button>
+    </div>
+  </div>
+
   <footer id="panelFooter">
     <button id="resetBtn" type="button">Reset</button>
     <button id="privacyBtn" type="button">Privacy · GDPR</button>
@@ -160,7 +169,7 @@ const FONTS = {
   "HN Roman":                { file: "Helvetica Neue LT Std/HelveticaNeueLTStd-Roman.otf", label: "Helvetica Roman" },
   "HN Black Extended":       { file: "Helvetica Neue LT Std/HelveticaNeueLTStd-BlkEx.otf", label: "Helvetica Black Extended" },
 };
-const DEFAULT_FONT = "HN Black Extended";
+const DEFAULT_FONT = "MingLiU-01";
 for (const [name, { label }] of Object.entries(FONTS)) $("fontSelect").add(new Option(label ?? name, name, name === DEFAULT_FONT));
 
 // Au rechargement, le navigateur restaure les anciens réglages : on repart des valeurs du HTML
@@ -424,6 +433,23 @@ $("swapBtn").addEventListener("click", () => {
 });
 formatButtons.forEach((btn) => btn.addEventListener("click", () => applyFormat(btn.dataset.format)));
 window.addEventListener("resize", resizeScene);
+
+// panneau caché : l'affiche reprend la place libérée
+const togglePanel = () => {
+  document.body.classList.toggle("panel-hidden");
+  resizeScene();
+};
+const toggleFullscreen = () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen?.();
+};
+$("fullscreenBtn").addEventListener("click", toggleFullscreen);
+$("hidePanelBtn").addEventListener("click", togglePanel);
+window.addEventListener("keydown", (e) => {
+  if (e.target.closest?.("input, textarea, select")) return;
+  if (e.key === "h" || e.key === "H") togglePanel();
+  if (e.key === "f" || e.key === "F") toggleFullscreen();
+});
 $("resetBtn").addEventListener("click", () => {
   resetFields();
   applyFormat("portrait");
