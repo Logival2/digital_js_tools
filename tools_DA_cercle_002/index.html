@@ -1107,9 +1107,12 @@ async function loadThumbnail(source) {
   return thumb;
 }
 
-// Images chargées par défaut au démarrage (dossier sources_img), dans cet ordre
-const DEFAULT_IMAGES = ["5619.png", "5622.png", "5623.png", "83528.png", "83529.png", "83530.png", "83531.png"];
-DEFAULT_IMAGES.forEach((file) => addCardImage(file, `sources_img/${file}`));
+// Images chargées par défaut au démarrage (dossier sources_img/images NB), dans cet ordre
+const DEFAULT_IMAGES = [
+  "1.png", "3.png", "4.png", "20.png", "21.png", "29.webp", "32.webp",
+  "Ongle vert fluo au symbole géométrique_2.png",
+];
+DEFAULT_IMAGES.forEach((file) => addCardImage(file, encodeURI(`sources_img/images NB/${file}`)));
 
 function renderImageList() {
   imageList.replaceChildren(...cardImages.map((entry, i) => {
