@@ -10,6 +10,9 @@
 !/fonts/Helvetica Neue LT Std/HelveticaNeueLTStd-BlkEx.otf
 /fonts/_source_complete/
 
+# Projets After Effects et captures vidéo (lourds, personnels)
+/AFTER EFFECT/
+
 # Médias personnels de l'outil Montage
 /tools_montage_*/INPUT/
 /tools_montage_*/OUTPUT/
@@ -20,4 +23,3 @@
 .DS_Store
 Thumbs.db
 desktop.ini
-AFTER EFFECT/

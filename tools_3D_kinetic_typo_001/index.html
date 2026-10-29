@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>3D kinetic type</title>
+<!-- interface commune des outils (verre, typo, sliders), puis la mise en page propre à l'outil -->
+<link rel="stylesheet" href="../ui/ui_001.css" />
+<link rel="stylesheet" href="style.css" />
+<script defer src="../ui/ui_001.js"></script>
+</head>
+<body data-mobile="ok" data-layout="panels">
+
+<!-- Panneau latéral (paramètres) -->
+<aside id="panel">
+
+  <!-- En-tête : retour au menu, titre (dessiné en MingLiU Prop par ui_001.js) -->
+  <header id="panelHead">
+    <p class="eyebrow"><a class="badge backLink" href="../" title="Back to all tools">← Digital tools</a></p>
+    <h1 class="toolTitle">3D kinetic<br>type</h1>
+  </header>
+
+  <!-- Texte : dessiné à plat puis enroulé sur une surface 3D -->
+  <div class="section">
+    <h2>Text</h2>
+    <textarea id="textInput" class="posterLine" rows="3" maxlength="200">NORDWAY</textarea>
+    <div class="row">
+      <label for="fontSelect">Font</label>
+      <select id="fontSelect" class="asPills">
+        <option value="HN Black Extended">Black Extended</option>
+        <option value="HN Roman">Regular</option>
+        <option value="MingLiU-01" selected>MingLiU</option>
+      </select>
+    </div>
+    <div class="row"><label for="sizeSlider" title="Height of one row of text">Size</label><input id="sizeSlider" type="range" min="0.06" max="0.9" step="0.01" value="0.3" /></div>
+    <div class="row"><label for="lineHeightSlider">Line height</label><input id="lineHeightSlider" type="range" min="0.6" max="1.6" step="0.01" value="0.9" /></div>
+    <div class="row"><label for="gapSlider" title="Space between two repeats of the text">Spacing</label><input id="gapSlider" type="range" min="0" max="3" step="0.05" value="0.6" /></div>
+  </div>
+
+  <!-- Forme : la surface sur laquelle le texte est enroulé -->
+  <div class="section">
+    <h2>Shape</h2>
+    <div class="row">
+      <label for="shapeSelect">Shape</label>
+      <select id="shapeSelect">
+        <optgroup label="Volumes">
+          <option value="cylinder">Cylinder</option>
+          <option value="flag">Flag</option>
+          <option value="twist">Twist</option>
+          <option value="helix">Helix</option>
+          <option value="sphere">Sphere</option>
+          <option value="tunnel">Tunnel</option>
+          <option value="ripple">Wave</option>
+          <option value="twistRing">Twisted ring</option>
+          <option value="torus">Torus</option>
+          <option value="roll">Roll</option>
+          <option value="cone">Cone</option>
+        </optgroup>
+        <optgroup label="Isometric">
+          <option value="cubeIso">Cube</option>
+          <option value="stairsIso" selected>Stairs</option>
+          <option value="floorIso">Floor</option>
+          <option value="foldIso">Accordion</option>
+          <option value="squareHelixIso">Square spiral</option>
+        </optgroup>
+        <optgroup label="Overlay">
+          <option value="strata">Strata</option>
+          <option value="gyro">Gyroscope</option>
+          <option value="crossFlags">Crossing</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="row"><label for="rowsSlider" title="Number of stacked rows of text">Rows</label><input id="rowsSlider" type="range" min="1" max="12" step="1" value="3" /></div>
+    <div class="row"><label for="ampSlider" title="Strength of the deformation">Amplitude</label><input id="ampSlider" type="range" min="0" max="1" step="0.01" value="0.35" /></div>
+    <div class="row"><label for="freqSlider" title="Number of waves, turns or folds">Frequency</label><input id="freqSlider" type="range" min="1" max="8" step="1" value="6" /></div>
+  </div>
+
+  <!-- Mouvement : tout est en nombre entier de cycles par boucle -> la vidéo boucle parfaitement -->
+  <div class="section">
+    <h2>Motion</h2>
+    <div class="row">
+      <label for="rhythmSelect">Rhythm</label>
+      <select id="rhythmSelect" class="asPills">
+        <option value="snap">Stepped</option>
+        <option value="smooth">Smooth</option>
+        <option value="pingpong">Ping-pong</option>
+      </select>
+    </div>
+    <div class="row"><label for="scrollSlider" title="Repeats of the text that scroll by during one loop">Scroll</label><input id="scrollSlider" type="range" min="-8" max="8" step="1" value="2" /></div>
+    <div class="row"><label for="spinSlider" title="Full turns during one loop">Rotation</label><input id="spinSlider" type="range" min="-3" max="3" step="1" value="1" /></div>
+    <div class="row"><label for="waveSlider" title="Deformation cycles during one loop">Wave</label><input id="waveSlider" type="range" min="0" max="4" step="1" value="1" /></div>
+    <div class="row"><label for="delaySlider" title="Delay from one row to the next">Offset</label><input id="delaySlider" type="range" min="0" max="1" step="0.01" value="0.25" /></div>
+    <label class="check"><input id="altToggle" type="checkbox" checked /> Alternate rows</label>
+  </div>
+
+  <!-- Vue : la caméra virtuelle (le mot « Camera » est réservé à la webcam dans les autres outils) -->
+  <div class="section">
+    <h2>View</h2>
+    <div class="row">
+      <label for="viewSelect">Projection</label>
+      <select id="viewSelect" class="asPills">
+        <option value="persp">Perspective</option>
+        <option value="iso" selected>Isometric</option>
+        <option value="face">Orthographic</option>
+      </select>
+    </div>
+    <div class="row"><label for="tiltSlider">Tilt</label><input id="tiltSlider" type="range" min="-90" max="90" step="1" value="18" /></div>
+    <div class="row"><label for="yawSlider">Angle</label><input id="yawSlider" type="range" min="-180" max="180" step="1" value="0" /></div>
+    <div class="row"><label for="zoomSlider">Zoom</label><input id="zoomSlider" type="range" min="0.3" max="4" step="0.01" value="1.5" /></div>
+    <div class="row"><label for="fovSlider" title="Low = flat, high = wide angle">Perspective</label><input id="fovSlider" type="range" min="5" max="110" step="1" value="40" /></div>
+    <p class="hint">Drag on the image to rotate, scroll to zoom. In isometric view the tilt is fixed.</p>
+  </div>
+
+  <!-- Superposition : plusieurs calques de la forme, croisements inversés -->
+  <div class="section">
+    <h2>Overlay</h2>
+    <div class="row"><label for="layersSlider" title="Copies of the shape, spread in rotation">Layers</label><input id="layersSlider" type="range" min="1" max="8" step="1" value="1" /></div>
+    <label class="check"><input id="xorToggle" type="checkbox" /> Invert where they cross</label>
+  </div>
+
+  <!-- Rendu : noir et blanc uniquement, sans lumière -->
+  <div class="section">
+    <h2>Render</h2>
+    <div class="swatches">
+      <input id="bgColorInput" type="color" value="#00ff26" title="Background" aria-label="Background colour" />
+      <input id="inkColorInput" type="color" value="#000000" title="Type" aria-label="Type colour" />
+    </div>
+    <div class="btnRow">
+      <button id="swapColorsBtn" type="button" title="Swaps the background and the type">Swap</button>
+    </div>
+    <label class="check"><input id="fillToggle" type="checkbox" /> Solid band</label>
+    <label class="check"><input id="cullToggle" type="checkbox" /> Hide the back</label>
+    <label class="check"><input id="gridToggle" type="checkbox" /> Grid</label>
+  </div>
+
+  <footer id="panelFooter">
+    <button id="resetBtn" type="button">Reset</button>
+    <button id="privacyBtn" type="button">Privacy · GDPR</button>
+  </footer>
+</aside>
+
+<dialog id="privacyDialog" aria-labelledby="privacyTitle">
+  <h2 id="privacyTitle">Privacy · GDPR</h2>
+  <h3>Data controller</h3>
+  <p>Valentin Maynadié — contact: <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
+  <h3>Exports</h3>
+  <p>PNG and MP4 files are made locally, in your browser. Nothing is sent to a server.</p>
+  <h3>Cookies and tracking</h3>
+  <p>This site uses no cookies, no analytics and no user accounts. Fonts are served with the page.</p>
+  <h3>Third-party services</h3>
+  <ul>
+    <li>jsDelivr — MP4 video muxer, when you export.</li>
+  </ul>
+  <p>These services receive your IP address, which they need to send the files.</p>
+  <h3>Your rights</h3>
+  <p>This site keeps no personal data. For any question about your rights (access, rectification, erasure, objection), write to the address above. You can also contact the CNIL, the French data protection authority (cnil.fr).</p>
+  <form method="dialog"><button type="submit">Close</button></form>
+</dialog>
+
+<!-- Zone principale : la typo 3D (WebGL) + la grille (2D) -->
+<div id="main">
+  <div id="frame" data-crop>
+    <canvas id="gl"></canvas>
+    <canvas id="overlay"></canvas>
+  </div>
+</div>
+
+<!-- Panneau de droite : mode, format, lecteur, export -->
+<aside id="rightPanel">
+  <div id="modeSwitch" role="group" aria-label="Mode">
+    <button type="button" data-mode="image" aria-pressed="true">Image</button>
+    <button type="button" data-mode="video" aria-pressed="false">Video</button>
+  </div>
+
+  <div id="formatButtons">
+    <button type="button" data-format="din">A4</button>
+    <button type="button" data-format="square">1:1</button>
+    <button type="button" data-format="portrait">4:5</button>
+    <button type="button" data-format="story">9:16</button>
+  </div>
+  <p id="formatInfo"></p>
+
+  <div id="motionControls">
+    <div id="transport">
+      <button type="button" data-action="start" title="Start" aria-label="Start">
+        <svg viewBox="0 0 16 16"><rect x="3" y="3" width="2" height="10"/><polygon points="13,3 13,13 6,8"/></svg>
+      </button>
+      <button type="button" data-action="prev" title="Previous frame" aria-label="Previous frame">
+        <svg viewBox="0 0 16 16"><polygon points="12,3 12,13 4,8"/></svg>
+      </button>
+      <button type="button" data-action="pause" title="Pause" aria-label="Pause">
+        <svg viewBox="0 0 16 16"><rect x="4" y="3" width="3" height="10"/><rect x="9" y="3" width="3" height="10"/></svg>
+      </button>
+      <button type="button" data-action="play" title="Play" aria-label="Play">
+        <svg viewBox="0 0 16 16"><polygon points="4,3 4,13 12,8"/></svg>
+      </button>
+      <button type="button" data-action="next" title="Next frame" aria-label="Next frame">
+        <svg viewBox="0 0 16 16"><polygon points="3,3 3,13 10,8"/><rect x="11" y="3" width="2" height="10"/></svg>
+      </button>
+    </div>
+    <p id="motionTimeLabel"></p>
+  </div>
+
+  <div class="row">
+    <label for="durationSelect">Duration</label>
+    <select id="durationSelect" class="asPills">
+      <option value="5">5 s</option>
+      <option value="10">10 s</option>
+      <option value="15">15 s</option>
+    </select>
+  </div>
+
+  <div id="exportRow">
+    <button id="exportBtn" type="button">Export PNG</button>
+    <button id="exportMp4Btn" type="button" hidden>Export MP4</button>
+    <!-- bouton carré noir : enregistre l'onglet entier en vidéo -->
+    <button id="extraBtn" type="button" aria-label="Record the tab as a video" title="Record the tab as a video"></button>
+  </div>
+</aside>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const TAU = Math.PI * 2;
+
+// ── Éléments de l'interface ──
+const frameEl = $("frame");
+const mainEl = $("main");
+const glCanvas = $("gl");
+const overlay = $("overlay");
+const octx = overlay.getContext("2d");
+const formatButtons = Array.from(document.querySelectorAll("#formatButtons button"));
+const modeButtons = Array.from(document.querySelectorAll("#modeSwitch button"));
+const transportButtons = Array.from(document.querySelectorAll("#transport button"));
+
+// Tous les réglages : lus à la volée, remis par défaut avec Réinitialiser
+const controls = {
+  text: $("textInput"),
+  font: $("fontSelect"),
+  size: $("sizeSlider"),
+  lineHeight: $("lineHeightSlider"),
+  gap: $("gapSlider"),
+  shape: $("shapeSelect"),
+  rows: $("rowsSlider"),
+  amp: $("ampSlider"),
+  freq: $("freqSlider"),
+  rhythm: $("rhythmSelect"),
+  scroll: $("scrollSlider"),
+  spin: $("spinSlider"),
+  wave: $("waveSlider"),
+  delay: $("delaySlider"),
+  alt: $("altToggle"),
+  view: $("viewSelect"),
+  tilt: $("tiltSlider"),
+  yaw: $("yawSlider"),
+  zoom: $("zoomSlider"),
+  fov: $("fovSlider"),
+  layers: $("layersSlider"),
+  xor: $("xorToggle"),
+  bgColor: $("bgColorInput"),
+  inkColor: $("inkColorInput"),
+  fill: $("fillToggle"),
+  cull: $("cullToggle"),
+  grid: $("gridToggle"),
+  duration: $("durationSelect"),
+};
+// Valeurs par défaut lues dans le HTML lui-même (et pas dans l'état courant :
+// au rechargement, le navigateur restaure les anciens réglages dans les champs)
+function htmlDefault(el) {
+  if (el.type === "checkbox") return el.defaultChecked;
+  if (el.tagName === "SELECT") return (Array.from(el.options).find((o) => o.defaultSelected) ?? el.options[0]).value;
+  return el.defaultValue;
+}
+const DEFAULTS = Object.fromEntries(Object.entries(controls).map(([k, el]) => [k, htmlDefault(el)]));
+function resetControls() {
+  for (const [k, el] of Object.entries(controls)) {
+    if (el.type === "checkbox") el.checked = DEFAULTS[k];
+    else el.value = DEFAULTS[k];
+  }
+}
+resetControls(); // la page démarre toujours sur les réglages par défaut
+const num = (k) => Number(controls[k].value);
+const on = (k) => controls[k].checked;
+
+// ── Formats (identiques à tools_DA_cercle_001 / tools_vibe) ──
+const FORMATS = {
+  din:      { w: 1240, h: 1754 }, // DIN A4 portrait, 150 dpi
+  square:   { w: 1080, h: 1080 },
+  portrait: { w: 1080, h: 1350 },
+  story:    { w: 1080, h: 1920 },
+};
+let currentFormat = "portrait"; // 4:5 Instagram par défaut
+
+// Repère de la page : petit côté = 800 unités, quel que soit le format
+const SCENE_SHORT_SIDE = 800;
+let sceneW = 800;
+let sceneH = 800;
+const SCENE_MARGIN = 40;
+const GRID_MARGIN = 10, GRID_GUTTER = 10, GRID_COLS = 5, GRID_ROWS = 10;
+
+// ── Polices : Helvetica Neue LT Std, Regular (Roman) et Black Extended ──
+const FONT_FILES = {
+  "HN Roman": "../fonts/Helvetica Neue LT Std/HelveticaNeueLTStd-Roman.otf",
+  "HN Black Extended": "../fonts/Helvetica Neue LT Std/HelveticaNeueLTStd-BlkEx.otf",
+};
+for (const [name, url] of Object.entries(FONT_FILES)) {
+  new FontFace(name, `url('${encodeURI(url)}')`).load().then((face) => {
+    document.fonts.add(face);
+    if (controls.font.value === name) buildTextTexture(); // redessine avec la vraie police
+  }).catch((err) => console.error(`Could not load the ${name} font:`, err));
+}
+// MingLiU : le texte d'arrière-plan (liste des boutiques)
+new FontFace("MingLiU-01", "url('../fonts/MingLiU-01.ttf')").load().then((face) => {
+  document.fonts.add(face);
+  clearBackgroundCache(); // redessine avec la vraie police
+  if (controls.font.value === "MingLiU-01") buildTextTexture();
+}).catch((err) => console.error("Could not load the MingLiU-01 font:", err));
+
+// ═══════════════════════════════════════════════════════════════════
+// WebGL : une grille (u, v) déformée dans le vertex shader selon la forme.
+// Pas de lumière : chaque pixel est soit la couleur du texte, soit le fond.
+// ═══════════════════════════════════════════════════════════════════
+// alpha : le canal alpha sert de masque pour « Inverser aux croisements » (toujours opaque à la fin)
+const gl = glCanvas.getContext("webgl2", { alpha: true, premultipliedAlpha: false, antialias: true, preserveDrawingBuffer: true });
+if (!gl) {
+  $("formatInfo").textContent = "Unsupported browser (WebGL2 required: Chrome or Edge).";
+  throw new Error("WebGL2 requis");
+}
+
+const VS = `#version 300 es
+precision highp float;
+layout(location = 0) in vec2 aUV;
+uniform mat4 uMVP;
+uniform int uShape;
+uniform float uT, uAmp, uFreq, uWave, uDelay, uRows, uBandH, uLen, uNear, uLayers;
+out vec2 vUV;
+flat out float vLayer;
+const float TAU = 6.28318531;
+const float PI = 3.14159265;
+
+mat3 rotXm(float a) { float c = cos(a), s = sin(a); return mat3(1, 0, 0, 0, c, s, 0, -s, c); }
+mat3 rotYm(float a) { float c = cos(a), s = sin(a); return mat3(c, 0, -s, 0, 1, 0, s, 0, c); }
+mat3 rotZm(float a) { float c = cos(a), s = sin(a); return mat3(c, s, 0, -s, c, 0, 0, 0, 1); }
+
+// Point sur le contour d'un carré de côté « side » (d de 0 à 4 = un tour) :
+// face avant, droite, arrière, gauche, dans le même sens que le cylindre
+vec3 square(float d, float side) {
+  float h = side * 0.5;
+  float seg = mod(floor(d), 4.0), f = fract(d);
+  if (seg < 0.5) return vec3(mix(-h, h, f), 0.0, h);
+  if (seg < 1.5) return vec3(h, 0.0, mix(h, -h, f));
+  if (seg < 2.5) return vec3(mix(h, -h, f), 0.0, -h);
+  return vec3(-h, 0.0, mix(-h, h, f));
+}
+
+void main() {
+  float u = aUV.x, v = aUV.y;
+  float k = float(gl_InstanceID);                   // numéro du calque
+  float lag = uLayers > 1.0 ? k / uLayers : 0.0;    // 0 → 1 d'un calque à l'autre
+  float H = uBandH * uRows;               // hauteur totale des rangs
+  float y = (v - 0.5) * H;
+  float phT = TAU * (uWave * uT - uDelay * lag);    // phase de la déformation (retardée par calque)
+  float ph = phT - TAU * uDelay * v;      // retardée d'un rang à l'autre
+  bool ownLayers = false;                 // la forme répartit elle-même ses calques
+  vec3 p;
+
+  if (uShape == 0) {                      // cylindre
+    float R = uLen / TAU, th = TAU * u;
+    p = vec3(R * sin(th), y + uAmp * 0.3 * sin(uFreq * th - ph), R * cos(th));
+  } else if (uShape == 1) {               // drapeau : vagues qui traversent la bande
+    float x = (u - 0.5) * uLen;
+    float z = uAmp * 0.45 * sin(TAU * uFreq * u * 0.5 - ph);
+    p = vec3(x, y + uAmp * 0.08 * cos(TAU * uFreq * u * 0.5 - ph), z);
+  } else if (uShape == 2) {               // torsade : la bande tourne sur elle-même
+    float x = (u - 0.5) * uLen;
+    float a = uAmp * 3.14159265 * uFreq * (2.0 * u - 1.0) + phT - TAU * uDelay * u;
+    p = vec3(x, y * cos(a), y * sin(a));
+  } else if (uShape == 3) {               // hélice : la bande descend en spirale
+    float turns = uFreq, th = TAU * u * turns, R = uLen / (TAU * turns);
+    float pitch = H * (1.0 + uAmp * 1.5);
+    float r = R * (1.0 + 0.12 * uAmp * sin(th * 0.5 - ph));
+    p = vec3(r * sin(th), y - (u - 0.5) * turns * pitch, r * cos(th));
+  } else if (uShape == 4) {               // sphère : la bande épouse un globe
+    float R = uLen / TAU, th = TAU * u;
+    float lat = clamp(y / R, -1.5, 1.5);
+    float r = R * (1.0 + uAmp * 0.25 * sin(uFreq * th + uFreq * lat * 2.0 - ph));
+    p = vec3(r * cos(lat) * sin(th), r * sin(lat), r * cos(lat) * cos(th));
+  } else if (uShape == 5) {               // tunnel : la caméra est dedans
+    float th = -TAU * u;
+    float R = (uLen / TAU) * (1.0 + uAmp * 0.35 * sin(uFreq * th - ph));
+    p = vec3(R * sin(th), R * cos(th), uNear - v * H);
+
+  // ── Isométriques ──
+  } else if (uShape == 6) {               // cube : le texte fait le tour d'une tour carrée qui se tord
+    vec3 q = square(u * 4.0, uLen / 4.0);
+    float a = uAmp * PI * 0.5 * sin(ph) * (2.0 * v - 1.0);
+    p = rotYm(a) * q + vec3(0.0, y, 0.0);
+  } else if (uShape == 7) {               // escalier : marches (à plat) et contremarches (debout)
+    float n = uFreq + 1.0, rr = 0.4 + uAmp;
+    float s = uLen / (n * (1.0 + rr));    // longueur d'une marche
+    float d = u * n, i = min(floor(d), n - 1.0), f = (d - i) * s * (1.0 + rr);
+    vec2 q = vec2(i * s, i * s * rr);
+    if (f < s) q.x += f; else { q.x += s; q.y += f - s; }
+    q -= vec2(n * s, n * s * rr) * 0.5;
+    p = vec3(q.x, q.y, -y);
+  } else if (uShape == 8) {               // sol : le texte posé à plat, terrain ondulé
+    float x = (u - 0.5) * uLen;
+    p = vec3(x, uAmp * 0.3 * sin(TAU * uFreq * 0.5 * (u + 0.5 * v) - ph), -y);
+  } else if (uShape == 9) {               // accordéon : plis verticaux qui respirent
+    float A = uAmp * 0.35 * (0.75 + 0.25 * sin(phT));
+    float tri = 1.0 - 4.0 * abs(fract(u * uFreq * 2.0) - 0.5);
+    p = vec3((u - 0.5) * 2.7, y, A * tri);
+  } else if (uShape == 10) {              // spirale carrée : la bande monte autour d'un carré
+    float turns = uFreq, pitch = H * (1.0 + uAmp * 1.5);
+    p = square(u * 4.0 * turns, uLen / (4.0 * turns)) + vec3(0.0, y - (u - 0.5) * turns * pitch, 0.0);
+
+  // ── Volumes ──
+  } else if (uShape == 11) {              // onde : ondes circulaires depuis le centre
+    float x = (u - 0.5) * uLen;
+    p = vec3(x, y, uAmp * 0.3 * sin(TAU * uFreq * 0.5 * length(vec2(x, y)) - phT));
+  } else if (uShape == 12) {              // anneau tordu : la bande pivote en faisant le tour
+    float R = uLen / TAU, th = TAU * u;
+    float a = uFreq * th + phT;           // tours entiers : la bande se referme sans couture
+    vec3 c = vec3(R * sin(th), uAmp * 0.25 * sin(2.0 * th - ph), R * cos(th));
+    vec3 n = vec3(sin(th), 0.0, cos(th));
+    p = c + y * (cos(a) * vec3(0.0, 1.0, 0.0) + sin(a) * n);
+  } else if (uShape == 13) {              // tore : les rangs font le tour du tube
+    float R = uLen / TAU, th = TAU * u, phi = TAU * v;
+    float r = (H / TAU) * (1.0 + uAmp * 0.6 * sin(uFreq * th - phT));
+    p = vec3((R + r * cos(phi)) * sin(th), r * sin(phi), (R + r * cos(phi)) * cos(th));
+  } else if (uShape == 14) {              // rouleau : spirale d'Archimède (affiche roulée)
+    float a0 = 0.18, b = (0.06 + uAmp * 0.2) / TAU;
+    float th = (-a0 + sqrt(a0 * a0 + 2.0 * b * u * uLen)) / b; // abscisse curviligne -> angle
+    float r = a0 + b * th;
+    p = vec3(r * sin(th), y, r * cos(th));
+  } else if (uShape == 15) {              // cône : les rangs rétrécissent vers le haut
+    float th = TAU * u;
+    float R = (uLen / TAU) * (1.0 - v * (0.3 + 0.6 * uAmp)) * (1.0 + 0.08 * sin(uFreq * th - ph));
+    p = vec3(R * sin(th), y, R * cos(th));
+
+  // ── Superpositions ──
+  } else if (uShape == 16) {              // strates : plans parallèles qui glissent les uns sur les autres
+    ownLayers = true;
+    float c = k - (uLayers - 1.0) * 0.5;
+    float x = (u - 0.5) * uLen + uAmp * 0.5 * sin(phT);
+    p = rotZm(c * 0.03 * uFreq) * vec3(x, y + c * uBandH * 0.5, c * 0.06);
+  } else if (uShape == 17) {              // gyroscope : anneaux inclinés qui tournent en sens contraires
+    ownLayers = true;
+    float R = uLen / TAU, th = TAU * u;
+    vec3 q = vec3(R * sin(th), y + uAmp * 0.25 * sin(uFreq * th - ph), R * cos(th));
+    float dir = mod(k, 2.0) < 0.5 ? 1.0 : -1.0;
+    q = rotYm(dir * TAU * uT * max(1.0, uWave)) * q;
+    p = rotYm(lag * PI) * rotXm(lag * PI) * q;
+  } else {                                // croisement : bandes ondulées croisées en X
+    ownLayers = true;
+    float x = (u - 0.5) * uLen;
+    vec3 q = vec3(x, y, uAmp * 0.35 * sin(TAU * uFreq * u * 0.5 - ph));
+    p = rotZm(PI * 0.25 + PI * lag) * q;
+  }
+  // calques génériques : copies réparties en rotation autour de l'axe de vue
+  if (!ownLayers && uLayers > 1.0) p = rotZm(PI * lag) * p;
+  vUV = aUV;
+  vLayer = k;
+  gl_Position = uMVP * vec4(p, 1.0);
+}`;
+
+const FS = `#version 300 es
+precision highp float;
+in vec2 vUV;
+flat in float vLayer;
+uniform sampler2D uTex;
+uniform float uRep, uRows, uScroll, uAlt, uRowShift, uFill, uXor;
+uniform vec3 uFg, uBg;
+out vec4 outColor;
+
+void main() {
+  float rv = vUV.y * uRows;
+  float r = min(floor(rv), uRows - 1.0);
+  float vv = rv - r;
+  // un rang (et un calque) sur deux défile dans l'autre sens ; chacun est décalé
+  float dir = (uAlt > 0.5 && mod(r + vLayer, 2.0) > 0.5) ? -1.0 : 1.0;
+  float uu = vUV.x * uRep + dir * uScroll + (r + vLayer) * uRowShift;
+  // dérivées prises sur des coordonnées continues : pas de liseré à la jonction des rangs
+  vec2 cont = vec2(vUV.x * uRep, rv);
+  float a = textureGrad(uTex, vec2(uu, vv), dFdx(cont), dFdy(cont)).a;
+  // bords nets : seuil à 50 %, adouci sur un pixel seulement
+  float w = max(fwidth(a), 1e-3) * 0.75;
+  a = smoothstep(0.5 - w, 0.5 + w, a);
+  if (uXor > 0.5) {
+    // mode « inverser aux croisements » : chaque surface inverse le masque (alpha) en dessous (OU exclusif)
+    float ink = uFill > 0.5 ? 1.0 - a : a;
+    if (ink < 0.01) discard;
+    outColor = vec4(0.0, 0.0, 0.0, ink);
+  } else if (uFill > 0.5) {
+    outColor = vec4(mix(uFg, uBg, a), 1.0);   // bande pleine, texte en réserve
+  } else {
+    if (a < 0.01) discard;
+    outColor = vec4(uFg, a);
+  }
+}`;
+
+function compile(type, src) {
+  const sh = gl.createShader(type);
+  gl.shaderSource(sh, src);
+  gl.compileShader(sh);
+  if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
+  return sh;
+}
+function program(vs, fs) {
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  const loc = {};
+  const n = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < n; i++) {
+    const name = gl.getActiveUniform(prog, i).name;
+    loc[name] = gl.getUniformLocation(prog, name);
+  }
+  return { prog, loc };
+}
+const typeProg = program(VS, FS);
+
+// ═══════════════════════════════════════════════════════════════════
+// Arrière-plan permanent : deux blocs d'adresses en MingLiU, derrière la typo 3D.
+// Dessinés en 2D à la taille exacte du rendu, puis posés en fond par WebGL
+// (donc présents à l'écran, dans le PNG et dans le MP4).
+// ═══════════════════════════════════════════════════════════════════
+const STORE_TEXT = `FRANCE
+Summit Line Running Co.
+112 Rue du Docteur Paccard 74400
+Chamonix-Mont-Blanc
+
+USA
+Wasatch Trail Supply
+1450 S 1100 E Salt Lake City, UT 84105
+
+SWITZERLAND
+Matterhorn Stride Store
+Bahnhofstrasse 28 3920 Zermatt
+
+CANADA
+Coast Ridge Runners
+4280 Mountain Square Whistler,
+BC V8E 1B8
+
+USA
+Flatirons Pace Shop
+1238 Pearl Street Boulder, CO 80302
+
+AUSTRIA
+Nordkette Running Room
+Maria-Theresien-Straße 34 6020 Innsbruck
+
+ITALY
+Dolomiti Trail House
+Corso Italia 76 32043 Cortina d'Ampezzo
+
+NEW ZEALAND
+Remarkables Run Club Store
+37 Shotover Street Queenstown 9300
+
+JAPAN
+Hakuba Altitude Store
+4683 Hokujo, Hakuba-mura 399-9301 Nagano
+
+ARGENTINA
+Cerro Catedral Running Co.
+Calle Mitre 340 R8400 San Carlos de Bariloche`;
+const STORES = STORE_TEXT.split(/\n\s*\n/).map((block) => block.split("\n"));
+
+// Composition (repère de la page, petit côté = 800), relevée sur la maquette 4:5 :
+// deux blocs centrés, le premier en haut, le second dans le bas de la page
+const BG = {
+  body: 9.8,           // taille du texte courant
+  title: 11,           // taille des pays (en capitales)
+  tracking: 0,         // interlettrage (en fraction de la taille) : 0 = celui de la police
+  embolden: 0.05,      // contour arrondi des titres (faux gras), en fraction de leur taille
+  titlePitch: 11.3,    // du titre à la première ligne
+  bodyPitch: 10.35,    // d'une ligne à la suivante
+  entryPitch: 21,      // de la dernière ligne au titre suivant
+  blocks: [
+    { from: 0, to: 5, y: 0.1235 },   // centre du premier titre, en fraction de la hauteur
+    { from: 5, to: 10, y: 0.6705 },
+  ],
+};
+
+function drawStoreBlocks(ctx, w, h) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  ctx.setTransform(w / sceneW, 0, 0, h / sceneH, 0, 0);
+  ctx.fillStyle = ctx.strokeStyle = "#fff";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  const cx = sceneW / 2;
+  const line = (text, size, y, bold) => {
+    const spacing = size * BG.tracking;
+    ctx.font = `${size}px "MingLiU-01", serif`;
+    ctx.letterSpacing = `${spacing}px`;
+    // le canvas compte l'espacement après la dernière lettre : on recentre d'un demi-espacement
+    const x = cx - spacing / 2;
+    ctx.fillText(text, x, y);
+    if (bold) {
+      ctx.lineWidth = size * BG.embolden;
+      ctx.strokeText(text, x, y);
+    }
+  };
+  for (const block of BG.blocks) {
+    let y = block.y * sceneH;
+    STORES.slice(block.from, block.to).forEach(([title, ...lines], i) => {
+      if (i > 0) y += BG.entryPitch;
+      line(title, BG.title, y, true);
+      y += BG.titlePitch;
+      lines.forEach((text, j) => {
+        if (j > 0) y += BG.bodyPitch;
+        line(text, BG.body, y, false);
+      });
+    });
+  }
+  // mention centrée en bas de page, mêmes réglages que dans l'outil Cercle
+  ctx.font = `11px "MingLiU-01", serif`;
+  ctx.letterSpacing = "0px";
+  ctx.textBaseline = "bottom";
+  ctx.fillText("[For experimental purposes only]", cx, sceneH - 10 - 6);
+}
+
+// Une texture par taille de rendu (écran, export), refaite si la page ou la police change
+const bgCanvas = document.createElement("canvas");
+const bgCtx = bgCanvas.getContext("2d");
+const bgTextures = new Map();
+function clearBackgroundCache() {
+  bgTextures.forEach((tex) => gl.deleteTexture(tex));
+  bgTextures.clear();
+}
+function backgroundTexture(w, h) {
+  const key = `${w}x${h}|${sceneW}x${sceneH}`;
+  let tex = bgTextures.get(key);
+  if (tex) return tex;
+  if (bgTextures.size >= 3) clearBackgroundCache();
+  bgCanvas.width = w;
+  bgCanvas.height = h;
+  drawStoreBlocks(bgCtx, w, h);
+  tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bgCanvas);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  bgTextures.set(key, tex);
+  return tex;
+}
+
+// Un triangle qui couvre tout le cadre, sans sommets à fournir
+const BG_VS = `#version 300 es
+out vec2 vUV;
+void main() {
+  vec2 p = vec2(float((gl_VertexID & 1) << 2) - 1.0, float((gl_VertexID & 2) << 1) - 1.0);
+  vUV = p * 0.5 + 0.5;
+  gl_Position = vec4(p, 0.0, 1.0);
+}`;
+const BG_FS = `#version 300 es
+precision highp float;
+in vec2 vUV;
+uniform sampler2D uBgTex;
+uniform vec3 uInk;
+uniform float uXor;
+out vec4 outColor;
+void main() {
+  float a = texture(uBgTex, vUV).a;
+  if (a < 0.01) discard;
+  outColor = uXor > 0.5 ? vec4(0.0, 0.0, 0.0, a) : vec4(uInk, a);
+}`;
+const bgProg = program(BG_VS, BG_FS);
+
+// Dernière passe du mode OU exclusif : le masque (alpha) devient la couleur de la typo sur le fond
+const TINT_FS = `#version 300 es
+precision highp float;
+uniform vec3 uInk;
+out vec4 outColor;
+void main() { outColor = vec4(uInk, 1.0); }`;
+const tintProg = program(BG_VS, TINT_FS);
+const bgVao = gl.createVertexArray();
+
+// Pose le texte d'arrière-plan (le mode de mélange courant s'applique : normal ou OU exclusif)
+function drawBackground(w, h, ink, xor) {
+  gl.disable(gl.DEPTH_TEST);
+  gl.useProgram(bgProg.prog);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, backgroundTexture(w, h));
+  gl.uniform1i(bgProg.loc.uBgTex, 0);
+  gl.uniform3fv(bgProg.loc.uInk, ink);
+  gl.uniform1f(bgProg.loc.uXor, xor ? 1 : 0);
+  gl.bindVertexArray(bgVao);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  if (!xor) gl.enable(gl.DEPTH_TEST);
+}
+
+// Grille de sommets (u, v) dans [0, 1]², assez fine pour des courbes lisses
+const SEG_U = 480, SEG_V = 240;
+const vao = gl.createVertexArray();
+gl.bindVertexArray(vao);
+{
+  const uv = new Float32Array((SEG_U + 1) * (SEG_V + 1) * 2);
+  let k = 0;
+  for (let j = 0; j <= SEG_V; j++) {
+    for (let i = 0; i <= SEG_U; i++) { uv[k++] = i / SEG_U; uv[k++] = j / SEG_V; }
+  }
+  const idx = new Uint32Array(SEG_U * SEG_V * 6);
+  k = 0;
+  for (let j = 0; j < SEG_V; j++) {
+    for (let i = 0; i < SEG_U; i++) {
+      const a = j * (SEG_U + 1) + i, b = a + 1, c = a + SEG_U + 1, d = c + 1;
+      idx[k++] = a; idx[k++] = b; idx[k++] = c;   // sens trigo vu de face
+      idx[k++] = b; idx[k++] = d; idx[k++] = c;
+    }
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, uv, gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+}
+const INDEX_COUNT = SEG_U * SEG_V * 6;
+
+// ── Texture du texte : une « tuile » (le bloc de lignes + l'espace), répétée le long de la bande ──
+const textCanvas = document.createElement("canvas");
+const tctx = textCanvas.getContext("2d");
+const textTex = gl.createTexture();
+const aniso = gl.getExtension("EXT_texture_filter_anisotropic");
+let tileAspect = 1; // largeur / hauteur de la tuile
+
+// MingLiU : toujours en capitales, avec un léger faux gras arrondi (contour de même couleur)
+const MINGLIU_EMBOLDEN = 0.025; // épaisseur du contour, en fraction de la taille
+
+function buildTextTexture() {
+  const mingliu = controls.font.value === "MingLiU-01";
+  const raw = mingliu ? controls.text.value.toUpperCase() : controls.text.value;
+  const lines = raw.split("\n");
+  const MAX_W = Math.min(8192, gl.getParameter(gl.MAX_TEXTURE_SIZE));
+  let F = 240; // taille de police dans la texture (px)
+  const font = (size) => `${size}px "${controls.font.value}", "Helvetica Neue", Helvetica, Arial, sans-serif`;
+  tctx.font = font(F);
+  const widest = Math.max(1, ...lines.map((l) => tctx.measureText(l).width));
+  const widthAt = (f) => (widest / 240) * f + num("gap") * f;
+  if (widthAt(F) > MAX_W) F = Math.floor(F * MAX_W / widthAt(F));
+
+  const lh = F * num("lineHeight");
+  const tileW = Math.max(8, Math.ceil(widthAt(F)));
+  const tileH = Math.max(8, Math.ceil(lh * lines.length));
+  textCanvas.width = tileW;
+  textCanvas.height = tileH;
+  tctx.clearRect(0, 0, tileW, tileH);
+  tctx.font = font(F);
+  tctx.fillStyle = "#fff";
+  tctx.textAlign = "center";
+  tctx.textBaseline = "alphabetic";
+  // les capitales sont centrées dans leur ligne
+  const capH = tctx.measureText("H").actualBoundingBoxAscent;
+  tctx.strokeStyle = "#fff";
+  tctx.lineWidth = F * MINGLIU_EMBOLDEN;
+  tctx.lineJoin = "round";
+  lines.forEach((line, i) => {
+    const y = (i + 0.5) * lh + capH / 2;
+    tctx.fillText(line, tileW / 2, y);
+    if (mingliu) tctx.strokeText(line, tileW / 2, y);
+  });
+  tileAspect = tileW / tileH;
+
+  gl.bindTexture(gl.TEXTURE_2D, textTex);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); // v = 0 en bas de la tuile
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textCanvas);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  if (aniso) gl.texParameterf(gl.TEXTURE_2D, aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, gl.getParameter(aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+}
+
+// ── Formes : longueur de la bande (unités 3D, doit correspondre au shader) ──
+// « preset » : réglages appliqués quand on choisit la forme (vue, calques…)
+const SHAPES = {
+  cylinder:  { id: 0, len: () => TAU * 0.8 },
+  flag:      { id: 1, len: () => 3.6 },
+  twist:     { id: 2, len: () => 3.6 },
+  helix:     { id: 3, len: () => TAU * 0.75 * num("freq") },
+  sphere:    { id: 4, len: () => TAU * 0.85 },
+  tunnel:    { id: 5, len: () => TAU * 0.9 },
+  ripple:    { id: 11, len: () => 3.6 },
+  twistRing: { id: 12, len: () => TAU * 0.8, preset: { freq: 1 } },
+  torus:     { id: 13, len: () => TAU * 0.75, preset: { rows: 6 } },
+  roll: {
+    id: 14,
+    len: () => { // longueur de la spirale r = a0 + b·θ sur « Fréquence » tours
+      const a0 = 0.18, b = (0.06 + num("amp") * 0.2) / TAU, T = TAU * num("freq");
+      return a0 * T + (b * T * T) / 2;
+    },
+    preset: { freq: 2, rows: 3, amp: 0.6, cull: true },
+  },
+  cone:      { id: 15, len: () => TAU * 0.85, preset: { rows: 5 } },
+  cubeIso:   { id: 6, len: () => 4.4, preset: { view: "iso", rows: 4, cull: true } },
+  stairsIso: { id: 7, len: () => 2.4 * (1.4 + num("amp")), preset: { view: "iso", rows: 3, freq: 6, zoom: 1.5 } },
+  floorIso:  { id: 8, len: () => 3.6, preset: { view: "iso", rows: 8 } },
+  foldIso: {
+    id: 9,
+    len: () => { // zigzag : 4 segments par pli
+      const f = num("freq"), A = num("amp") * 0.35;
+      return 4 * f * Math.hypot(2.7 / (4 * f), 2 * A);
+    },
+    preset: { view: "iso", rows: 3, freq: 4, amp: 0.6 },
+  },
+  squareHelixIso: { id: 10, len: () => 4 * 0.9 * num("freq"), preset: { view: "iso", rows: 1, freq: 3, cull: true } },
+  strata:     { id: 16, len: () => 3.6, preset: { view: "face", layers: 4, xor: true, rows: 2 } },
+  gyro:       { id: 17, len: () => TAU * 0.8, preset: { layers: 4, xor: true, rows: 1 } },
+  crossFlags: { id: 18, len: () => 3.6, preset: { layers: 2, xor: true, rows: 2 } },
+};
+
+// Choisir une forme applique ses réglages conseillés (texte, mouvement et rendu ne bougent pas)
+function applyShapePreset() {
+  const preset = { view: "persp", zoom: 1, layers: 1, xor: false, cull: false, ...SHAPES[controls.shape.value].preset };
+  for (const [k, v] of Object.entries(preset)) {
+    if (controls[k].type === "checkbox") controls[k].checked = v;
+    else controls[k].value = v;
+  }
+}
+
+// ── Petites matrices 4×4 (colonnes d'abord, comme WebGL) ──
+const M4 = {
+  mul(a, b) {
+    const o = new Float32Array(16);
+    for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) {
+      let s = 0;
+      for (let k = 0; k < 4; k++) s += a[k * 4 + r] * b[c * 4 + k];
+      o[c * 4 + r] = s;
+    }
+    return o;
+  },
+  ortho(halfW, halfH, n, f) {
+    return new Float32Array([1 / halfW, 0, 0, 0, 0, 1 / halfH, 0, 0, 0, 0, -2 / (f - n), 0, 0, 0, -(f + n) / (f - n), 1]);
+  },
+  persp(fovy, aspect, n, f) {
+    const t = 1 / Math.tan(fovy / 2);
+    return new Float32Array([t / aspect, 0, 0, 0, 0, t, 0, 0, 0, 0, (f + n) / (n - f), -1, 0, 0, (2 * f * n) / (n - f), 0]);
+  },
+  trans(x, y, z) { return new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1]); },
+  rotX(a) { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([1, 0, 0, 0, 0, c, s, 0, 0, -s, c, 0, 0, 0, 0, 1]); },
+  rotY(a) { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, 0, 0, 0, 1]); },
+  rotZ(a) { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([c, s, 0, 0, -s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]); },
+};
+
+// ── Rythme : transforme le temps de la boucle (0 → 1) ──
+// Saccadé : pose, puis mouvement rapide amorti (4 temps par boucle), façon Studio Dumbar.
+const STEPS = 4;
+const easeInOutQuart = (x) => (x < 0.5 ? 8 * x ** 4 : 1 - (-2 * x + 2) ** 4 / 2);
+function rhythm(t, steps = STEPS) {
+  switch (controls.rhythm.value) {
+    case "smooth": return t;
+    case "pingpong": return 0.5 - 0.5 * Math.cos(TAU * t);
+    default: {
+      const p = t * steps, i = Math.floor(p), f = p - i;
+      const k = Math.min(1, Math.max(0, (f - 0.35) / 0.65));
+      return (i + easeInOutQuart(k)) / steps;
+    }
+  }
+}
+
+// Rotation « écho » : la forme saute de position en position selon spinPattern
+// (en pas de spinStepDeg), un pas par à-coup, avec le même amorti que le rythme choisi
+function patternSpin(shape, t) {
+  const pat = shape.spinPattern, steps = shape.steps ?? STEPS;
+  const p = t * steps, i = Math.floor(p), f = p - i;
+  const k = controls.rhythm.value === "snap"
+    ? easeInOutQuart(Math.min(1, Math.max(0, (f - 0.35) / 0.65)))
+    : f;
+  const a = pat[i % pat.length], b = pat[(i + 1) % pat.length];
+  return ((a + (b - a) * k) * shape.spinStepDeg * num("spin") * Math.PI) / 180;
+}
+
+// Dessine la scène dans fb (null = l'écran), à la taille w × h, au temps t de la boucle (0 → 1)
+function render(fb, w, h, t) {
+  const shape = SHAPES[controls.shape.value];
+  // nombre d'à-coups par boucle (4 = quarts de tour ; une forme peut en demander d'autres)
+  const e = rhythm(t, shape.steps ?? STEPS);
+  const len = shape.len();
+  const bandH = num("size");
+  const isTunnel = shape.id === 5;
+  const rows = num("rows") * (isTunnel ? 4 : 1); // le tunnel a besoin de profondeur
+  // nombre entier de répétitions : le texte n'est (presque) pas déformé et la bande se referme
+  const rep = Math.max(1, Math.round(len / (bandH * tileAspect)));
+
+  // Caméra : « Perspective » change la déformation sans changer la taille du sujet (travelling compensé)
+  const aspect = sceneW / sceneH;
+  const fov = (num("fov") * Math.PI) / 180;
+  const halfShort = 1.25 / num("zoom");
+  const halfH = aspect < 1 ? halfShort / aspect : halfShort;
+  // Isométrique / orthogonale : pas de perspective, les parallèles restent parallèles
+  const ortho = controls.view.value !== "persp";
+  const dist = ortho ? 15 : halfH / Math.tan(fov / 2);
+  const proj = ortho
+    ? M4.ortho(halfH * aspect, halfH, 0.1, 40)
+    : M4.persp(fov, aspect, Math.max(0.005, dist * 0.002), dist + 40);
+  const view = M4.trans(0, 0, -dist);
+  const spin = shape.spinPattern ? patternSpin(shape, t) : TAU * num("spin") * e;
+  // vue isométrique : 35,26° d'inclinaison et 45° de rotation (une forme peut en demander une autre) ; « Angle » s'ajoute
+  const ISO_YAW = ((shape.isoYaw ?? 45) * Math.PI) / 180;
+  const tilt = controls.view.value === "iso" ? Math.atan(1 / Math.SQRT2) : (num("tilt") * Math.PI) / 180;
+  const yaw = (num("yaw") * Math.PI) / 180 + (controls.view.value === "iso" ? ISO_YAW : 0);
+  const model = isTunnel
+    ? M4.rotZ(yaw + spin) // tunnel : on tourne autour de son axe
+    : M4.mul(M4.rotX(tilt), M4.rotY(yaw + spin));
+  // le tunnel commence là où ses parois entrent dans le cadre (plus près si on zoome)
+  const tunnelStart = ortho ? 13 : (0.7 * (len / TAU)) / Math.tan(fov / 2) / num("zoom");
+  const mvp = M4.mul(proj, M4.mul(view, model));
+  const layers = num("layers");
+  const xor = on("xor");
+
+  const ink = hexToRgb(controls.inkColor.value);
+  const paper = hexToRgb(controls.bgColor.value);
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.viewport(0, 0, w, h);
+  gl.colorMask(true, true, true, true);
+  gl.disable(gl.SAMPLE_ALPHA_TO_COVERAGE);
+  // en OU exclusif, l'alpha part de 0 : c'est le masque des zones « typo »
+  gl.clearColor(paper[0], paper[1], paper[2], xor ? 0 : 1);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.enable(gl.BLEND);
+  if (xor) {
+    // OU exclusif sur le masque : vide + typo = typo, typo + typo = vide ; l'ordre ne compte pas, pas de profondeur
+    gl.disable(gl.DEPTH_TEST);
+    gl.blendFuncSeparate(gl.ZERO, gl.ONE, gl.ONE_MINUS_DST_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  } else {
+    gl.enable(gl.DEPTH_TEST);
+    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  }
+  if (on("cull")) gl.enable(gl.CULL_FACE); else gl.disable(gl.CULL_FACE);
+
+  drawBackground(w, h, ink, xor);
+
+  gl.useProgram(typeProg.prog);
+  const L = typeProg.loc;
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, textTex);
+  gl.uniform1i(L.uTex, 0);
+  gl.uniformMatrix4fv(L.uMVP, false, mvp);
+  gl.uniform1i(L.uShape, shape.id);
+  gl.uniform1f(L.uT, e);
+  gl.uniform1f(L.uAmp, num("amp"));
+  gl.uniform1f(L.uFreq, num("freq"));
+  gl.uniform1f(L.uWave, num("wave"));
+  gl.uniform1f(L.uDelay, num("delay"));
+  gl.uniform1f(L.uRows, rows);
+  gl.uniform1f(L.uBandH, bandH);
+  gl.uniform1f(L.uLen, len);
+  gl.uniform1f(L.uNear, dist - tunnelStart);
+  gl.uniform1f(L.uRep, rep);
+  gl.uniform1f(L.uScroll, num("scroll") * e);
+  gl.uniform1f(L.uAlt, on("alt") ? 1 : 0);
+  gl.uniform1f(L.uRowShift, num("delay"));
+  gl.uniform1f(L.uFill, on("fill") ? 1 : 0);
+  gl.uniform3fv(L.uFg, ink);
+  gl.uniform3fv(L.uBg, paper);
+  gl.uniform1f(L.uLayers, layers);
+  gl.uniform1f(L.uXor, xor ? 1 : 0);
+  gl.bindVertexArray(vao);
+  if (!xor) {
+    // Bords des lettres en « alpha to coverage » : l'anticrénelage se fait par échantillon,
+    // avec la profondeur de chacun. Sinon les pixels de bord, à moitié transparents,
+    // masquent les lettres de derrière et laissent un liseré couleur fond autour des lettres.
+    gl.disable(gl.BLEND);
+    gl.enable(gl.SAMPLE_ALPHA_TO_COVERAGE);
+    gl.colorMask(true, true, true, false); // l'image reste opaque
+  }
+  gl.drawElementsInstanced(gl.TRIANGLES, INDEX_COUNT, gl.UNSIGNED_INT, 0, layers);
+  gl.colorMask(true, true, true, true);
+  gl.disable(gl.SAMPLE_ALPHA_TO_COVERAGE);
+  gl.enable(gl.BLEND);
+
+  if (xor) {
+    // couleur = typo × masque + fond × (1 − masque), puis tout redevient opaque
+    gl.disable(gl.CULL_FACE);
+    gl.blendFuncSeparate(gl.DST_ALPHA, gl.ONE_MINUS_DST_ALPHA, gl.ONE, gl.ZERO);
+    gl.useProgram(tintProg.prog);
+    gl.uniform3fv(tintProg.loc.uInk, ink);
+    gl.bindVertexArray(bgVao);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+}
+
+const hexToRgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+
+// ── Mise en page de la frame ──
+function applyFormat(key) {
+  currentFormat = key;
+  const { w, h } = FORMATS[key];
+  const scale = SCENE_SHORT_SIDE / Math.min(w, h);
+  sceneW = w * scale;
+  sceneH = h * scale;
+  formatButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.format === key));
+  $("formatInfo").textContent = `${w} × ${h} px`;
+  resizeScene();
+}
+
+let pixelScale = 1;
+function resizeScene() {
+  const maxW = mainEl.clientWidth - SCENE_MARGIN * 2;
+  const maxH = mainEl.clientHeight - SCENE_MARGIN * 2;
+  const ratio = sceneW / sceneH;
+  let dw = maxW, dh = dw / ratio;
+  if (dh > maxH) { dh = maxH; dw = dh * ratio; }
+  frameEl.style.width = dw + "px";
+  frameEl.style.height = dh + "px";
+  const dpr = window.devicePixelRatio || 1;
+  for (const c of [glCanvas, overlay]) {
+    c.width = Math.round(dw * dpr);
+    c.height = Math.round(dh * dpr);
+  }
+  pixelScale = overlay.width / sceneW;
+}
+window.addEventListener("resize", resizeScene);
+
+// ── Calque 2D : grille de mise en page (jamais exportée) ──
+function drawOverlay() {
+  octx.setTransform(1, 0, 0, 1, 0, 0);
+  octx.clearRect(0, 0, overlay.width, overlay.height);
+  if (!on("grid")) return;
+  octx.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
+  const cw = (sceneW - GRID_MARGIN * 2 - GRID_GUTTER * (GRID_COLS - 1)) / GRID_COLS;
+  const rh = (sceneH - GRID_MARGIN * 2 - GRID_GUTTER * (GRID_ROWS - 1)) / GRID_ROWS;
+  octx.strokeStyle = "rgba(255, 0, 80, 0.6)";
+  octx.lineWidth = 1 / pixelScale;
+  for (let c = 0; c < GRID_COLS; c++) {
+    for (let r = 0; r < GRID_ROWS; r++) {
+      octx.strokeRect(GRID_MARGIN + c * (cw + GRID_GUTTER), GRID_MARGIN + r * (rh + GRID_GUTTER), cw, rh);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Horloge : une boucle de « Durée » secondes, commune aux deux modes.
+// Tout est fonction du temps t (pas d'accumulation) : l'aperçu et l'export MP4
+// donnent exactement la même animation, et la fin rejoint le début.
+// ═══════════════════════════════════════════════════════════════════
+const FPS = 30;
+let videoMode = false;
+let playing = true;
+let motionTime = 0; // position dans la boucle (s)
+let lastTime = performance.now();
+
+const loopDuration = () => num("duration");
+
+function loop(now) {
+  const dt = Math.min(0.1, Math.max(0, (now - lastTime) / 1000));
+  lastTime = now;
+  if (playing) motionTime = (motionTime + dt) % loopDuration();
+  render(null, glCanvas.width, glCanvas.height, motionTime / loopDuration());
+  drawOverlay();
+  updateTimeLabel();
+  requestAnimationFrame(loop);
+}
+
+// m:ss.cc
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = (seconds - m * 60).toFixed(2).padStart(5, "0");
+  return `${m}:${s}`;
+}
+function updateTimeLabel() {
+  $("motionTimeLabel").textContent = `${formatTime(motionTime)} / ${formatTime(loopDuration())}`;
+}
+
+// ── Souris : glisser pour tourner, molette pour zoomer ──
+let drag = null;
+const setSlider = (k, v) => {
+  const el = controls[k];
+  el.value = Math.min(Number(el.max), Math.max(Number(el.min), v));
+};
+overlay.addEventListener("pointerdown", (e) => {
+  overlay.setPointerCapture(e.pointerId);
+  overlay.classList.add("dragging");
+  drag = { x: e.clientX, y: e.clientY, tilt: num("tilt"), yaw: num("yaw") };
+});
+overlay.addEventListener("pointermove", (e) => {
+  if (!drag) return;
+  setSlider("yaw", Math.round(drag.yaw + (e.clientX - drag.x) * 0.4));
+  setSlider("tilt", Math.round(drag.tilt + (e.clientY - drag.y) * 0.4));
+});
+overlay.addEventListener("pointerup", () => { drag = null; overlay.classList.remove("dragging"); });
+overlay.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  setSlider("zoom", num("zoom") * Math.exp(-e.deltaY * 0.001));
+}, { passive: false });
+
+// ═══════════════════════════════════════════════════════════════════
+// Réglages
+// ═══════════════════════════════════════════════════════════════════
+["text", "font", "lineHeight", "gap"].forEach((k) => controls[k].addEventListener("input", buildTextTexture));
+controls.shape.addEventListener("input", applyShapePreset);
+// la durée change la boucle : on garde la même position relative
+let lastDuration = loopDuration();
+controls.duration.addEventListener("input", () => {
+  motionTime = (motionTime / lastDuration) * loopDuration();
+  lastDuration = loopDuration();
+});
+
+// Réinitialiser : tous les réglages, le format, le mode et le lecteur
+$("resetBtn").addEventListener("click", () => {
+  resetControls();
+  lastDuration = loopDuration();
+  buildTextTexture();
+  applyFormat("portrait");
+  setMode("image"); // remet aussi le lecteur au début, en lecture
+});
+
+$("swapColorsBtn").addEventListener("click", () => {
+  [controls.bgColor.value, controls.inkColor.value] = [controls.inkColor.value, controls.bgColor.value];
+});
+
+$("privacyBtn").addEventListener("click", () => $("privacyDialog").showModal());
+
+// ── Mode Image / Vidéo ──
+modeButtons.forEach((btn) => btn.addEventListener("click", () => setMode(btn.dataset.mode)));
+function setMode(mode) {
+  videoMode = mode === "video";
+  modeButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+  $("exportBtn").hidden = videoMode;
+  $("exportMp4Btn").hidden = !videoMode;
+  motionTime = 0;
+  setPlaying(true);
+}
+
+function setPlaying(p) {
+  playing = p;
+  transportButtons.forEach((b) => {
+    const a = b.dataset.action;
+    b.classList.toggle("active", (a === "play" && p) || (a === "pause" && !p));
+  });
+}
+const FRAME = 1 / FPS;
+transportButtons.forEach((btn) => btn.addEventListener("click", () => {
+  const d = loopDuration();
+  switch (btn.dataset.action) {
+    case "start": motionTime = 0; break;
+    case "prev": setPlaying(false); motionTime = (motionTime - FRAME + d) % d; break;
+    case "pause": setPlaying(false); break;
+    case "play": setPlaying(true); break;
+    case "next": setPlaying(false); motionTime = (motionTime + FRAME) % d; break;
+  }
+}));
+
+formatButtons.forEach((btn) => btn.addEventListener("click", () => applyFormat(btn.dataset.format)));
+
+// ═══════════════════════════════════════════════════════════════════
+// Exports : la scène est recalculée à la taille réelle du format (anticrénelage 4×)
+// ═══════════════════════════════════════════════════════════════════
+let exportTarget = null;
+function getExportTarget(w, h) {
+  if (exportTarget && exportTarget.w === w && exportTarget.h === h) return exportTarget;
+  if (exportTarget) {
+    gl.deleteFramebuffer(exportTarget.msFb);
+    gl.deleteFramebuffer(exportTarget.outFb);
+    exportTarget.rbs.forEach((rb) => gl.deleteRenderbuffer(rb));
+  }
+  const samples = Math.min(4, gl.getParameter(gl.MAX_SAMPLES));
+  const rb = (multi, format) => {
+    const r = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, r);
+    if (multi) gl.renderbufferStorageMultisample(gl.RENDERBUFFER, samples, format, w, h);
+    else gl.renderbufferStorage(gl.RENDERBUFFER, format, w, h);
+    return r;
+  };
+  const msColor = rb(true, gl.RGBA8), msDepth = rb(true, gl.DEPTH_COMPONENT24), outColor = rb(false, gl.RGBA8);
+  const msFb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, msFb);
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, msColor);
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, msDepth);
+  const outFb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, outFb);
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, outColor);
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  exportTarget = {
+    w, h, msFb, outFb, rbs: [msColor, msDepth, outColor],
+    canvas, ctx: canvas.getContext("2d"),
+    raw: new Uint8Array(w * h * 4), pixels: new Uint8ClampedArray(w * h * 4),
+  };
+  return exportTarget;
+}
+
+// Rend l'affiche au temps t (0 → 1) dans le canvas d'export
+function renderPoster(t) {
+  const { w, h } = FORMATS[currentFormat];
+  const T = getExportTarget(w, h);
+  render(T.msFb, w, h, t);
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER, T.msFb);
+  gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, T.outFb);
+  gl.blitFramebuffer(0, 0, w, h, 0, 0, w, h, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, T.outFb);
+  gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, T.raw);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  // WebGL lit de bas en haut : on retourne les lignes
+  const row = w * 4;
+  for (let y = 0; y < h; y++) T.pixels.set(T.raw.subarray((h - 1 - y) * row, (h - y) * row), y * row);
+  T.ctx.putImageData(new ImageData(T.pixels, w, h), 0, 0);
+  return T.canvas;
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+$("exportBtn").addEventListener("click", () => {
+  const { w, h } = FORMATS[currentFormat];
+  renderPoster(motionTime / loopDuration()).toBlob((blob) => downloadBlob(blob, `typo-3d-${currentFormat}-${w}x${h}.png`), "image/png");
+});
+
+const exportMp4Btn = $("exportMp4Btn");
+exportMp4Btn.addEventListener("click", () => {
+  exportMP4().catch((err) => {
+    console.error(err);
+    alert("MP4 export failed: " + err.message);
+  }).finally(() => {
+    exportMp4Btn.disabled = false;
+    exportMp4Btn.textContent = "Export MP4";
+    setPlaying(true);
+  });
+});
+
+async function exportMP4() {
+  if (!("VideoEncoder" in window)) throw new Error("this browser can't encode video (use Chrome or Edge).");
+  exportMp4Btn.disabled = true;
+  exportMp4Btn.textContent = "Export… 0 %";
+  setPlaying(false);
+
+  const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/+esm");
+  const { w, h } = FORMATS[currentFormat];
+  // H.264 Baseline, niveau 5.1 (jusqu'au A4 1240×1754), sans images B : Firefox les rend dans le désordre et le MP4 serait refusé
+  const config = { codec: "avc1.42e033", width: w, height: h, bitrate: 12_000_000, framerate: FPS, avc: { format: "avc" } };
+  const { supported } = await VideoEncoder.isConfigSupported(config);
+  if (!supported) throw new Error(`H.264 encoding at ${w}×${h} isn't supported by this browser.`);
+
+  const muxer = new Muxer({
+    target: new ArrayBufferTarget(),
+    video: { codec: "avc", width: w, height: h, frameRate: FPS },
+    fastStart: "in-memory",
+  });
+  let encodeError = null;
+  const encoder = new VideoEncoder({
+    output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+    error: (e) => { encodeError = e; },
+  });
+  encoder.configure(config);
+
+  // chaque image est calculée à son temps exact : la dernière rejoint la première
+  const total = loopDuration() * FPS;
+  const frameDuration = 1e6 / FPS;
+  for (let i = 0; i < total; i++) {
+    if (encodeError) throw encodeError;
+    const canvas = renderPoster(i / total);
+    const frame = new VideoFrame(canvas, { timestamp: i * frameDuration, duration: frameDuration });
+    encoder.encode(frame, { keyFrame: i % FPS === 0 });
+    frame.close();
+    motionTime = i / FPS;
+    while (encoder.encodeQueueSize > 4) await new Promise((r) => setTimeout(r, 0));
+    exportMp4Btn.textContent = `Export… ${Math.round(((i + 1) / total) * 100)} %`;
+    if (i % 5 === 0) await new Promise((r) => setTimeout(r, 0));
+  }
+  await encoder.flush();
+  if (encodeError) throw encodeError;
+  encoder.close();
+  muxer.finalize();
+  downloadBlob(new Blob([muxer.target.buffer], { type: "video/mp4" }), `typo-3d-${currentFormat}-${w}x${h}-${loopDuration()}s.mp4`);
+  motionTime = 0;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Bouton carré noir : enregistre l'onglet entier (interface + affiche) en vidéo,
+// pendant la « Durée » choisie, l'animation repartant du début.
+// Le navigateur demande l'autorisation de partager l'onglet à chaque fois.
+// ═══════════════════════════════════════════════════════════════════
+let recording = false;
+
+// MP4 si le navigateur sait l'enregistrer (Chrome / Edge récents), sinon WebM
+function recorderType() {
+  const types = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm"];
+  return types.find((t) => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) ?? "";
+}
+
+async function recordWindow() {
+  if (recording) return;
+  if (!navigator.mediaDevices?.getDisplayMedia) throw new Error("this browser can't record the tab (use Chrome or Edge).");
+  recording = true;
+  let stream = null;
+  try {
+    stream = await navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: FPS, displaySurface: "browser" },
+      audio: false,
+      preferCurrentTab: true,       // propose directement cet onglet
+      selfBrowserSurface: "include",
+    });
+    // Chrome affiche sa barre « vous partagez cet onglet » et la page se réorganise :
+    // on attend 0,8 s qu'elle soit stable. La vidéo garde la taille affichée (pas de recadrage).
+    await new Promise((r) => setTimeout(r, 800));
+
+    // l'animation est figée sur sa toute première image en attendant que l'enregistrement démarre
+    motionTime = 0;
+    setPlaying(false);
+
+    // lecture du flux capturé : sert à savoir quand une nouvelle image filmée arrive
+    const src = document.createElement("video");
+    src.muted = true;
+    src.srcObject = stream;
+    await src.play();
+    const nextCapturedFrame = () => new Promise((r) => src.requestVideoFrameCallback(() => r()));
+    await nextCapturedFrame(); // l'image 0 est bien affichée et filmée
+
+    const type = recorderType();
+    const recorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 12_000_000 });
+    const chunks = [];
+    recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+    const started = new Promise((resolve) => (recorder.onstart = resolve));
+    const stopped = new Promise((resolve) => (recorder.onstop = resolve));
+    recorder.start();
+    await started;
+    await nextCapturedFrame(); // première image enregistrée = image 0 de la boucle
+
+    // la boucle repart de zéro exactement maintenant, et l'enregistrement dure « Durée »
+    motionTime = 0;
+    setPlaying(true);
+    await new Promise((r) => setTimeout(r, loopDuration() * 1000));
+    recorder.stop();
+    await stopped;
+
+    const ext = type.includes("mp4") ? "mp4" : "webm";
+    downloadBlob(new Blob(chunks, { type: type || "video/webm" }), `typo-3d-ecran-${loopDuration()}s.${ext}`);
+  } finally {
+    stream?.getTracks().forEach((t) => t.stop());
+    setPlaying(true);
+    recording = false;
+  }
+}
+
+$("extraBtn").addEventListener("click", () => {
+  recordWindow().catch((err) => {
+    recording = false;
+    // annuler la fenêtre de partage n'est pas une erreur
+    if (err.name !== "NotAllowedError") alert("Recording failed: " + err.message);
+  });
+});
+
+// ── Démarrage ──
+buildTextTexture();
+applyFormat(currentFormat);
+setMode("image");
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
