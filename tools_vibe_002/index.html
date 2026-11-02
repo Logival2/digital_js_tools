@@ -1210,6 +1210,32 @@ exportMp4Btn.addEventListener("click", () => {
   });
 });
 
+// Firefox donne une description avcC fautive (l'en-tête de NAL des SPS / PPS en double) :
+// VLC et Firefox lisent les SPS / PPS répétés dans les images clés et s'en accommodent,
+// After Effects lit la description et refuse le fichier. On la reconstruit donc depuis
+// les SPS / PPS de l'image clé (Chrome ne les répète pas : sa description, juste, est gardée).
+function fixAvcDescription(chunk, meta) {
+  if (!meta?.decoderConfig) return meta;
+  const data = new Uint8Array(chunk.byteLength);
+  chunk.copyTo(data);
+  const view = new DataView(data.buffer);
+  const sps = [], pps = [];
+  for (let p = 0; p + 4 <= data.length; ) {
+    const len = view.getUint32(p);
+    if (len === 0 || p + 4 + len > data.length) break;
+    const nal = data.subarray(p + 4, p + 4 + len);
+    if ((nal[0] & 31) === 7) sps.push(nal);
+    if ((nal[0] & 31) === 8) pps.push(nal);
+    p += 4 + len;
+  }
+  if (!sps.length || !pps.length) return meta;
+  const bytes = [1, sps[0][1], sps[0][2], sps[0][3], 0xff, 0xe0 | sps.length];
+  for (const nal of sps) bytes.push(nal.length >> 8, nal.length & 255, ...nal);
+  bytes.push(pps.length);
+  for (const nal of pps) bytes.push(nal.length >> 8, nal.length & 255, ...nal);
+  return { ...meta, decoderConfig: { ...meta.decoderConfig, description: new Uint8Array(bytes) } };
+}
+
 async function exportMP4() {
   if (!("VideoEncoder" in window)) throw new Error("this browser can't encode video (use Chrome or Edge).");
   exportMp4Btn.disabled = true;
@@ -1219,7 +1245,7 @@ async function exportMP4() {
   const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/+esm");
   const { w, h } = FORMATS[currentFormat];
   // H.264 Baseline : sans images B, que l'encodeur de Firefox rend dans le désordre (le MP4 serait refusé)
-  const config = { codec: "avc1.42e033", width: w, height: h, bitrate: 12_000_000, framerate: FPS };
+  const config = { codec: "avc1.42e033", width: w, height: h, bitrate: 12_000_000, framerate: FPS, avc: { format: "avc" } };
   const { supported } = await VideoEncoder.isConfigSupported(config);
   if (!supported) throw new Error(`H.264 encoding at ${w}×${h} isn't supported by this browser.`);
 
@@ -1230,7 +1256,7 @@ async function exportMP4() {
   });
   let encodeError = null;
   const encoder = new VideoEncoder({
-    output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+    output: (chunk, meta) => muxer.addVideoChunk(chunk, fixAvcDescription(chunk, meta)),
     error: (e) => { encodeError = e; },
   });
   encoder.configure(config);
