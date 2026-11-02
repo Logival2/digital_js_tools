@@ -239,9 +239,10 @@ function resizeScene() {
 // Typo et mise en page fixes, calquées sur l'affiche de référence
 const MARGIN_PX = 20;        // marge tout autour, en px de l'image exportée
 const TITLE_LEADING = 0.95;  // interligne du titre (× sa taille)
-const MIDDLE_RATIO = 0.45;   // taille du milieu (× celle du titre)
+const TITLE_MAX = 1.2;       // taille maximale du titre (× la taille de référence) : un mot court ne devient pas énorme
+const MIDDLE_RATIO = 0.45;   // taille du milieu (× la taille de référence)
 const MIDDLE_POS = 0.755;    // ligne de base du milieu (× la hauteur de l'affiche)
-const BOTTOM_RATIO = 0.17;   // taille du bas (× celle du titre)
+const BOTTOM_RATIO = 0.17;   // taille du bas (× la taille de référence)
 const BOTTOM_LEADING = 1.25; // interligne du bas (× sa taille)
 const TITLE_TOP = 0.07;     // marge au-dessus du titre (× la hauteur de la page)
 const TRACKING =-0.03;     // interlettrage des trois blocs, en em
@@ -290,13 +291,21 @@ function draw(colors) {
   const cx = sceneW / 2;
 
   // Titre : la ligne la plus large va d'une marge à l'autre (contour compris),
-  // le haut des capitales de la 1re ligne est à TITLE_TOP de la hauteur de la page.
-  // Les deux autres blocs suivent sa taille : tout s'adapte à la page.
+  // sans dépasser TITLE_MAX × la taille de référence ; le haut des capitales de
+  // la 1re ligne est à TITLE_TOP de la hauteur de la page.
+  // Taille de référence : celle du titre par défaut (« THE TOOLS » d'une marge à
+  // l'autre), dans la police du titre. Le milieu et le bas en dépendent, pas du
+  // texte tapé : ils ne bougent pas pendant la saisie du titre.
   const REF = 100;
   setType(REF, "titleFont");
+  const fitSize = (lines) => {
+    const widest = Math.max(0, ...lines.map((l) => inkWidth(ctx.measureText(l))));
+    return widest > 0 ? (REF * (sceneW - margin * 2)) / ((font().width ?? 1) * (widest + strokeW)) : REF;
+  };
+  const casing = (text) => (font().upper ? text.toUpperCase() : text);
+  const refSize = fitSize(casing($("titleInput").defaultValue).split("\n"));
   const title = linesOf("titleInput");
-  const widest = Math.max(0, ...title.map((l) => inkWidth(ctx.measureText(l))));
-  const titleSize = widest > 0 ? (REF * (sceneW - margin * 2)) / ((font().width ?? 1) * (widest + strokeW)) : REF;
+  const titleSize = Math.min(fitSize(title), refSize * TITLE_MAX);
   const firstLine = title.find((l) => l.trim());
   if (firstLine) {
     setType(titleSize, "titleFont");
@@ -305,14 +314,14 @@ function draw(colors) {
   }
 
   // Milieu : la ligne de base du bloc à MIDDLE_POS de la hauteur
-  const middleSize = titleSize * MIDDLE_RATIO;
+  const middleSize = refSize * MIDDLE_RATIO;
   setType(middleSize, "middleFont");
   const middle = linesOf("middleInput");
   middle.forEach((line, i) =>
     drawLine(line, cx, sceneH * MIDDLE_POS - (middle.length - 1 - i) * middleSize * 1.1));
 
   // Bas : dernière ligne posée sur la marge basse
-  const bottomSize = titleSize * BOTTOM_RATIO;
+  const bottomSize = refSize * BOTTOM_RATIO;
   setType(bottomSize, "bottomFont");
   const bottom = linesOf("bottomInput");
   const lastBaseline = sceneH - margin - strokeW / 2;
