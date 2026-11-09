@@ -40,6 +40,8 @@
     <!-- Images : plusieurs à la fois depuis le Finder / l'explorateur, ou déposées sur la page -->
     <input id="imageInput" type="file" multiple accept="image/*" hidden />
     <button id="addImagesBtn" class="cta" type="button">Import images</button>
+    <!-- Fake image : les images d'exemple du dossier ../images (liste dans ../images/list.json) -->
+    <button id="fakeImagesBtn" class="cta" type="button">Fake image</button>
     <p class="hint" id="imageInfo">No image: 50 blank cards. Several at once, or drop them on the page.</p>
     <div class="row" id="countRow">
       <label for="count">Count</label>
@@ -70,6 +72,7 @@
     <div id="modeSwitch" class="pills">
       <button type="button" data-mode="grid">Grid</button>
       <button type="button" data-mode="sphere">Sphere</button>
+      <button type="button" data-mode="roll">Roll</button>
       <button type="button" data-mode="space">Space</button>
       <button type="button" data-mode="terrain">Mont Blanc</button>
     </div>
@@ -92,6 +95,8 @@
       <button type="button" data-env="linear">Linear</button>
       <button type="button" data-env="radial">Radial</button>
       <button type="button" data-env="mono">Mono</button>
+      <!-- Black : fond noir, et tout ce qui était noir (légendes, cadres, relief, panneau) passe en blanc -->
+      <button type="button" data-env="black">Black</button>
     </div>
     <div id="gradientColors">
       <!-- cinq teintes également espacées, du haut vers le bas : pêche, lilas, passage pâle, vert-jaune, vert acide -->
@@ -126,7 +131,7 @@
   <!-- Commandes : la souris, le clavier ; la dérive des modes a une vitesse fixe -->
   <div class="section collapsed">
     <h2>Controls</h2>
-    <p class="hint">Grid: drag or scroll to move, click a card, arrows to step, Esc to leave. Space: drag to move, scroll to fly forward or back, click a card to reach it. Sphere and Mont Blanc: drag, scroll, double-click to recentre. H hides the panel, F full screen.</p>
+    <p class="hint">Grid: drag or scroll to move, click a card, arrows to step, Esc to leave. Space: drag to move, scroll to fly forward or back, click a card to reach it. Sphere and Mont Blanc: drag, scroll, double-click to recentre. Roll: drag up or down or scroll to turn it, drag sideways to tilt, click a card to bring it in front. H hides the panel, F full screen.</p>
   </div>
 
   <!-- Affichage -->
@@ -269,6 +274,10 @@ const view = {
   grid: { panX: 0, panY: 0, velX: 0, velY: 0, zoom: 1, zoomCur: 1, pull: 1, press: 1, spread: 1, introT: Infinity, focus: -1 },
   // boule : focus = carte visée, back = zoom d'avant le focus (on y revient en ressortant)
   sphere: { yaw: 0, pitch: 0.25, velYaw: 0, velPitch: 0, zoom: 1.5, focus: -1, back: null }, // zoom 1,5 : 50 % plus près au lancement
+  // rouleau : angle = tour autour de son axe horizontal (les cartes de devant descendent quand il augmente),
+  // yaw = rouleau tourné de côté, pour le voir en biais comme la référence
+  // panX = rouleau glissé le long de son axe (0 : au centre)
+  roll: { angle: 0, velAngle: 0, yaw: -0.35, velYaw: 0, panX: 0, zoom: 1, focus: -1, back: null },
   // espace : position de la caméra, élan, arrivée de l'entrée, carte visée
   space: { camX: 0, camY: 0, camZ: 0, vx: 0, vy: 0, vz: 0, intro: false, focus: -1 },
   // Mont Blanc : vu depuis Chamonix (le nord), vers le sommet ; fade = apparition du relief
@@ -283,7 +292,7 @@ function setMode(next) {
   mode = next;
   if (captionsChange) buildAtlas(); // au-dessus du relief, la légende dit aussi le lieu
   modeButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
-  $("facingRow").hidden = mode !== "sphere";
+  $("facingRow").hidden = mode !== "sphere" && mode !== "roll";
   $("reliefSwitch").hidden = mode !== "terrain";
   unfocus();
   // entrée dans le plan 2D, comme la référence : grille resserrée qui s'ouvre, caméra qui revient
@@ -521,6 +530,46 @@ function sphereLayout(n) {
   };
 }
 
+// Rouleau : un cylindre couché (axe horizontal) qui tourne de haut en bas, comme un carrousel vertical.
+// Une seule colonne : toutes les cartes font le tour, l'une sous l'autre, en grand. On les voit tout
+// autour du rouleau ; celles du fond s'estompent (rollDim, dans le rendu et les légendes).
+// Les cartes suivent la surface (ou toutes face à la caméra avec l'option).
+const ROLL_DIM = 0.8; // au fond du rouleau, la carte ne garde que 20 % de sa présence
+function rollPlan(n) {
+  const rows = Math.max(8, n);                                  // cartes sur le tour
+  const gap = 0.03 + 0.06 * num(controls.spacing);
+  const pitch = (CARD_H + LABEL_GAP + LABEL_H) * (1 + gap);     // la légende a sa place sous la carte
+  return { rows, R: (rows * pitch) / (2 * Math.PI) };
+}
+// angle de la carte i sur le rouleau, avant la rotation (0 = face à la caméra)
+const rollBase = (i, rows) => (i % rows) * ((2 * Math.PI) / rows);
+function rollLayout(n) {
+  const { rows, R } = rollPlan(n);
+  const v = view.roll;
+  // tout le rouleau tient dans la hauteur de la scène
+  const fit = (R * 1.08) / TAN + R;
+  const cz = -fit / v.zoom;
+  const cy = Math.cos(v.yaw), sy = Math.sin(v.yaw);
+  const facing = controls.facing.checked;
+  return {
+    depth: Math.max(0.5, -cz - R), // la face avant : le glisser la fait suivre la main
+    roll: { fit, R, rows, near: -cz - R, far: -cz + R },
+    place(i) {
+      const a = rollBase(i, rows) - v.angle;
+      const sa = Math.sin(a), ca = Math.cos(a);
+      // tour autour de l'axe x, puis le rouleau tourné de côté (yaw)
+      const pos = [v.panX * cy + R * ca * sy, R * sa, cz - v.panX * sy + R * ca * cy];
+      if (facing) return { pos, quat: IDENTITY };
+      // tangente au rouleau : à l'arrière, la carte est vue de dos, à l'envers (voulu : elle ne saute jamais)
+      const nrm = [ca * sy, sa, ca * cy], right = [cy, 0, -sy];
+      return { pos, quat: quatFromBasis(right, cross(nrm, right), nrm) };
+    },
+  };
+}
+// présence perdue par une carte du rouleau à cette distance de la caméra (0 devant, ROLL_DIM au fond)
+let rollFog = 0; // fondu en entrant et en sortant du mode
+const rollDim = (depth) => (lastRoll ? rollFog * ROLL_DIM * smoothstep(lastRoll.near, lastRoll.far, depth) : 0);
+
 // Espace 3D, d'après « espace » (matrice instagram website / expérience) : un champ fixe de cartes
 // étagées en profondeur, qu'on parcourt en déplaçant la caméra (glisser, molette, clic sur une carte).
 // Les unités de la référence (cartes de 700 à 2 100 de profondeur, 3 800 au téléphone) sont ramenées
@@ -723,7 +772,7 @@ function terrainLayout(n) {
   };
 }
 
-const LAYOUTS = { grid: gridLayout, sphere: sphereLayout, space: spaceLayout, terrain: terrainLayout };
+const LAYOUTS = { grid: gridLayout, sphere: sphereLayout, roll: rollLayout, space: spaceLayout, terrain: terrainLayout };
 
 // ── Légendes : une texture atlas, une case par carte ──
 const ATLAS_COLS = 8;
@@ -799,10 +848,12 @@ const ENV_GLSL = `
 uniform vec3 uC[5];       // cinq teintes, également espacées
 uniform float uHorizon;   // où tombe le milieu du dégradé (0,5 : à mi-hauteur)
 uniform float uAspect;
-uniform int uShape;   // 0 linear, 1 radial, 2 mono
+uniform int uShape;   // 0 linear, 1 radial, 2 mono, 3 black
 uniform vec3 uMono;
+uniform vec3 uInk;    // encre des légendes et des traits : noir, ou blanc sur le fond Black
 vec3 envColor(vec2 uv) {
   if (uShape == 2) return uMono;
+  if (uShape == 3) return vec3(0.0);
   float t = 1.0 - uv.y;
   if (uShape == 1) {
     vec2 d = (uv - 0.5) * vec2(uAspect, 1.0);
@@ -829,6 +880,7 @@ uniform mat4 uProj;
 uniform vec2 uAtlasGrid;
 uniform float uFogFar;   // brouillard linéaire, de la caméra jusqu'à cette distance
 uniform float uFogMix;   // 0 hors de l'espace, 1 dedans (fondu en changeant de mode)
+uniform vec4 uRoll;      // rouleau : distance de sa face avant, de son fond, part estompée au fond, présence du mode
 out vec2 vUV;
 out float vPart;
 out vec2 vAlpha;
@@ -838,6 +890,8 @@ flat out float vImage;
 void main() {
   vec4 world = mat4(aM0, aM1, aM2, aM3) * vec4(aPos, 0.0, 1.0);
   vFog = uFogMix * clamp(-world.z / uFogFar, 0.0, 1.0);
+  // rouleau : une carte entière s'estompe d'autant plus qu'elle est au fond (son centre, aM3)
+  vFog = max(vFog, uRoll.w * uRoll.z * smoothstep(uRoll.x, uRoll.y, -aM3.z));
   vPart = aPart;
   vec2 cell = vec2(mod(aExtra.x, uAtlasGrid.x), floor((aExtra.x + 0.5) / uAtlasGrid.x));
   vUV = aPart > 0.5 ? (cell + aUV) / uAtlasGrid : aUV;
@@ -873,7 +927,7 @@ void main() {
     float a = t.a * vAlpha.x * (1.0 - vFog);
     if (a < 0.03) discard;
     vec3 rgb = t.rgb / max(t.a, 1e-4);
-    outColor = vec4(mix(rgb, vec3(0.0), smoothstep(0.93, 0.985, min(rgb.r, min(rgb.g, rgb.b)))), a);
+    outColor = vec4(mix(rgb, uInk, smoothstep(0.93, 0.985, min(rgb.r, min(rgb.g, rgb.b)))), a);
     return;
   }
   // carte : toujours opaque, fondue au loin dans la couleur du fond à cet endroit de l'écran
@@ -887,7 +941,8 @@ void main() {
     float frame = min(min(pxDist(vUV.x), pxDist(1.0 - vUV.x)), min(pxDist(vUV.y), pxDist(1.0 - vUV.y)));
     float cross = min(pxDist(vUV.x - vUV.y), pxDist(vUV.x + vUV.y - 1.0));
     float line = max(clamp(1.5 - frame, 0.0, 1.0), clamp(1.2 - 1.6 * cross, 0.0, 1.0));
-    col = mix(PAPER, vec3(0.0), line);
+    // sur le fond Black : planche gris très foncé, cadre et croix blancs
+    col = mix(uShape == 3 ? vec3(0.13) : PAPER, uInk, line);
   }
   outColor = vec4(mix(col, envColor(gl_FragCoord.xy / uViewport), vFog), 1.0);
 }`;
@@ -906,10 +961,10 @@ if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgram
 const uni = (name) => gl.getUniformLocation(prog, name);
 const U = {
   proj: uni("uProj"), atlasGrid: uni("uAtlasGrid"), atlas: uni("uAtlas"), images: uni("uImages"), pass: uni("uPass"),
-  fogFar: uni("uFogFar"), fogMix: uni("uFogMix"), viewport: uni("uViewport"),
+  fogFar: uni("uFogFar"), fogMix: uni("uFogMix"), viewport: uni("uViewport"), roll: uni("uRoll"),
 };
 // uniformes de l'environnement d'un programme (ENV_GLSL)
-const envUniforms = (p) => Object.fromEntries(["c", "horizon", "aspect", "shape", "mono"]
+const envUniforms = (p) => Object.fromEntries(["c", "horizon", "aspect", "shape", "mono", "ink"]
   .map((k) => [k, gl.getUniformLocation(p, "u" + k[0].toUpperCase() + k.slice(1))]));
 const UE = envUniforms(prog);
 
@@ -1072,14 +1127,19 @@ const ENV_TITLES = {
   linear: ["Top", "Upper", "Middle", "Lower", "Bottom"],
   radial: ["Edge", "Outer", "Middle", "Inner", "Centre"],
 };
-const ENV_SHAPES = ["linear", "radial", "mono"];
+const ENV_SHAPES = ["linear", "radial", "mono", "black"];
+// Black : l'encre passe du noir au blanc, dans le rendu (inkRgb, inkCss) comme dans le panneau (:root.dark, style.css)
+const isDark = () => env === "black";
+const inkRgb = () => (isDark() ? [1, 1, 1] : [0, 0, 0]);
+const inkCss = (a = 1) => (isDark() ? `rgba(255, 255, 255, ${a})` : `rgba(0, 0, 0, ${a})`);
 function setEnv(next) {
   env = next;
   envButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.env === env)));
-  // en Mono, une seule pastille : les couleurs du dégradé et l'horizon n'ont plus de sens
-  $("gradientColors").hidden = $("horizonRow").hidden = env === "mono";
+  document.documentElement.classList.toggle("dark", isDark());
+  // en Mono, une seule pastille ; en Black, aucune : les couleurs du dégradé et l'horizon n'ont plus de sens
+  $("gradientColors").hidden = $("horizonRow").hidden = env === "mono" || isDark();
   $("monoColors").hidden = env !== "mono";
-  if (env === "mono") return;
+  if (env === "mono" || isDark()) return;
   envColors.forEach((el, k) => {
     el.title = ENV_TITLES[env][k];
     el.setAttribute("aria-label", `${ENV_TITLES[env][k]} colour`);
@@ -1115,6 +1175,7 @@ function setEnvUniforms(locs) {
   gl.uniform1f(locs.aspect, aspect);
   gl.uniform1i(locs.shape, ENV_SHAPES.indexOf(env));
   gl.uniform3fv(locs.mono, hexToRgb($("monoColor").value));
+  gl.uniform3fv(locs.ink, inkRgb());
 }
 function drawEnvironment() {
   gl.disable(gl.DEPTH_TEST);
@@ -1141,17 +1202,18 @@ const LINE_FS = `#version 300 es
 precision highp float;
 in float vShade;
 uniform float uFade;  // apparition : du fond vers le gris
+uniform vec3 uInk;    // noir, ou blanc sur le fond Black
 out vec4 outColor;
 void main() {
   // sur fond blanc, exactement le gris vShade ; sur un fond coloré, le même assombrissement
-  outColor = vec4(0.0, 0.0, 0.0, (1.0 - vShade) * uFade);
+  outColor = vec4(uInk, (1.0 - vShade) * uFade);
 }`;
 const lineProg = gl.createProgram();
 gl.attachShader(lineProg, compile(gl.VERTEX_SHADER, LINE_VS));
 gl.attachShader(lineProg, compile(gl.FRAGMENT_SHADER, LINE_FS));
 gl.linkProgram(lineProg);
 if (!gl.getProgramParameter(lineProg, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(lineProg));
-const LU = { proj: gl.getUniformLocation(lineProg, "uProj"), model: gl.getUniformLocation(lineProg, "uModel"), fade: gl.getUniformLocation(lineProg, "uFade") };
+const LU = { proj: gl.getUniformLocation(lineProg, "uProj"), model: gl.getUniformLocation(lineProg, "uModel"), fade: gl.getUniformLocation(lineProg, "uFade"), ink: gl.getUniformLocation(lineProg, "uInk") };
 function lineBuffer() {
   const vao = gl.createVertexArray();
   const buf = gl.createBuffer();
@@ -1224,12 +1286,13 @@ in float vEdge;
 uniform int uStyle;    // 0 mesh, 1 lidar
 uniform float uFade;   // apparition du relief
 uniform float uDist;   // distance du centre du relief
+uniform vec3 uInk;     // noir, ou blanc sur le fond Black
 out vec4 outColor;
 void main() {
   float fade = uFade * (1.0 - vEdge);
   if (uStyle == 0) {
     // surface noire à 30 %, un peu plus sombre sur les pentes à l'ombre
-    outColor = vec4(0.0, 0.0, 0.0, 0.3 * mix(1.45, 0.55, vLight) * fade);
+    outColor = vec4(uInk, 0.3 * mix(1.45, 0.55, vLight) * fade);
     return;
   }
   // points gris (sur fond blanc), plus clairs au soleil et au loin : du noir plus ou moins transparent
@@ -1237,14 +1300,14 @@ void main() {
   g = mix(g, 1.0, 0.6 * smoothstep(uDist - 6.0, uDist + 14.0, vDepth));
   float a = (1.0 - g) * fade;
   if (a < 0.01) discard;
-  outColor = vec4(0.0, 0.0, 0.0, a);
+  outColor = vec4(uInk, a);
 }`;
 const reliefProg = gl.createProgram();
 gl.attachShader(reliefProg, compile(gl.VERTEX_SHADER, RELIEF_VS));
 gl.attachShader(reliefProg, compile(gl.FRAGMENT_SHADER, RELIEF_FS));
 gl.linkProgram(reliefProg);
 if (!gl.getProgramParameter(reliefProg, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(reliefProg));
-const RU = Object.fromEntries(["proj", "model", "pointSize", "style", "fade", "dist"]
+const RU = Object.fromEntries(["proj", "model", "pointSize", "style", "fade", "dist", "ink"]
   .map((k) => [k, gl.getUniformLocation(reliefProg, "u" + k[0].toUpperCase() + k.slice(1))]));
 // position + normale + bord par sommet
 const RELIEF_FLOATS = 7;
@@ -1329,6 +1392,7 @@ function drawRelief(T, fade) {
   gl.uniformMatrix4fv(RU.model, false, T.model);
   gl.uniform1f(RU.fade, fade);
   gl.uniform1f(RU.dist, T.dist);
+  gl.uniform3fv(RU.ink, inkRgb());
   if (relief === "mesh") {
     gl.uniform1i(RU.style, 0);
     gl.bindVertexArray(reliefMesh.vao);
@@ -1364,6 +1428,7 @@ fetch("data/montblanc_dem.bin")
   .catch((err) => console.error("Could not load the Mont Blanc terrain:", err));
 let lastGrid = null;        // dernière grille du plan 2D : ses répétitions s'effacent en quittant le mode
 let lastSphere = null;      // mesures de la boule (fit, R), pour son focus
+let lastRoll = null;        // mesures du rouleau (fit, R, rows), pour son focus et le glisser
 let lastTerrain = null;     // dernière vue du relief : il pâlit sur place en quittant le mode
 let lastCount = 0;          // instances dessinées à la dernière image (pour retrouver la carte cliquée)
 
@@ -1401,18 +1466,20 @@ function focusCard(i) {
   if (v.back === null) v.back = v.zoom;
   v.focus = i;
   v.velYaw = v.velPitch = 0;
+  if (mode === "roll") v.velAngle = 0;
 }
 function unfocus() {
   view.grid.focus = view.space.focus = -1;
-  for (const key of ["sphere", "terrain"]) view[key].focus = -1;
+  for (const key of ["sphere", "roll", "terrain"]) view[key].focus = -1;
 }
 // Zoom (molette, ou pincement à deux doigts) : k > 1 rapproche
 function zoomBy(k) {
   // pendant un focus, ou en y revenant, la molette reprend la main sur le zoom
-  if (mode === "sphere" || mode === "terrain") Object.assign(view[mode], { focus: -1, back: null });
+  if (mode === "sphere" || mode === "roll" || mode === "terrain") Object.assign(view[mode], { focus: -1, back: null });
   // plan 2D : jamais en dessous du repos, sinon on verrait le bord de la grille enroulée
   if (mode === "grid") view.grid.zoom = Math.max(1, Math.min(2.5, view.grid.zoom * k));
   else if (mode === "sphere") view.sphere.zoom = Math.max(0.35, Math.min(4, view.sphere.zoom * k));
+  else if (mode === "roll") view.roll.zoom = Math.max(0.4, Math.min(4, view.roll.zoom * k));
   else if (mode === "terrain") view.terrain.zoom = Math.max(0.5, Math.min(5, view.terrain.zoom * k));
   else if (mode === "space") {
     // dans l'espace, écarter les doigts fait avancer (comme la référence : 3 unités par pixel d'écart)
@@ -1487,6 +1554,14 @@ function dragBy(dx, dy, dt) {
     v.pitch = Math.max(-1.3, Math.min(1.3, v.pitch + dy * 0.005));
     v.velYaw = dx * 0.3;
     v.velPitch = dy * 0.3;
+  } else if (mode === "roll") {
+    // haut / bas : la face avant du rouleau suit la main, et garde son élan au lâcher ; côté : on le tourne
+    const v = view.roll, R = lastRoll?.R ?? 1;
+    v.focus = -1;
+    const da = (dy * unitsPerPx) / R;
+    v.angle += da;
+    v.velAngle = v.velAngle * 0.6 + (da / dt) * 0.4;
+    v.yaw = Math.max(-1.2, Math.min(1.2, v.yaw + dx * 0.004));
   } else {
     // la caméra glisse à l'opposé de la main : les cartes proches suivent à moitié, les lointaines moins ;
     // au lâcher, l'élan vaut 0,3 fois la vitesse du glisser, comme la référence
@@ -1532,6 +1607,10 @@ canvas.addEventListener("wheel", (e) => {
     const v = view.space, cap = 250 * 30 * SPACE_U;
     Object.assign(v, { intro: false, focus: -1 });
     v.vz = Math.max(-cap, Math.min(cap, v.vz + e.deltaY * 0.17 * 30 * SPACE_U));
+  } else if (mode === "roll") {
+    // la molette fait tourner le rouleau, comme on fait défiler une page : vers le bas, les cartes montent
+    Object.assign(view.roll, { focus: -1 });
+    view.roll.velAngle -= e.deltaY * 0.012;
   } else zoomBy(Math.exp(-e.deltaY * 0.0012));
 }, { passive: false });
 canvas.addEventListener("dblclick", () => {
@@ -1711,7 +1790,7 @@ function trackHand(now, dt) {
     const d = Math.max(0.3, Math.min(1.6, HAND_REF / hands.size));
     const dPrev = Math.max(0.3, Math.min(1.6, HAND_REF / hands.psize));
     // la boule et le massif tournent : zoomé, le même angle paraît plus grand, on le réduit d'autant
-    const turn = mode === "sphere" || mode === "terrain" ? 1 / Math.sqrt(view[mode].zoom) : 1;
+    const turn = mode === "sphere" || mode === "roll" || mode === "terrain" ? 1 / Math.sqrt(view[mode].zoom) : 1;
     const k = HAND_GAIN * d ** 1.5 * turn;
     const dx = (hands.x - hands.px) * k, dy = (hands.y - hands.py) * k;
     hands.moved += Math.hypot(dx, dy);
@@ -1800,7 +1879,7 @@ function drawCaptions(count) {
     const w = Math.hypot(p[1][0] - p[0][0], p[1][1] - p[0][1]);
     const o = k * FLOATS;
     // opacité de la légende (survol) et brouillard de l'espace, comme dans le rendu
-    const fog = spaceFog * Math.min(1, Math.max(0, -instanceData[o + 14] / SPACE_FOG));
+    const fog = Math.max(spaceFog * Math.min(1, Math.max(0, -instanceData[o + 14] / SPACE_FOG)), rollDim(-instanceData[o + 14]));
     const alpha = instanceData[o + 17] * (1 - fog);
     if (alpha < 0.03) continue;
     list.push({ p, w, i: instanceData[o + 16], alpha, depth: -instanceData[o + 14] });
@@ -1817,7 +1896,7 @@ function drawCaptions(count) {
     const right = numberOf(i, n);
     const right2 = spot?.alt ? `${spot.alt.toLocaleString("en-GB").replace(/,/g, " ")} m` : "";
     octx.globalAlpha = alpha;
-    octx.fillStyle = "#000";
+    octx.fillStyle = inkCss();
     octx.textAlign = "right";
     octx.fillText(right, x0 + w, y0);
     if (right2) octx.fillText(right2, x0 + w, y0 + line);
@@ -1830,7 +1909,7 @@ function drawCaptions(count) {
       octx.beginPath();
       octx.arc(x0 + r, y0 + line + fs * 0.5, r, 0, Math.PI * 2);
       octx.fill();
-      octx.fillStyle = "#000";
+      octx.fillStyle = inkCss();
       x2 += r * 2 + fs * 0.45;
     }
     const second = spot ? spot.name : tone?.name ?? (images[i] ? "Reading…" : "Blank");
@@ -1856,7 +1935,7 @@ function drawOverlay(count, hit) {
   if (!controls.frame.checked || hit < 0) return;
   const pA = projectCard(instanceData, hit);
   if (!pA) return;
-  const ink = "#000", dim = "rgba(0, 0, 0, 0.35)";
+  const ink = inkCss(), dim = inkCss(0.35);
   octx.font = `500 13px "Roboto Mono", Menlo, monospace`; // même taille que les textes du panneau
   octx.textBaseline = "middle";
   octx.textAlign = "left";
@@ -1925,6 +2004,23 @@ function frame(now) {
     const damp = Math.exp(-3 * dt);
     sv.velYaw *= damp;
     sv.velPitch *= damp;
+  }
+  // Rouleau : il tourne lentement de haut en bas ; une carte cliquée vient devant, droite, et s'approche
+  const rv = view.roll;
+  if (rv.focus >= 0 && rv.focus < cards.length && lastRoll) {
+    const { fit, R, rows } = lastRoll;
+    rv.angle += angleTo(rv.angle, rollBase(rv.focus, rows)) * ease(4);
+    rv.yaw += -rv.yaw * ease(4);
+    rv.zoom += (fit / (focusDist(num(controls.size)) + R) - rv.zoom) * ease(3.5);
+  } else if (!held) {
+    if (rv.back !== null) {
+      // en ressortant : retour au zoom d'avant
+      rv.zoom += (rv.back - rv.zoom) * ease(3);
+      if (Math.abs(rv.back - rv.zoom) < 0.002) rv.back = null;
+    }
+    // ralenti au survol, pour pouvoir viser une carte
+    rv.angle += (speed * 0.3 * (hovered >= 0 && mode === "roll" ? 0.15 : 1) + rv.velAngle) * dt;
+    rv.velAngle *= Math.exp(-3 * dt);
   }
   // Espace : arrivée de l'entrée, vol jusqu'à une carte cliquée, ou élan du glisser et de la molette.
   // Les amortis de la référence (par image à 30 images/s) sont ramenés à la seconde.
@@ -2035,6 +2131,7 @@ function frame(now) {
   const g = layout.grid ?? lastGrid;
   if (layout.grid) lastGrid = layout.grid;
   if (layout.sphere) lastSphere = layout.sphere;
+  if (layout.roll) lastRoll = layout.roll;
 
   for (let i = 0; i < n; i++) {
     const c = cards[i];
@@ -2090,6 +2187,8 @@ function frame(now) {
   spaceFog += ((mode === "space" ? 1 : 0) - spaceFog) * (1 - Math.exp(-3 * dt));
   gl.uniform1f(U.fogFar, SPACE_FOG);
   gl.uniform1f(U.fogMix, spaceFog);
+  rollFog += ((mode === "roll" ? 1 : 0) - rollFog) * (1 - Math.exp(-3 * dt));
+  gl.uniform4f(U.roll, lastRoll?.near ?? 0, lastRoll?.far ?? 1, ROLL_DIM, rollFog);
   gl.uniform2f(U.viewport, canvas.width, canvas.height);
   setEnvUniforms(UE);
   gl.uniform2f(U.atlasGrid, ATLAS_COLS, atlasRows);
@@ -2116,6 +2215,7 @@ function frame(now) {
       gl.uniformMatrix4fv(LU.proj, false, proj);
       gl.uniformMatrix4fv(LU.model, false, lastTerrain.model);
       gl.uniform1f(LU.fade, tv.fade);
+      gl.uniform3fv(LU.ink, inkRgb());
       gl.bindVertexArray(contourLines.vao);
       gl.drawArrays(gl.LINES, 0, contourLines.count);
       gl.bindVertexArray(null);
@@ -2147,6 +2247,32 @@ $("imageInput").addEventListener("change", (e) => {
   e.target.value = ""; // pouvoir reprendre les mêmes fichiers
 });
 $("clearImagesBtn").addEventListener("click", clearImages);
+// Fake image : remplace les cartes par les images d'exemple du dossier images/ à la racine des outils.
+// Un site statique ne liste pas un dossier : les noms de fichiers viennent de images/list.json.
+const FAKE_DIR = "../images/";
+$("fakeImagesBtn").addEventListener("click", async () => {
+  const btn = $("fakeImagesBtn");
+  btn.disabled = true;
+  try {
+    const names = await (await fetch(FAKE_DIR + "list.json", { cache: "no-cache" })).json();
+    const files = (await Promise.all(names.map(async (name) => {
+      const res = await fetch(FAKE_DIR + encodeURIComponent(name));
+      if (!res.ok) { console.error(`Could not load ${name}: ${res.status}`); return null; }
+      const blob = await res.blob();
+      // certains serveurs ne donnent pas le type (webp…) : on le déduit de l'extension
+      const ext = name.split(".").pop().toLowerCase();
+      const type = blob.type.startsWith("image/") ? blob.type : `image/${ext === "jpg" ? "jpeg" : ext}`;
+      return new File([blob], name, { type });
+    }))).filter(Boolean);
+    clearImages();
+    await addImages(files);
+  } catch (err) {
+    console.error("Could not load the fake images:", err);
+    $("imageInfo").textContent = "Fake images unavailable (open the tools through a web server).";
+  } finally {
+    btn.disabled = false;
+  }
+});
 window.addEventListener("dragover", (e) => e.preventDefault());
 window.addEventListener("drop", (e) => {
   e.preventDefault();
