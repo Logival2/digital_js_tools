@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kinetic v2</title>
+<!-- interface commune des outils (verre, typo, sliders), puis la mise en page propre à l'outil.
+     Repart de 3D kinetic type 002 (formats, lecteur, exports), avec beaucoup moins de réglages :
+     une forme organique (anneaux de perles fondues, dégradé, flou, grain) et un calque typo posé dessus. -->
+<link rel="stylesheet" href="../ui/ui_001.css" />
+<link rel="stylesheet" href="style.css" />
+<script defer src="../ui/ui_001.js"></script>
+</head>
+<body data-mobile="ok" data-layout="panels">
+
+<!-- Panneau latéral (paramètres) : contenu → forme et mouvement → rendu → aide -->
+<aside id="panel">
+
+  <header id="panelHead">
+    <p class="eyebrow"><a class="badge backLink" href="../" title="Back to all tools">← Digital tools</a></p>
+    <h1 class="toolTitle">Kinetic v2</h1>
+  </header>
+
+  <!-- Typo : un calque à plat, posé sur la forme (jamais écrit dans la forme) -->
+  <div class="section">
+    <h2>Type</h2>
+    <label class="check"><input id="typeToggle" type="checkbox" checked /> Show type</label>
+    <textarea id="textInput" rows="2" maxlength="200">NORDWAY</textarea>
+    <div class="row">
+      <label for="fontSelect">Font</label>
+      <select id="fontSelect" class="asPills">
+        <option value="HN Black Extended">Black Extended</option>
+        <option value="HN Roman">Regular</option>
+        <option value="MingLiU-01" selected>MingLiU</option>
+      </select>
+    </div>
+    <div class="row"><label for="typeSizeSlider" title="Height of the letters, in fraction of the page">Size</label><input id="typeSizeSlider" type="range" min="0.03" max="0.4" step="0.005" value="0.09" /></div>
+    <label class="check"><input id="storesToggle" type="checkbox" checked /> Store addresses</label>
+    <div class="swatches">
+      <input id="typeColorInput" type="color" value="#000000" title="Type" aria-label="Type colour" />
+    </div>
+  </div>
+
+  <!-- Forme : des anneaux de perles empilés, qui se fondent les uns dans les autres -->
+  <div class="section">
+    <h2>Shape</h2>
+    <div class="row">
+      <label for="shapeSelect">Shape</label>
+      <select id="shapeSelect" class="asPills">
+        <option value="beads" selected>Bead rings</option>
+        <option value="peak">Peak</option>
+        <option value="cairn">Cairn</option>
+      </select>
+    </div>
+    <div class="row beadsOnly"><label for="ringsSlider" title="Stacked rings">Rings</label><input id="ringsSlider" type="range" min="1" max="5" step="1" value="3" /></div>
+    <div class="row beadsOnly"><label for="beadsSlider" title="Beads around each ring">Beads</label><input id="beadsSlider" type="range" min="6" max="24" step="1" value="12" /></div>
+    <div class="row cairnOnly"><label for="stonesSlider" title="Rocks in the pile (1 = a single rock)">Stones</label><input id="stonesSlider" type="range" min="1" max="8" step="1" value="3" /></div>
+    <label class="check cairnOnly"><input id="altStonesToggle" type="checkbox" /> Stones turn apart</label>
+    <div class="btnRow cairnOnly">
+      <button id="newStonesBtn" type="button" title="Draws a new pile of stones">New stones</button>
+    </div>
+    <div class="row"><label for="organicSlider" title="Beads: how much they melt together. Peak and Cairn: rounder, less sharp">Organic</label><input id="organicSlider" type="range" min="0" max="1" step="0.01" value="0.4" /></div>
+  </div>
+
+  <!-- Mouvement : en nombres entiers par boucle, la vidéo boucle parfaitement -->
+  <div class="section">
+    <h2>Motion</h2>
+    <div class="row"><label for="spinSlider" title="Beads that pass by during one loop (rings turn in opposite directions)">Rotation</label><input id="spinSlider" type="range" min="0" max="6" step="1" value="2" /></div>
+    <div class="row"><label for="breathSlider" title="Beads swelling one after the other">Breath</label><input id="breathSlider" type="range" min="0" max="1" step="0.01" value="0.6" /></div>
+  </div>
+
+  <!-- Rendu : le dégradé posé sur la lumière, le flou et le bruit -->
+  <div class="section">
+    <h2>Render</h2>
+    <!-- palettes toutes prêtes (Glacier et Fire viennent de Gradient body) ; les pastilles restent modifiables -->
+    <div id="palettePills" class="pills">
+      <button type="button" data-palette="thermal">Thermal</button>
+      <button type="button" data-palette="glacier">Glacier</button>
+      <button type="button" data-palette="fire">Fire</button>
+      <button type="button" data-palette="chrome">Chrome</button>
+    </div>
+    <div class="swatches" id="paletteSwatches">
+      <input type="color" class="palColor" value="#f1f0ff" title="Light" aria-label="Palette colour 1 (light)" />
+      <input type="color" class="palColor" value="#0c1730" title="Palette colour 2" aria-label="Palette colour 2" />
+      <input type="color" class="palColor" value="#2f9a1c" title="Palette colour 3" aria-label="Palette colour 3" />
+      <input type="color" class="palColor" value="#ff8a14" title="Palette colour 4" aria-label="Palette colour 4" />
+      <input type="color" class="palColor" value="#ff2a55" title="Palette colour 5" aria-label="Palette colour 5" />
+      <input type="color" class="palColor" value="#4f6dff" title="Shadow" aria-label="Palette colour 6 (shadow)" />
+    </div>
+    <div class="swatches">
+      <input id="bgColorInput" type="color" value="#d6dcec" title="Background" aria-label="Background colour" />
+    </div>
+    <div class="row"><label for="blurSlider">Blur</label><input id="blurSlider" type="range" min="0" max="1" step="0.01" value="0.15" /></div>
+    <div class="row"><label for="noiseSlider" title="Bumpy surface and grainy colours">Noise</label><input id="noiseSlider" type="range" min="0" max="1" step="0.01" value="0.35" /></div>
+    <div class="row"><label for="grainSlider">Grain</label><input id="grainSlider" type="range" min="0" max="1" step="0.01" value="0.35" /></div>
+  </div>
+
+  <div class="section collapsed">
+    <h2>Controls</h2>
+    <p class="hint">Drag on the image to turn the shape, scroll to zoom. Cairn: New stones draws other rocks; the pile turns as one unless Stones turn apart is on. Reset brings everything back.</p>
+  </div>
+
+  <footer id="panelFooter">
+    <button id="resetBtn" type="button">Reset</button>
+    <button id="privacyBtn" type="button">Privacy · GDPR</button>
+  </footer>
+</aside>
+
+<dialog id="privacyDialog" aria-labelledby="privacyTitle">
+  <h2 id="privacyTitle">Privacy · GDPR</h2>
+  <h3>Data controller</h3>
+  <p>Valentin Maynadié — contact: <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
+  <h3>Exports</h3>
+  <p>PNG and MP4 files are made locally, in your browser. Nothing is sent to a server.</p>
+  <h3>Cookies and tracking</h3>
+  <p>This site uses no cookies, no analytics and no user accounts. Fonts are served with the page.</p>
+  <h3>Third-party services</h3>
+  <ul>
+    <li>jsDelivr — MP4 video muxer, when you export.</li>
+  </ul>
+  <p>These services receive your IP address, which they need to send the files.</p>
+  <h3>Your rights</h3>
+  <p>This site keeps no personal data. For any question about your rights (access, rectification, erasure, objection), write to the address above. You can also contact the CNIL, the French data protection authority (cnil.fr).</p>
+  <form method="dialog"><button type="submit">Close</button></form>
+</dialog>
+
+<!-- Zone principale : la forme et la typo (WebGL) ; le canvas du dessus reçoit la souris -->
+<div id="main">
+  <div id="frame" data-crop>
+    <canvas id="gl"></canvas>
+    <canvas id="overlay"></canvas>
+  </div>
+</div>
+
+<!-- Panneau de droite : mode, format, lecteur, export (comme 3D kinetic type 002) -->
+<aside id="rightPanel">
+  <div id="modeSwitch" role="group" aria-label="Mode">
+    <button type="button" data-mode="image" aria-pressed="true">Image</button>
+    <button type="button" data-mode="video" aria-pressed="false">Video</button>
+  </div>
+
+  <div id="formatButtons">
+    <button type="button" data-format="din">A4</button>
+    <button type="button" data-format="square">1:1</button>
+    <button type="button" data-format="portrait">4:5</button>
+    <button type="button" data-format="story">9:16</button>
+  </div>
+  <p id="formatInfo"></p>
+
+  <div id="motionControls">
+    <div id="transport">
+      <button type="button" data-action="start" title="Start" aria-label="Start">
+        <svg viewBox="0 0 16 16"><rect x="3" y="3" width="2" height="10"/><polygon points="13,3 13,13 6,8"/></svg>
+      </button>
+      <button type="button" data-action="prev" title="Previous frame" aria-label="Previous frame">
+        <svg viewBox="0 0 16 16"><polygon points="12,3 12,13 4,8"/></svg>
+      </button>
+      <button type="button" data-action="pause" title="Pause" aria-label="Pause">
+        <svg viewBox="0 0 16 16"><rect x="4" y="3" width="3" height="10"/><rect x="9" y="3" width="3" height="10"/></svg>
+      </button>
+      <button type="button" data-action="play" title="Play" aria-label="Play">
+        <svg viewBox="0 0 16 16"><polygon points="4,3 4,13 12,8"/></svg>
+      </button>
+      <button type="button" data-action="next" title="Next frame" aria-label="Next frame">
+        <svg viewBox="0 0 16 16"><polygon points="3,3 3,13 10,8"/><rect x="11" y="3" width="2" height="10"/></svg>
+      </button>
+    </div>
+    <p id="motionTimeLabel"></p>
+  </div>
+
+  <div class="row">
+    <label for="durationSelect">Duration</label>
+    <select id="durationSelect" class="asPills">
+      <option value="5">5 s</option>
+      <option value="10" selected>10 s</option>
+      <option value="15">15 s</option>
+    </select>
+  </div>
+
+  <div id="exportRow">
+    <button id="exportBtn" type="button">Export PNG</button>
+    <button id="exportMp4Btn" type="button" hidden>Export MP4</button>
+    <!-- bouton carré noir : enregistre l'onglet entier en vidéo -->
+    <button id="extraBtn" type="button" aria-label="Record the tab as a video" title="Record the tab as a video"></button>
+  </div>
+</aside>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const TAU = Math.PI * 2;
+
+// ── Éléments de l'interface ──
+const frameEl = $("frame");
+const mainEl = $("main");
+const glCanvas = $("gl");
+const overlay = $("overlay");
+const formatButtons = Array.from(document.querySelectorAll("#formatButtons button"));
+const modeButtons = Array.from(document.querySelectorAll("#modeSwitch button"));
+const transportButtons = Array.from(document.querySelectorAll("#transport button"));
+const palInputs = Array.from(document.querySelectorAll(".palColor"));
+
+// Tous les réglages : lus à la volée, remis par défaut avec Reset
+const controls = {
+  typeOn: $("typeToggle"),
+  text: $("textInput"),
+  font: $("fontSelect"),
+  typeSize: $("typeSizeSlider"),
+  typeColor: $("typeColorInput"),
+  stores: $("storesToggle"),
+  shape: $("shapeSelect"),
+  rings: $("ringsSlider"),
+  beads: $("beadsSlider"),
+  stones: $("stonesSlider"),
+  altStones: $("altStonesToggle"),
+  organic: $("organicSlider"),
+  spin: $("spinSlider"),
+  breath: $("breathSlider"),
+  bgColor: $("bgColorInput"),
+  blur: $("blurSlider"),
+  noise: $("noiseSlider"),
+  grain: $("grainSlider"),
+  duration: $("durationSelect"),
+};
+palInputs.forEach((el, i) => (controls[`pal${i}`] = el));
+// Valeurs par défaut lues dans le HTML lui-même (au rechargement, le navigateur restaure les anciens réglages)
+function htmlDefault(el) {
+  if (el.type === "checkbox") return el.defaultChecked;
+  if (el.tagName === "SELECT") return (Array.from(el.options).find((o) => o.defaultSelected) ?? el.options[0]).value;
+  return el.defaultValue;
+}
+const DEFAULTS = Object.fromEntries(Object.entries(controls).map(([k, el]) => [k, htmlDefault(el)]));
+function resetControls() {
+  for (const [k, el] of Object.entries(controls)) {
+    if (el.type === "checkbox") el.checked = DEFAULTS[k];
+    else el.value = DEFAULTS[k];
+    el.dispatchEvent(new Event("input", { bubbles: true })); // ui_001.js remet à jour sliders et pilules
+  }
+}
+const num = (k) => Number(controls[k].value);
+const on = (k) => controls[k].checked;
+const hexToRgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+
+// ── Formats (identiques aux autres outils) ──
+const FORMATS = {
+  din:      { w: 1240, h: 1754 }, // DIN A4 portrait, 150 dpi
+  square:   { w: 1080, h: 1080 },
+  portrait: { w: 1080, h: 1350 },
+  story:    { w: 1080, h: 1920 },
+};
+let currentFormat = "portrait"; // 4:5 Instagram par défaut
+const SCENE_MARGIN = 40;
+
+// ── Polices du calque typo ──
+const FONT_FILES = {
+  "HN Roman": "../fonts/Helvetica Neue LT Std/HelveticaNeueLTStd-Roman.otf",
+  "HN Black Extended": "../fonts/Helvetica Neue LT Std/HelveticaNeueLTStd-BlkEx.otf",
+  "MingLiU-01": "../fonts/MingLiU-01.ttf",
+};
+for (const [name, url] of Object.entries(FONT_FILES)) {
+  new FontFace(name, `url('${encodeURI(url)}')`).load().then((face) => {
+    document.fonts.add(face);
+    typeKey = ""; // redessine avec la vraie police
+  }).catch((err) => console.error(`Could not load the ${name} font:`, err));
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// WebGL2 : trois passes.
+// 1. la forme, en raymarching (champ de distance), avec le fond, dans une texture
+// 2. et 3. un flou gaussien, horizontal puis vertical ; la dernière passe ajoute le grain et la typo
+// Tout dépend du temps t de la boucle (0 → 1) : aperçu et export identiques, la fin rejoint le début.
+// ═══════════════════════════════════════════════════════════════════
+const gl = glCanvas.getContext("webgl2", { alpha: false, antialias: false, preserveDrawingBuffer: true });
+if (!gl) {
+  $("formatInfo").textContent = "Unsupported browser (WebGL2 required: Chrome or Edge).";
+  throw new Error("WebGL2 requis");
+}
+
+// Un triangle qui couvre tout le cadre, sans sommets à fournir
+const FULL_VS = `#version 300 es
+out vec2 vUV;
+void main() {
+  vec2 p = vec2(float((gl_VertexID & 1) << 2) - 1.0, float((gl_VertexID & 2) << 1) - 1.0);
+  vUV = p * 0.5 + 0.5;
+  gl_Position = vec4(p, 0.0, 1.0);
+}`;
+
+// ── 1. La forme : anneaux de perles empilés, fondus entre eux (union douce) et bosselés par un bruit.
+// La couleur vient de la lumière, lue dans un dégradé de six teintes (comme une carte thermique),
+// décalé d'un anneau à l'autre ; un liseré clair souligne les bords. ──
+const SHAPE_FS = `#version 300 es
+precision highp float;
+in vec2 vUV;
+uniform vec2 uRes;
+uniform float uT;          // temps de la boucle, 0 → 1
+uniform int uShape;        // 0 anneaux de perles, 1 sommet (Peak), 2 cairn de granite
+uniform vec4 uStoneA[8];   // cairn : centre de chaque caillou (xyz) et sa graine
+uniform vec4 uStoneB[8];   // demi-axes (xyz) et orientation de départ
+uniform vec2 uStoneT[8];   // légère inclinaison (x, z)
+uniform int uStones;
+uniform float uLift;       // écart entre les cailloux (Breath : le cairn s'ouvre et se referme)
+uniform float uBound;      // rayon de la sphère qui contient le cairn
+uniform float uAltStones;  // 1 : les blocs tournent l'un par rapport à l'autre ; 0 : toute la pile tourne d'un bloc
+uniform int uRings;
+uniform float uBeads, uOrganic, uNoise, uSpin, uBreath, uDist;
+uniform mat3 uRot;         // orientation de la forme (glisser à la souris)
+uniform vec3 uPal[6];
+uniform float uCycle;      // 1 : le dégradé boucle (Thermal) ; 0 : il va du clair au sombre, sans retour
+uniform float uShift;      // décalage du dégradé d'un anneau à l'autre
+uniform float uSpread;     // étendue du dégradé sur la lumière (plus grand : les teintes sombres montent plus haut)
+uniform vec3 uBg;
+out vec4 outColor;
+const float TAU = 6.28318531;
+const float PI = 3.14159265;
+const float R = 1.0;       // rayon d'un anneau (centre des perles)
+const float TAN_HALF = 0.32; // champ de la caméra (≈ 35°)
+
+float hash(vec3 p) {
+  p = fract(p * 0.3183099 + 0.1);
+  p *= 17.0;
+  return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+}
+float vnoise(vec3 x) {
+  vec3 i = floor(x), f = fract(x);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(hash(i), hash(i + vec3(1, 0, 0)), f.x), mix(hash(i + vec3(0, 1, 0)), hash(i + vec3(1, 1, 0)), f.x), f.y),
+             mix(mix(hash(i + vec3(0, 0, 1)), hash(i + vec3(1, 0, 1)), f.x), mix(hash(i + vec3(0, 1, 1)), hash(i + vec3(1, 1, 1)), f.x), f.y), f.z);
+}
+// le bruit parcourt un cercle pendant la boucle : il revient exactement à son départ
+vec3 loopOffset() { return vec3(cos(TAU * uT), sin(TAU * uT), 0.0) * 0.9; }
+
+float smin(float a, float b, float k) {
+  if (k <= 0.0) return min(a, b);
+  float h = max(k - abs(a - b), 0.0) / k;
+  return min(a, b) - h * h * k * 0.25;
+}
+float beadRadius() { return R * sin(PI / uBeads) * 1.25; }
+
+// ── Peak : un sommet rocheux qui flotte, comme un bloc de montagne arraché.
+// Dessus : un pic (une cloche) creusé d'arêtes (bruit « ridged », comme des crêtes et des couloirs) ;
+// dessous : un éperon de roche irrégulier qui se resserre vers le bas. Il tourne d'un nombre entier de tours. ──
+float vnoise2(vec2 x) {
+  vec2 i = floor(x), f = fract(x);
+  f = f * f * (3.0 - 2.0 * f);
+  float a = hash(vec3(i, 0.0)), b = hash(vec3(i + vec2(1, 0), 0.0));
+  float c = hash(vec3(i + vec2(0, 1), 0.0)), d = hash(vec3(i + vec2(1, 1), 0.0));
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+float ridged(vec2 x) {
+  float s = 0.0, a = 0.5;
+  mat2 m = mat2(1.6, 1.2, -1.2, 1.6);
+  for (int i = 0; i < 5; i++) {
+    float n = 1.0 - abs(vnoise2(x) * 2.0 - 1.0); // crête là où le bruit passe par le milieu
+    s += a * n * n;
+    x = m * x;
+    a *= 0.5;
+  }
+  return s;
+}
+float peakTop(vec2 q) {
+  float r = length(q);
+  // Organic adoucit les arêtes (moins de petites crêtes), Noise les creuse
+  float rough = mix(0.8, 0.4, uOrganic) * (0.5 + uNoise);
+  // pic pointu (cône adouci au sommet) + massif plus large, creusés de crêtes
+  float cone = 1.55 * exp(-r * 2.1) + 0.35 * exp(-r * r * 2.0);
+  return -0.45 + cone + rough * (ridged(q * 2.3 + 3.1) - 0.35) * smoothstep(1.5, 0.15, r);
+}
+float peakBottom(vec2 q) {
+  float r = length(q);
+  // dessous : roche arrachée, courte et irrégulière
+  return -0.42 - 0.55 * pow(smoothstep(1.45, 0.0, r), 1.6) + 0.3 * (ridged(q * 2.6 + 11.0) - 0.4);
+}
+float peakMap(vec3 p) {
+  float a = TAU * uSpin * uT;            // Rotation = tours entiers par boucle : la vidéo boucle
+  float c = cos(a), s = sin(a);
+  p.xz = mat2(c, -s, s, c) * p.xz;
+  float d = max(p.y - peakTop(p.xz), peakBottom(p.xz) - p.y);
+  d = max(d, length(p.xz) - 1.45 - 0.1 * vnoise2(p.xz * 4.0));
+  return d * 0.3;                        // champ de hauteurs raide : pas prudent
+}
+
+// ── Cairn : des blocs de roche éclatée, empilés (d'après des photos de pierres taillées) :
+// un volume de départ (ovoïde irrégulier), taillé par neuf plans de fracture (facettes, arêtes vives),
+// creusé de deux éclats concaves, puis érodé de crêtes et de fissures (Noise) sur le bloc le plus proche.
+// Place, taille et orientation sont tirées dans le JS (New stones en tire d'autres). ──
+float smax(float a, float b, float k) { return -smin(-a, -b, k); }
+vec3 hash3(float n) { return vec3(hash(vec3(n, 1.7, 3.1)), hash(vec3(n, 5.3, 0.7)), hash(vec3(n, 2.9, 8.3))); }
+vec3 stoneCenter(int k) {
+  return uStoneA[k].xyz + vec3(0.0, uLift * (float(k) - (float(uStones) - 1.0) * 0.5), 0.0);
+}
+float stoneMinR(int k) { vec3 r = uStoneB[k].xyz; return min(r.x, min(r.y, r.z)); }
+// par défaut, toute la pile tourne d'un bloc autour de son axe (Rotation = tours entiers par boucle)
+vec3 pileSpace(vec3 p) {
+  if (uAltStones > 0.5) return p;
+  float a = TAU * uSpin * uT;
+  float c = cos(a), s = sin(a);
+  p.xz = mat2(c, -s, s, c) * p.xz;
+  return p;
+}
+// du repère de la pile à celui du bloc ; avec « Stones turn apart », un bloc sur deux tourne dans l'autre sens
+mat3 stoneRot(int k) {
+  float spin = uAltStones > 0.5 ? (mod(float(k), 2.0) < 0.5 ? 1.0 : -1.0) * TAU * uSpin * uT : 0.0;
+  float a = uStoneB[k].w + spin;
+  float ca = cos(a), sa = sin(a), tx = uStoneT[k].x, tz = uStoneT[k].y;
+  mat3 ry = mat3(ca, 0.0, sa, 0.0, 1.0, 0.0, -sa, 0.0, ca);
+  mat3 rx = mat3(1.0, 0.0, 0.0, 0.0, cos(tx), sin(tx), 0.0, -sin(tx), cos(tx));
+  mat3 rz = mat3(cos(tz), sin(tz), 0.0, -sin(tz), cos(tz), 0.0, 0.0, 0.0, 1.0);
+  return ry * rx * rz;
+}
+float stoneBase(vec3 q, int k) {
+  vec3 r = uStoneB[k].xyz;
+  float seed = uStoneA[k].w;
+  float k0 = length(q / r), k1 = length(q / (r * r));
+  float d = k0 * (k0 - 1.0) / max(k1, 1e-4);                       // ovoïde (approché)
+  float rm = min(r.x, min(r.y, r.z));
+  d += rm * 0.12 * (vnoise(q / rm * 1.1 + seed * 13.0) - 0.5);     // volume irrégulier
+  float sk = mix(0.004, 0.12, uOrganic) * rm;                      // arêtes : vives → émoussées (Organic)
+  for (int j = 0; j < 12; j++) {
+    // directions réparties sur la sphère (Fibonacci), bousculées par la graine du bloc
+    float fj = float(j) + 0.5;
+    float y = 1.0 - 2.0 * fj / 12.0, rr = sqrt(1.0 - y * y), th = fj * 2.39996;
+    vec3 n = normalize(vec3(cos(th) * rr, y, sin(th) * rr) + (hash3(seed * 7.0 + float(j)) - 0.5) * 0.8);
+    float plane = dot(q, n) - length(r * n) * (0.5 + 0.28 * hash(vec3(seed, float(j), 9.0)));
+    d = smax(d, plane, sk);                                        // une facette plane
+  }
+  for (int j = 0; j < 2; j++) {
+    // éclat concave : une sphère retirée au bord du bloc
+    vec3 n = normalize(hash3(seed * 3.0 + float(j) + 40.0) - 0.5);
+    vec3 c = n * length(r * n) * 1.05;
+    d = smax(d, -(length(q - c) - rm * 0.75), sk + 0.02 * rm);
+  }
+  return d;
+}
+// érosion : des lignes (bruit « ridged ») qui creusent la roche en fissures et en crêtes
+float erosion(vec3 x) {
+  float s = 0.0, a = 0.5;
+  for (int i = 0; i < 3; i++) {
+    float n = 1.0 - abs(vnoise(x * 2.2) * 2.0 - 1.0);
+    s += a * pow(n, 6.0);                 // lignes fines : des fissures
+    x = x * 2.03 + 1.7;
+    a *= 0.5;
+  }
+  return s;
+}
+float cairnMap(vec3 p, out float ring) {
+  p = pileSpace(p);
+  float d = 1e9;
+  ring = 0.0;
+  for (int k = 0; k < 8; k++) {
+    if (k >= uStones) break;
+    vec3 c = stoneCenter(k);
+    vec3 r = uStoneB[k].xyz;
+    // plus loin que le bloc déjà trouvé : inutile de le détailler
+    if (length(p - c) - max(r.x, max(r.y, r.z)) * 1.25 > d) continue;
+    float ds = stoneBase(stoneRot(k) * (p - c), k);
+    if (ds < d) { d = ds; ring = float(k); }
+  }
+  // fissures, crêtes et grain, sur le bloc le plus proche
+  int kk = int(ring + 0.5);
+  vec3 q = stoneRot(kk) * (p - stoneCenter(kk));
+  float rm = stoneMinR(kk);
+  d += uNoise * rm * (0.06 * erosion(q / rm * 0.9 + uStoneA[kk].w) + 0.025 * (vnoise(q * 30.0) - 0.5));
+  return d * 0.7;
+}
+// Granite : des cristaux fins (cellules de Voronoï en 3D) ; x = tirage de la cellule, y et z = 1re et 2e distances
+vec3 voronoi(vec3 x) {
+  vec3 i = floor(x), f = fract(x);
+  float f1 = 8.0, f2 = 8.0, id = 0.0;
+  for (int z = -1; z <= 1; z++)
+  for (int y = -1; y <= 1; y++)
+  for (int w = -1; w <= 1; w++) {
+    vec3 g = vec3(float(w), float(y), float(z));
+    vec3 o = vec3(hash(i + g), hash(i + g + 19.1), hash(i + g + 47.3));
+    vec3 r = g + o - f;
+    float dd = dot(r, r);
+    if (dd < f1) { f2 = f1; f1 = dd; id = hash(i + g + 91.7); }
+    else if (dd < f2) f2 = dd;
+  }
+  return vec3(id, sqrt(f1), sqrt(f2));
+}
+// Teinte de la pierre, en position dans le dégradé (0 clair → 5 sombre) : grain fin et discret
+// (quartz clair, feldspath moyen, mica sombre), pour que les facettes et la lumière dominent
+float graniteTone(vec3 q, float seed) {
+  vec3 v = voronoi(q * 45.0 + seed * 31.0);
+  float tone = v.x < 0.12 ? 2.2 + v.x * 2.0 : v.x < 0.5 ? 0.8 + v.x * 0.6 : 0.1 + (v.x - 0.5) * 0.5;
+  tone += 0.3 * smoothstep(0.05, 0.0, v.z - v.y);                  // joints entre les cristaux
+  tone = mix(tone, 2.6, step(0.84, vnoise(q * 120.0 + seed)) * 0.6); // mouchetures
+  return tone;
+}
+
+// distance à la forme ; ring = l'anneau le plus proche (pour décaler le dégradé)
+float map(vec3 p, out float ring) {
+  p = uRot * p;
+  if (uShape == 1) { ring = 0.0; return peakMap(p); }
+  if (uShape == 2) return cairnMap(p, ring);
+  float rb = beadRadius();
+  float gap = rb * 2.1;                  // d'un anneau au suivant : les anneaux se touchent à peine
+  float sector = TAU / uBeads;
+  float d = 1e9, best = 1e9;
+  ring = 0.0;
+  for (int k = 0; k < 5; k++) {
+    if (k >= uRings) break;
+    float fk = float(k);
+    vec3 q = p - vec3(0.0, (fk - (float(uRings) - 1.0) * 0.5) * gap, 0.0);
+    // un anneau sur deux tourne dans l'autre sens, d'un nombre entier de perles par boucle
+    float dir = mod(fk, 2.0) < 0.5 ? 1.0 : -1.0;
+    float a0 = dir * sector * uSpin * uT;
+    float c = cos(a0), s = sin(a0);
+    q.xz = mat2(c, -s, s, c) * q.xz;
+    float a = atan(q.z, q.x);
+    float i0 = floor(a / sector);
+    float dr = 1e9;
+    for (int j = 0; j < 2; j++) {
+      float i = i0 + float(j);
+      float ang = i * sector;
+      vec3 e = q - vec3(R * cos(ang), 0.0, R * sin(ang));
+      // les perles gonflent l'une après l'autre (deux vagues par boucle, décalées d'un anneau à l'autre)
+      float br = rb * (1.0 + uBreath * 0.16 * sin(TAU * (2.0 * uT - 2.0 * i / uBeads + fk * 0.25)));
+      e.y *= 0.88;                       // perles un peu plus hautes que larges
+      dr = smin(dr, length(e) - br, uOrganic * rb * 0.9);
+    }
+    if (dr < best) { best = dr; ring = fk; }
+    d = smin(d, dr, uOrganic * rb * 0.7);
+  }
+  d += uNoise * 0.07 * (vnoise(p * 3.2 + loopOffset()) - 0.5);
+  return d * 0.85;
+}
+
+vec3 normalAt(vec3 p) {
+  float r;
+  const vec2 k = vec2(1.0, -1.0);
+  const float h = 0.0015;
+  return normalize(k.xyy * map(p + k.xyy * h, r) + k.yyx * map(p + k.yyx * h, r)
+                 + k.yxy * map(p + k.yxy * h, r) + k.xxx * map(p + k.xxx * h, r));
+}
+
+// dégradé cyclique de six teintes, transitions douces
+vec3 palette(float s) {
+  s = uCycle > 0.5 ? mod(s, 6.0) : clamp(s, 0.0, 5.0);
+  float k = floor(s), f = smoothstep(0.0, 1.0, s - k);
+  int a = int(k), b = int(mod(k + 1.0, 6.0));
+  return mix(uPal[a], uPal[b], f);
+}
+
+void main() {
+  vec2 uv = (vUV * 2.0 - 1.0) * vec2(uRes.x / uRes.y, 1.0);
+  vec3 ro = vec3(0.0, 0.0, uDist);
+  vec3 rd = normalize(vec3(uv * TAN_HALF, -1.0));
+  // sphère englobante : on ne marche que là où la forme peut être
+  float bound = uShape == 2 ? uBound : uShape == 1 ? 1.85 : R + beadRadius() * (1.5 + float(uRings) * 0.9) + 0.2;
+  float b = dot(ro, rd), cc = dot(ro, ro) - bound * bound, disc = b * b - cc;
+  vec3 col = uBg;
+  if (disc > 0.0) {
+    float t = max(0.0, -b - sqrt(disc)), tEnd = -b + sqrt(disc);
+    float ring = 0.0;
+    bool hit = false;
+    int steps = uShape == 1 ? 260 : uShape == 2 ? 170 : 110;
+    for (int i = 0; i < 260; i++) {
+      if (i >= steps) break;
+      float d = map(ro + rd * t, ring);
+      if (d < 0.0008 * t) { hit = true; break; }
+      t += d;
+      if (t > tEnd) break;
+    }
+    if (hit) {
+      vec3 p = ro + rd * t;
+      float r2;
+      map(p, ring);
+      vec3 n = normalAt(p);
+      vec3 L = normalize(vec3(-0.15, 0.75, 0.65));  // lumière haute, devant
+      float dif = dot(n, L) * 0.5 + 0.5;
+      float fres = pow(1.0 - max(dot(n, -rd), 0.0), 2.2);
+      float v = dif * 0.9 + 0.1 * (1.0 - fres);
+      v += uNoise * 0.05 * (vnoise(p * 5.0 + loopOffset() * 2.0) - 0.5);
+      // lumière forte = teinte 1, ombre = teinte 6 ; chaque anneau décale le dégradé
+      col = palette((1.0 - clamp(v, 0.0, 1.0)) * uSpread + ring * uShift);
+      col = mix(col, uPal[0], smoothstep(0.6, 1.0, fres) * 0.55); // liseré clair sur les bords
+      if (uShape == 2) {
+        // granite : le minéral donne la teinte, la lumière l'assombrit ; chaque caillou est un peu décalé
+        int k = int(ring + 0.5);
+        vec3 q = stoneRot(k) * (pileSpace(uRot * p) - stoneCenter(k));
+        // cavités : la roche est plus sombre au fond des fissures et des éclats (occlusion, deux mesures)
+        float rr, h1 = 0.025, h2 = 0.07;
+        float ao = clamp(0.5 * (map(p + n * h1, rr) / h1 + map(p + n * h2, rr) / h2) / 0.7, 0.0, 1.0);
+        vec3 Lk = normalize(vec3(-0.45, 0.7, 0.55));           // lumière de studio, haute et de côté
+        float key = max(dot(n, Lk), 0.0);
+        float lit = (0.12 + 0.88 * key) * mix(0.5, 1.0, ao);
+        float tone = graniteTone(q, uStoneA[k].w);
+        col = palette(tone * 0.35 + (1.0 - lit) * min(uSpread, 5.0) * 0.8 + ring * uShift * 0.15);
+        col = mix(col, uPal[0], smoothstep(0.75, 1.0, fres) * 0.25);
+      }
+      if (uShape == 1) {
+        // neige : sur les faces tournées vers le ciel, au-dessus d'une limite qui monte et descend (Breath)
+        vec3 po = uRot * p, no = uRot * n;
+        float line = 0.15 + uBreath * 0.12 * sin(TAU * uT) + 0.12 * (vnoise(po * 6.0) - 0.5);
+        float snow = smoothstep(0.45, 0.75, no.y) * smoothstep(line - 0.05, line + 0.12, po.y);
+        col = mix(col, mix(uPal[0], uPal[1], 0.35 * (1.0 - dif)), snow);
+      }
+    }
+  }
+  outColor = vec4(col, 1.0);
+}`;
+
+// ── 2. Flou gaussien séparable, 13 prises, rayon en pixels ──
+const BLUR_FS = `#version 300 es
+precision highp float;
+in vec2 vUV;
+uniform sampler2D uTex;
+uniform vec2 uStep;        // une prise sur deux, en UV
+out vec4 outColor;
+void main() {
+  vec4 s = vec4(0.0);
+  float wsum = 0.0;
+  for (int i = -6; i <= 6; i++) {
+    float x = float(i);
+    float w = exp(-x * x / 18.0);
+    s += texture(uTex, vUV + uStep * x) * w;
+    wsum += w;
+  }
+  outColor = s / wsum;
+}`;
+
+// ── 3. Dernière passe : grain, puis la typo par-dessus (nette, jamais floutée) ──
+const FINAL_FS = `#version 300 es
+precision highp float;
+in vec2 vUV;
+uniform sampler2D uTex;
+uniform sampler2D uType;
+uniform float uGrain, uSeed, uTypeOn;
+out vec4 outColor;
+float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233)) + uSeed) * 43758.5453); }
+void main() {
+  vec3 col = texture(uTex, vUV).rgb;
+  col += (hash(gl_FragCoord.xy) - 0.5) * uGrain * 0.22;
+  vec4 type = texture(uType, vec2(vUV.x, 1.0 - vUV.y));
+  col = mix(col, type.rgb, type.a * uTypeOn);
+  outColor = vec4(col, 1.0);
+}`;
+
+function compile(type, src) {
+  const sh = gl.createShader(type);
+  gl.shaderSource(sh, src);
+  gl.compileShader(sh);
+  if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
+  return sh;
+}
+function program(fs) {
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, FULL_VS));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  const loc = {};
+  const n = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < n; i++) {
+    const name = gl.getActiveUniform(prog, i).name.replace(/\[0\]$/, "");
+    loc[name] = gl.getUniformLocation(prog, name);
+  }
+  return { prog, loc };
+}
+const shapeProg = program(SHAPE_FS);
+const blurProg = program(BLUR_FS);
+const finalProg = program(FINAL_FS);
+const vao = gl.createVertexArray(); // aucun attribut : les sommets viennent de gl_VertexID
+
+// Textures intermédiaires (forme, flou), refaites quand la taille change
+function makeTarget(w, h) {
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  const fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  return { tex, fb, w, h };
+}
+function freeTarget(t) { if (t) { gl.deleteTexture(t.tex); gl.deleteFramebuffer(t.fb); } }
+const passCache = new Map(); // "w×h" → { a, b }
+function passTargets(w, h) {
+  const key = `${w}x${h}`;
+  let t = passCache.get(key);
+  if (t) return t;
+  if (passCache.size >= 2) { passCache.forEach((v) => { freeTarget(v.a); freeTarget(v.b); }); passCache.clear(); }
+  t = { a: makeTarget(w, h), b: makeTarget(w, h) };
+  passCache.set(key, t);
+  return t;
+}
+
+// ── Adresses des boutiques (reprises de 3D kinetic type 002) : deux blocs en MingLiU, dans le calque typo ──
+const STORE_TEXT = `FRANCE
+Summit Line Running Co.
+112 Rue du Docteur Paccard 74400
+Chamonix-Mont-Blanc
+
+USA
+Wasatch Trail Supply
+1450 S 1100 E Salt Lake City, UT 84105
+
+SWITZERLAND
+Matterhorn Stride Store
+Bahnhofstrasse 28 3920 Zermatt
+
+CANADA
+Coast Ridge Runners
+4280 Mountain Square Whistler,
+BC V8E 1B8
+
+USA
+Flatirons Pace Shop
+1238 Pearl Street Boulder, CO 80302
+
+AUSTRIA
+Nordkette Running Room
+Maria-Theresien-Straße 34 6020 Innsbruck
+
+ITALY
+Dolomiti Trail House
+Corso Italia 76 32043 Cortina d'Ampezzo
+
+NEW ZEALAND
+Remarkables Run Club Store
+37 Shotover Street Queenstown 9300
+
+JAPAN
+Hakuba Altitude Store
+4683 Hokujo, Hakuba-mura 399-9301 Nagano
+
+ARGENTINA
+Cerro Catedral Running Co.
+Calle Mitre 340 R8400 San Carlos de Bariloche`;
+const STORES = STORE_TEXT.split(/\n\s*\n/).map((block) => block.split("\n"));
+
+// Composition (repère de la page, petit côté = 800), relevée sur la maquette 4:5 :
+// deux blocs centrés, le premier en haut, le second dans le bas de la page
+const BG = {
+  body: 9.8,           // taille du texte courant
+  title: 11,           // taille des pays (en capitales)
+  tracking: 0,         // interlettrage (en fraction de la taille) : 0 = celui de la police
+  embolden: 0.05,      // contour arrondi des titres (faux gras), en fraction de leur taille
+  titlePitch: 11.3,    // du titre à la première ligne
+  bodyPitch: 10.35,    // d'une ligne à la suivante
+  entryPitch: 21,      // de la dernière ligne au titre suivant
+  blocks: [
+    { from: 0, to: 5, y: 0.1235 },   // centre du premier titre, en fraction de la hauteur
+    { from: 5, to: 10, y: 0.6705 },
+  ],
+};
+
+// Dessine les adresses dans le calque typo (repère de la page : petit côté = 800), dans la couleur de la typo
+function drawStoreBlocks(ctx, w, h) {
+  const scale = Math.min(w, h) / 800, sceneW = w / scale, sceneH = h / scale;
+  ctx.save();
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  const cx = sceneW / 2;
+  const line = (text, size, y, bold) => {
+    const spacing = size * BG.tracking;
+    ctx.font = `${size}px "MingLiU-01", serif`;
+    ctx.letterSpacing = `${spacing}px`;
+    const x = cx - spacing / 2; // le canvas compte l'espacement après la dernière lettre
+    ctx.fillText(text, x, y);
+    if (bold) {
+      ctx.lineWidth = size * BG.embolden;
+      ctx.strokeText(text, x, y);
+    }
+  };
+  for (const block of BG.blocks) {
+    let y = block.y * sceneH;
+    STORES.slice(block.from, block.to).forEach(([title, ...lines], i) => {
+      if (i > 0) y += BG.entryPitch;
+      line(title, BG.title, y, true);
+      y += BG.titlePitch;
+      lines.forEach((text, j) => {
+        if (j > 0) y += BG.bodyPitch;
+        line(text, BG.body, y, false);
+      });
+    });
+  }
+  // mention centrée en bas de page, comme dans 3D kinetic type
+  ctx.font = `11px "MingLiU-01", serif`;
+  ctx.letterSpacing = "0px";
+  ctx.textBaseline = "bottom";
+  ctx.fillText("[For experimental purposes only]", cx, sceneH - 10 - 6);
+  ctx.restore();
+}
+
+// ── Calque typo : dessiné en 2D à la taille du rendu, centré, puis posé par la dernière passe ──
+const typeCanvas = document.createElement("canvas");
+const tctx = typeCanvas.getContext("2d");
+const typeTex = gl.createTexture();
+let typeKey = "";
+const MINGLIU_EMBOLDEN = 0.025; // faux gras arrondi de MingLiU, comme dans les autres outils
+function updateTypeTexture(w, h) {
+  const key = [w, h, controls.text.value, controls.font.value, num("typeSize"), controls.typeColor.value, on("stores"), on("typeOn")].join("|");
+  if (key === typeKey) return;
+  typeKey = key;
+  typeCanvas.width = w;
+  typeCanvas.height = h;
+  tctx.clearRect(0, 0, w, h);
+  const mingliu = controls.font.value === "MingLiU-01";
+  const lines = (mingliu ? controls.text.value.toUpperCase() : controls.text.value).split("\n");
+  let size = num("typeSize") * h;
+  const font = (s) => `${s}px "${controls.font.value}", "Helvetica Neue", Helvetica, Arial, sans-serif`;
+  tctx.font = font(size);
+  // jamais plus large que la page (marge de 6 %)
+  const widest = Math.max(1, ...lines.map((l) => tctx.measureText(l).width));
+  if (widest > w * 0.88) { size *= (w * 0.88) / widest; tctx.font = font(size); }
+  tctx.fillStyle = tctx.strokeStyle = controls.typeColor.value;
+  tctx.textAlign = "center";
+  tctx.textBaseline = "alphabetic";
+  tctx.lineJoin = "round";
+  tctx.lineWidth = size * MINGLIU_EMBOLDEN;
+  const capH = tctx.measureText("H").actualBoundingBoxAscent;
+  const lh = size * 0.9;
+  if (on("typeOn")) lines.forEach((line, i) => {
+    const y = h / 2 + (i - (lines.length - 1) / 2) * lh + capH / 2;
+    tctx.fillText(line, w / 2, y);
+    if (mingliu) tctx.strokeText(line, w / 2, y);
+  });
+  if (on("stores")) {
+    tctx.fillStyle = tctx.strokeStyle = controls.typeColor.value;
+    drawStoreBlocks(tctx, w, h);
+  }
+  gl.bindTexture(gl.TEXTURE_2D, typeTex);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, typeCanvas);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+}
+
+// ── Palettes : six teintes de la lumière (1) à l'ombre (6), le fond et la couleur de la typo.
+// Glacier et Fire reprennent les couleurs de Gradient body (du cœur clair au fond sombre). ──
+const PALETTES = {
+  thermal: { cycle: true, shift: 1.5, spread: 4.6, bg: "#d6dcec", ink: "#000000",
+             colors: ["#f1f0ff", "#0c1730", "#2f9a1c", "#ff8a14", "#ff2a55", "#4f6dff"] },
+  glacier: { cycle: false, shift: 0.35, spread: 7.5, bg: "#02060d", ink: "#f3fbff",
+             colors: ["#f3fbff", "#a8e3f2", "#3d8cc4", "#1d5c8f", "#0c2c4a", "#02060d"] },
+  fire:    { cycle: false, shift: 0.35, spread: 7.5, bg: "#070006", ink: "#ffe3d6",
+             colors: ["#ffe3d6", "#e00000", "#e2003c", "#c414bc", "#4a063f", "#070006"] },
+  chrome:  { cycle: false, shift: 0.25, spread: 6.5, bg: "#e9e9eb", ink: "#000000",
+             colors: ["#ffffff", "#d9dde3", "#9aa3ad", "#5b636d", "#2a2f36", "#0a0c0f"] },
+};
+const DEFAULT_PALETTE = "glacier"; // le bleu de Gradient body
+let paletteName = DEFAULT_PALETTE;
+const palettePills = Array.from(document.querySelectorAll("#palettePills button"));
+function setPalette(name) {
+  paletteName = name;
+  const P = PALETTES[name];
+  palInputs.forEach((el, i) => (el.value = P.colors[i]));
+  controls.bgColor.value = P.bg;
+  controls.typeColor.value = P.ink;
+  palettePills.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.palette === name)));
+}
+palettePills.forEach((b) => b.addEventListener("click", () => setPalette(b.dataset.palette)));
+// une pastille retouchée à la main : plus aucune palette n'est « la » palette (son mode de dégradé reste)
+palInputs.forEach((el) => el.addEventListener("input", () => palettePills.forEach((b) => b.setAttribute("aria-pressed", "false"))));
+
+// ── Cairn : la pile de cailloux, tirée au hasard depuis une graine (New stones en change) ──
+// Du plus gros en bas au plus petit en haut, aplatis, chacun posé sur le précédent, un peu décalé et penché.
+function mulberry32(a) {
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const DEFAULT_STONE_SEED = 1;
+let stoneSeed = DEFAULT_STONE_SEED;
+let cairnCache = null;
+function cairnStones() {
+  const n = num("stones");
+  const key = n + "|" + stoneSeed;
+  if (cairnCache?.key === key) return cairnCache;
+  const rnd = mulberry32(stoneSeed * 9973 + 17);
+  const A = new Float32Array(32), B = new Float32Array(32), T = new Float32Array(16);
+  let y = 0, prevRy = 0, maxR = 0;
+  for (let i = 0; i < n; i++) {
+    const f = n > 1 ? i / (n - 1) : 0;
+    const R = n === 1 ? 0.9 : 0.8 - 0.38 * f + (rnd() - 0.5) * 0.12;
+    const rx = R * (0.85 + rnd() * 0.25), rz = R * (0.7 + rnd() * 0.25);
+    // blocs massifs ; celui du sommet se dresse en pointe (seul, c'est un éclat debout, comme les photos)
+    let ry = R * (0.5 + rnd() * 0.2);
+    if (i === n - 1) ry = R * (n === 1 ? 1.75 : 0.9 + rnd() * 0.3);
+    // posé sur le précédent : les facettes rognent le volume, les blocs s'emboîtent un peu
+    if (i > 0) y += (prevRy + ry) * 0.74;
+    prevRy = ry;
+    A.set([(rnd() - 0.5) * 0.12, y, (rnd() - 0.5) * 0.12, 1 + rnd() * 100], i * 4);
+    B.set([rx, ry, rz, rnd() * TAU], i * 4);
+    T.set([(rnd() - 0.5) * 0.22, (rnd() - 0.5) * 0.22], i * 2);
+    maxR = Math.max(maxR, rx, rz);
+  }
+  // la pile est centrée en hauteur
+  const bottom = -B[1], top = y + B[(n - 1) * 4 + 1], mid = (top + bottom) / 2;
+  for (let i = 0; i < n; i++) A[i * 4 + 1] -= mid;
+  cairnCache = { key, n, A, B, T, maxR, halfH: (top - bottom) / 2 };
+  return cairnCache;
+}
+$("newStonesBtn").addEventListener("click", () => { stoneSeed++; });
+
+// ── Vue : orientation de la forme (glisser) et distance de la caméra (molette) ──
+const DEFAULT_VIEW = { tilt: 0.42, yaw: 0, zoom: 1 };
+const viewState = { ...DEFAULT_VIEW };
+function rotationMatrix() {
+  // la forme penche vers nous (tilt) puis tourne sur elle-même (yaw) ; colonnes d'abord, pour uRot * p
+  const ct = Math.cos(viewState.tilt), st = Math.sin(viewState.tilt);
+  const cy = Math.cos(viewState.yaw), sy = Math.sin(viewState.yaw);
+  // Ry(yaw) · Rx(tilt)
+  return new Float32Array([
+    cy, 0, -sy,
+    sy * st, ct, cy * st,
+    sy * ct, -st, cy * ct,
+  ]);
+}
+
+// Dessine la scène dans fb (null = l'écran), à la taille w × h, au temps t de la boucle (0 → 1).
+// quality < 1 : la forme est calculée plus petite (aperçu), le flou cache la différence.
+function render(fb, w, h, t, quality = 1) {
+  const sw = Math.max(16, Math.round(w * quality)), sh = Math.max(16, Math.round(h * quality));
+  const { a, b } = passTargets(sw, sh);
+  gl.bindVertexArray(vao);
+  gl.disable(gl.DEPTH_TEST);
+  gl.disable(gl.BLEND);
+
+  // 1. la forme
+  gl.bindFramebuffer(gl.FRAMEBUFFER, a.fb);
+  gl.viewport(0, 0, sw, sh);
+  gl.useProgram(shapeProg.prog);
+  const S = shapeProg.loc;
+  const rings = num("rings");
+  const shapeName = controls.shape.value, peak = shapeName === "peak", cairn = shapeName === "cairn";
+  const C = cairn ? cairnStones() : null;
+  // Breath ouvre le cairn et le referme pendant la boucle (0 au début et à la fin)
+  const liftMax = num("breath") * 0.16;
+  const lift = liftMax * (0.5 - 0.5 * Math.cos(TAU * t));
+  // la forme entière tient dans la hauteur (ou la largeur, sur un format plus étroit)
+  const rb = Math.sin(Math.PI / num("beads")) * 1.25;
+  const halfExtent = cairn ? Math.max(C.halfH + (liftMax * (C.n - 1)) / 2, C.maxR) * 1.08
+    : peak ? 1.55 : Math.max(1 + rb * 1.1, (rings * rb * 2.1) / 2 + rb * 1.2);
+  const fitH = halfExtent / 0.32 / 0.82, fitW = halfExtent / 0.32 / 0.82 / Math.min(1, w / h);
+  gl.uniform2f(S.uRes, sw, sh);
+  gl.uniform1f(S.uT, t);
+  gl.uniform1i(S.uShape, cairn ? 2 : peak ? 1 : 0);
+  if (cairn) {
+    gl.uniform4fv(S.uStoneA, C.A);
+    gl.uniform4fv(S.uStoneB, C.B);
+    gl.uniform2fv(S.uStoneT, C.T);
+    gl.uniform1i(S.uStones, C.n);
+    gl.uniform1f(S.uAltStones, on("altStones") ? 1 : 0);
+    gl.uniform1f(S.uLift, lift);
+    gl.uniform1f(S.uBound, Math.hypot(C.halfH + (liftMax * (C.n - 1)) / 2, C.maxR) * 1.2 + 0.1);
+  }
+  gl.uniform1i(S.uRings, rings);
+  gl.uniform1f(S.uBeads, num("beads"));
+  gl.uniform1f(S.uOrganic, num("organic"));
+  gl.uniform1f(S.uNoise, num("noise"));
+  gl.uniform1f(S.uSpin, num("spin"));
+  gl.uniform1f(S.uBreath, num("breath"));
+  gl.uniform1f(S.uDist, Math.max(fitH, fitW) / viewState.zoom + 0.6);
+  gl.uniformMatrix3fv(S.uRot, false, rotationMatrix());
+  gl.uniform3fv(S.uPal, palInputs.flatMap((el) => hexToRgb(el.value)));
+  gl.uniform3fv(S.uBg, hexToRgb(controls.bgColor.value));
+  gl.uniform1f(S.uCycle, PALETTES[paletteName].cycle ? 1 : 0);
+  gl.uniform1f(S.uShift, PALETTES[paletteName].shift);
+  gl.uniform1f(S.uSpread, PALETTES[paletteName].spread);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+  // 2. flou horizontal puis vertical ; rayon proportionnel à la hauteur (même rendu à l'écran et à l'export)
+  const radius = num("blur") * sh * 0.012; // écart entre deux prises, en pixels
+  let src = a;
+  if (radius > 0.05) {
+    gl.useProgram(blurProg.prog);
+    gl.uniform1i(blurProg.loc.uTex, 0);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, b.fb);
+    gl.bindTexture(gl.TEXTURE_2D, a.tex);
+    gl.uniform2f(blurProg.loc.uStep, radius / sw, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, a.fb);
+    gl.bindTexture(gl.TEXTURE_2D, b.tex);
+    gl.uniform2f(blurProg.loc.uStep, 0, radius / sh);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+
+  // 3. grain et typo, à la taille finale
+  updateTypeTexture(w, h);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.viewport(0, 0, w, h);
+  gl.useProgram(finalProg.prog);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, src.tex);
+  gl.uniform1i(finalProg.loc.uTex, 0);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, typeTex);
+  gl.uniform1i(finalProg.loc.uType, 1);
+  gl.uniform1f(finalProg.loc.uGrain, num("grain"));
+  // un grain par image de la vidéo : la boucle reste parfaite
+  gl.uniform1f(finalProg.loc.uSeed, Math.floor(t * loopDuration() * FPS) % 997);
+  gl.uniform1f(finalProg.loc.uTypeOn, 1); // titre et adresses s'allument séparément, dans la texture
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.activeTexture(gl.TEXTURE0);
+}
+
+// ── Mise en page de la frame ──
+function applyFormat(key) {
+  currentFormat = key;
+  const { w, h } = FORMATS[key];
+  formatButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.format === key));
+  $("formatInfo").textContent = `${w} × ${h} px`;
+  resizeScene();
+}
+function resizeScene() {
+  const { w, h } = FORMATS[currentFormat];
+  const maxW = mainEl.clientWidth - SCENE_MARGIN * 2;
+  const maxH = mainEl.clientHeight - SCENE_MARGIN * 2;
+  const ratio = w / h;
+  let dw = maxW, dh = dw / ratio;
+  if (dh > maxH) { dh = maxH; dw = dh * ratio; }
+  frameEl.style.width = dw + "px";
+  frameEl.style.height = dh + "px";
+  const dpr = window.devicePixelRatio || 1;
+  for (const c of [glCanvas, overlay]) {
+    c.width = Math.round(dw * dpr);
+    c.height = Math.round(dh * dpr);
+  }
+}
+window.addEventListener("resize", resizeScene);
+
+// ═══════════════════════════════════════════════════════════════════
+// Horloge : une boucle de « Duration » secondes
+// ═══════════════════════════════════════════════════════════════════
+const FPS = 30;
+let videoMode = false;
+let playing = true;
+let motionTime = 0;
+let lastTime = performance.now();
+const loopDuration = () => num("duration");
+// aperçu : la forme est calculée à 60 % (le flou cache la différence), à pleine taille sans flou
+// (Peak a des détails fins : calculé un peu plus grand)
+const previewQuality = () => (controls.shape.value !== "beads" ? 0.8 : num("blur") > 0.1 ? 0.6 : 0.85);
+
+function loop(now) {
+  const dt = Math.min(0.1, Math.max(0, (now - lastTime) / 1000));
+  lastTime = now;
+  if (playing) motionTime = (motionTime + dt) % loopDuration();
+  render(null, glCanvas.width, glCanvas.height, motionTime / loopDuration(), previewQuality());
+  updateTimeLabel();
+  requestAnimationFrame(loop);
+}
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = (seconds - m * 60).toFixed(2).padStart(5, "0");
+  return `${m}:${s}`;
+}
+function updateTimeLabel() {
+  $("motionTimeLabel").textContent = `${formatTime(motionTime)} / ${formatTime(loopDuration())}`;
+}
+
+// ── Souris : glisser pour tourner la forme, molette pour zoomer ──
+let drag = null;
+overlay.addEventListener("pointerdown", (e) => {
+  overlay.setPointerCapture(e.pointerId);
+  overlay.classList.add("dragging");
+  drag = { x: e.clientX, y: e.clientY, tilt: viewState.tilt, yaw: viewState.yaw };
+});
+overlay.addEventListener("pointermove", (e) => {
+  if (!drag) return;
+  viewState.yaw = drag.yaw + (e.clientX - drag.x) * 0.008;
+  viewState.tilt = Math.max(-1.5, Math.min(1.5, drag.tilt + (e.clientY - drag.y) * 0.008));
+});
+const endDrag = () => { drag = null; overlay.classList.remove("dragging"); };
+overlay.addEventListener("pointerup", endDrag);
+overlay.addEventListener("pointercancel", endDrag);
+overlay.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  viewState.zoom = Math.max(0.4, Math.min(4, viewState.zoom * Math.exp(-e.deltaY * 0.001)));
+}, { passive: false });
+
+// ═══════════════════════════════════════════════════════════════════
+// Réglages
+// ═══════════════════════════════════════════════════════════════════
+let lastDuration = loopDuration();
+controls.duration.addEventListener("input", () => {
+  motionTime = (motionTime / lastDuration) * loopDuration();
+  lastDuration = loopDuration();
+});
+$("resetBtn").addEventListener("click", () => {
+  resetControls();
+  setPalette(DEFAULT_PALETTE);
+  stoneSeed = DEFAULT_STONE_SEED;
+  updateShapeRows();
+  Object.assign(viewState, DEFAULT_VIEW);
+  lastDuration = loopDuration();
+  applyFormat("portrait");
+  setMode("image");
+});
+$("privacyBtn").addEventListener("click", () => $("privacyDialog").showModal());
+
+// ── Mode Image / Vidéo ──
+modeButtons.forEach((btn) => btn.addEventListener("click", () => setMode(btn.dataset.mode)));
+function setMode(mode) {
+  videoMode = mode === "video";
+  modeButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+  $("exportBtn").hidden = videoMode;
+  $("exportMp4Btn").hidden = !videoMode;
+  motionTime = 0;
+  setPlaying(true);
+}
+function setPlaying(p) {
+  playing = p;
+  transportButtons.forEach((b) => {
+    const a = b.dataset.action;
+    b.classList.toggle("active", (a === "play" && p) || (a === "pause" && !p));
+  });
+}
+const FRAME = 1 / FPS;
+transportButtons.forEach((btn) => btn.addEventListener("click", () => {
+  const d = loopDuration();
+  switch (btn.dataset.action) {
+    case "start": motionTime = 0; break;
+    case "prev": setPlaying(false); motionTime = (motionTime - FRAME + d) % d; break;
+    case "pause": setPlaying(false); break;
+    case "play": setPlaying(true); break;
+    case "next": setPlaying(false); motionTime = (motionTime + FRAME) % d; break;
+  }
+}));
+formatButtons.forEach((btn) => btn.addEventListener("click", () => applyFormat(btn.dataset.format)));
+
+// ═══════════════════════════════════════════════════════════════════
+// Exports : la scène est recalculée à la taille réelle du format
+// ═══════════════════════════════════════════════════════════════════
+let exportTarget = null;
+function getExportTarget(w, h) {
+  if (exportTarget && exportTarget.w === w && exportTarget.h === h) return exportTarget;
+  if (exportTarget) freeTarget(exportTarget.out);
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  exportTarget = {
+    w, h, out: makeTarget(w, h),
+    canvas, ctx: canvas.getContext("2d"),
+    raw: new Uint8Array(w * h * 4), pixels: new Uint8ClampedArray(w * h * 4),
+  };
+  return exportTarget;
+}
+function renderPoster(t) {
+  const { w, h } = FORMATS[currentFormat];
+  const T = getExportTarget(w, h);
+  render(T.out.fb, w, h, t, 1);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, T.out.fb);
+  gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, T.raw);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  // WebGL lit de bas en haut : on retourne les lignes
+  const row = w * 4;
+  for (let y = 0; y < h; y++) T.pixels.set(T.raw.subarray((h - 1 - y) * row, (h - y) * row), y * row);
+  T.ctx.putImageData(new ImageData(T.pixels, w, h), 0, 0);
+  return T.canvas;
+}
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+$("exportBtn").addEventListener("click", () => {
+  const { w, h } = FORMATS[currentFormat];
+  renderPoster(motionTime / loopDuration()).toBlob((blob) => downloadBlob(blob, `kinetic-v2-${currentFormat}-${w}x${h}.png`), "image/png");
+});
+
+const exportMp4Btn = $("exportMp4Btn");
+exportMp4Btn.addEventListener("click", () => {
+  exportMP4().catch((err) => {
+    console.error(err);
+    alert("MP4 export failed: " + err.message);
+  }).finally(() => {
+    exportMp4Btn.disabled = false;
+    exportMp4Btn.textContent = "Export MP4";
+    setPlaying(true);
+  });
+});
+
+// Firefox donne une description avcC fautive : on la reconstruit depuis les SPS / PPS de l'image clé
+// (même correctif que 3D kinetic type 002, pour qu'After Effects lise le fichier)
+function fixAvcDescription(chunk, meta) {
+  if (!meta?.decoderConfig) return meta;
+  const data = new Uint8Array(chunk.byteLength);
+  chunk.copyTo(data);
+  const view = new DataView(data.buffer);
+  const sps = [], pps = [];
+  for (let p = 0; p + 4 <= data.length; ) {
+    const len = view.getUint32(p);
+    if (len === 0 || p + 4 + len > data.length) break;
+    const nal = data.subarray(p + 4, p + 4 + len);
+    if ((nal[0] & 31) === 7) sps.push(nal);
+    if ((nal[0] & 31) === 8) pps.push(nal);
+    p += 4 + len;
+  }
+  if (!sps.length || !pps.length) return meta;
+  const bytes = [1, sps[0][1], sps[0][2], sps[0][3], 0xff, 0xe0 | sps.length];
+  for (const nal of sps) bytes.push(nal.length >> 8, nal.length & 255, ...nal);
+  bytes.push(pps.length);
+  for (const nal of pps) bytes.push(nal.length >> 8, nal.length & 255, ...nal);
+  return { ...meta, decoderConfig: { ...meta.decoderConfig, description: new Uint8Array(bytes) } };
+}
+
+async function exportMP4() {
+  if (!("VideoEncoder" in window)) throw new Error("this browser can't encode video (use Chrome or Edge).");
+  exportMp4Btn.disabled = true;
+  exportMp4Btn.textContent = "Export… 0 %";
+  setPlaying(false);
+
+  const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/+esm");
+  const { w, h } = FORMATS[currentFormat];
+  // H.264 Baseline, niveau 5.1, sans images B
+  const config = { codec: "avc1.42e033", width: w, height: h, bitrate: 14_000_000, framerate: FPS, avc: { format: "avc" } };
+  const { supported } = await VideoEncoder.isConfigSupported(config);
+  if (!supported) throw new Error(`H.264 encoding at ${w}×${h} isn't supported by this browser.`);
+
+  const muxer = new Muxer({
+    target: new ArrayBufferTarget(),
+    video: { codec: "avc", width: w, height: h, frameRate: FPS },
+    fastStart: "in-memory",
+  });
+  let encodeError = null;
+  const encoder = new VideoEncoder({
+    output: (chunk, meta) => muxer.addVideoChunk(chunk, fixAvcDescription(chunk, meta)),
+    error: (e) => { encodeError = e; },
+  });
+  encoder.configure(config);
+
+  const total = loopDuration() * FPS;
+  const frameDuration = 1e6 / FPS;
+  for (let i = 0; i < total; i++) {
+    if (encodeError) throw encodeError;
+    const canvas = renderPoster(i / total);
+    const frame = new VideoFrame(canvas, { timestamp: i * frameDuration, duration: frameDuration });
+    encoder.encode(frame, { keyFrame: i % FPS === 0 });
+    frame.close();
+    motionTime = i / FPS;
+    while (encoder.encodeQueueSize > 4) await new Promise((r) => setTimeout(r, 0));
+    exportMp4Btn.textContent = `Export… ${Math.round(((i + 1) / total) * 100)} %`;
+    if (i % 5 === 0) await new Promise((r) => setTimeout(r, 0));
+  }
+  await encoder.flush();
+  if (encodeError) throw encodeError;
+  encoder.close();
+  muxer.finalize();
+  downloadBlob(new Blob([muxer.target.buffer], { type: "video/mp4" }), `kinetic-v2-${currentFormat}-${w}x${h}-${loopDuration()}s.mp4`);
+  motionTime = 0;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Bouton carré noir : enregistre l'onglet entier en vidéo, pendant « Duration »
+// ═══════════════════════════════════════════════════════════════════
+let recording = false;
+function recorderType() {
+  const types = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm"];
+  return types.find((t) => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) ?? "";
+}
+async function recordWindow() {
+  if (recording) return;
+  if (!navigator.mediaDevices?.getDisplayMedia) throw new Error("this browser can't record the tab (use Chrome or Edge).");
+  recording = true;
+  let stream = null;
+  try {
+    stream = await navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: FPS, displaySurface: "browser" },
+      audio: false,
+      preferCurrentTab: true,
+      selfBrowserSurface: "include",
+    });
+    await new Promise((r) => setTimeout(r, 800)); // la barre de partage de Chrome s'installe
+    motionTime = 0;
+    setPlaying(false);
+    const src = document.createElement("video");
+    src.muted = true;
+    src.srcObject = stream;
+    await src.play();
+    const nextCapturedFrame = () => new Promise((r) => src.requestVideoFrameCallback(() => r()));
+    await nextCapturedFrame();
+    const type = recorderType();
+    const recorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 12_000_000 });
+    const chunks = [];
+    recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+    const started = new Promise((resolve) => (recorder.onstart = resolve));
+    const stopped = new Promise((resolve) => (recorder.onstop = resolve));
+    recorder.start();
+    await started;
+    await nextCapturedFrame();
+    motionTime = 0;
+    setPlaying(true);
+    await new Promise((r) => setTimeout(r, loopDuration() * 1000));
+    recorder.stop();
+    await stopped;
+    const ext = type.includes("mp4") ? "mp4" : "webm";
+    downloadBlob(new Blob(chunks, { type: type || "video/webm" }), `kinetic-v2-screen-${loopDuration()}s.${ext}`);
+  } finally {
+    stream?.getTracks().forEach((t) => t.stop());
+    setPlaying(true);
+    recording = false;
+  }
+}
+$("extraBtn").addEventListener("click", () => {
+  recordWindow().catch((err) => {
+    recording = false;
+    if (err.name !== "NotAllowedError") alert("Recording failed: " + err.message);
+  });
+});
+
+// Rings et Beads ne concernent que les anneaux de perles
+function updateShapeRows() {
+  document.querySelectorAll(".beadsOnly").forEach((row) => (row.hidden = controls.shape.value !== "beads"));
+  document.querySelectorAll(".cairnOnly").forEach((row) => (row.hidden = controls.shape.value !== "cairn"));
+}
+controls.shape.addEventListener("input", updateShapeRows);
+
+// ── Démarrage : toujours sur les réglages par défaut ──
+resetControls();
+setPalette(DEFAULT_PALETTE);
+updateShapeRows();
+applyFormat(currentFormat);
+setMode("image");
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
