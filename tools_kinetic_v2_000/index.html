@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Kinetic v2</title>
+<title>Cairn generator</title>
 <!-- interface commune des outils (verre, typo, sliders), puis la mise en page propre à l'outil.
      Repart de 3D kinetic type 002 (formats, lecteur, exports), avec beaucoup moins de réglages :
      une forme organique (anneaux de perles fondues, dégradé, flou, grain) et un calque typo posé dessus. -->
@@ -18,7 +18,7 @@
 
   <header id="panelHead">
     <p class="eyebrow"><a class="badge backLink" href="../" title="Back to all tools">← Digital tools</a></p>
-    <h1 class="toolTitle">Kinetic v2</h1>
+    <h1 class="toolTitle">Cairn<br>generator</h1>
   </header>
 
   <!-- Typo : un calque à plat, posé sur la forme (jamais écrit dans la forme) -->
@@ -47,14 +47,14 @@
     <div class="row">
       <label for="shapeSelect">Shape</label>
       <select id="shapeSelect" class="asPills">
-        <option value="beads" selected>Bead rings</option>
+        <option value="beads">Bead rings</option>
         <option value="peak">Peak</option>
-        <option value="cairn">Cairn</option>
+        <option value="cairn" selected>Cairn</option>
       </select>
     </div>
     <div class="row beadsOnly"><label for="ringsSlider" title="Stacked rings">Rings</label><input id="ringsSlider" type="range" min="1" max="5" step="1" value="3" /></div>
     <div class="row beadsOnly"><label for="beadsSlider" title="Beads around each ring">Beads</label><input id="beadsSlider" type="range" min="6" max="24" step="1" value="12" /></div>
-    <div class="row cairnOnly"><label for="stonesSlider" title="Rocks in the pile (1 = a single rock)">Stones</label><input id="stonesSlider" type="range" min="1" max="8" step="1" value="3" /></div>
+    <div class="row cairnOnly"><label for="stonesSlider" title="Rocks in the pile (1 = a single rock)">Stones</label><input id="stonesSlider" type="range" min="1" max="8" step="1" value="5" /></div>
     <label class="check cairnOnly"><input id="altStonesToggle" type="checkbox" /> Stones turn apart</label>
     <div class="btnRow cairnOnly">
       <button id="newStonesBtn" type="button" title="Draws a new pile of stones">New stones</button>
@@ -292,7 +292,8 @@ precision highp float;
 in vec2 vUV;
 uniform vec2 uRes;
 uniform float uT;          // temps de la boucle, 0 → 1
-uniform int uShape;        // 0 anneaux de perles, 1 sommet (Peak), 2 cairn de granite
+// SHAPE (#define, posé par shapeSource) : 0 anneaux de perles, 1 sommet (Peak), 2 cairn de granite
+uniform int uZero;         // toujours 0 : borne de boucle que le compilateur ne peut pas dérouler
 uniform vec4 uStoneA[8];   // cairn : centre de chaque caillou (xyz) et sa graine
 uniform vec4 uStoneB[8];   // demi-axes (xyz) et orientation de départ
 uniform vec2 uStoneT[8];   // légère inclinaison (x, z)
@@ -490,8 +491,8 @@ float graniteTone(vec3 q, float seed) {
 // distance à la forme ; ring = l'anneau le plus proche (pour décaler le dégradé)
 float map(vec3 p, out float ring) {
   p = uRot * p;
-  if (uShape == 1) { ring = 0.0; return peakMap(p); }
-  if (uShape == 2) return cairnMap(p, ring);
+  if (SHAPE == 1) { ring = 0.0; return peakMap(p); }
+  if (SHAPE == 2) return cairnMap(p, ring);
   float rb = beadRadius();
   float gap = rb * 2.1;                  // d'un anneau au suivant : les anneaux se touchent à peine
   float sector = TAU / uBeads;
@@ -526,11 +527,15 @@ float map(vec3 p, out float ring) {
 }
 
 vec3 normalAt(vec3 p) {
+  // les 4 directions du tétraèdre, en boucle : map() n'est compilée qu'une fois (sous Windows, le
+  // compilateur Direct3D recopie chaque appel, et le shader mettait des secondes à compiler)
   float r;
-  const vec2 k = vec2(1.0, -1.0);
-  const float h = 0.0015;
-  return normalize(k.xyy * map(p + k.xyy * h, r) + k.yyx * map(p + k.yyx * h, r)
-                 + k.yxy * map(p + k.yxy * h, r) + k.xxx * map(p + k.xxx * h, r));
+  vec3 n = vec3(0.0);
+  for (int i = uZero; i < 4; i++) {
+    vec3 e = 0.5773 * (2.0 * vec3(float(((i + 3) >> 1) & 1), float((i >> 1) & 1), float(i & 1)) - 1.0);
+    n += e * map(p + e * 0.0015, r);
+  }
+  return normalize(n);
 }
 
 // dégradé cyclique de six teintes, transitions douces
@@ -546,14 +551,14 @@ void main() {
   vec3 ro = vec3(0.0, 0.0, uDist);
   vec3 rd = normalize(vec3(uv * TAN_HALF, -1.0));
   // sphère englobante : on ne marche que là où la forme peut être
-  float bound = uShape == 2 ? uBound : uShape == 1 ? 1.85 : R + beadRadius() * (1.5 + float(uRings) * 0.9) + 0.2;
+  float bound = SHAPE == 2 ? uBound : SHAPE == 1 ? 1.85 : R + beadRadius() * (1.5 + float(uRings) * 0.9) + 0.2;
   float b = dot(ro, rd), cc = dot(ro, ro) - bound * bound, disc = b * b - cc;
   vec3 col = uBg;
   if (disc > 0.0) {
     float t = max(0.0, -b - sqrt(disc)), tEnd = -b + sqrt(disc);
     float ring = 0.0;
     bool hit = false;
-    int steps = uShape == 1 ? 260 : uShape == 2 ? 170 : 110;
+    int steps = SHAPE == 1 ? 260 : SHAPE == 2 ? 170 : 110;
     for (int i = 0; i < 260; i++) {
       if (i >= steps) break;
       float d = map(ro + rd * t, ring);
@@ -574,13 +579,17 @@ void main() {
       // lumière forte = teinte 1, ombre = teinte 6 ; chaque anneau décale le dégradé
       col = palette((1.0 - clamp(v, 0.0, 1.0)) * uSpread + ring * uShift);
       col = mix(col, uPal[0], smoothstep(0.6, 1.0, fres) * 0.55); // liseré clair sur les bords
-      if (uShape == 2) {
+      if (SHAPE == 2) {
         // granite : le minéral donne la teinte, la lumière l'assombrit ; chaque caillou est un peu décalé
         int k = int(ring + 0.5);
         vec3 q = stoneRot(k) * (pileSpace(uRot * p) - stoneCenter(k));
         // cavités : la roche est plus sombre au fond des fissures et des éclats (occlusion, deux mesures)
-        float rr, h1 = 0.025, h2 = 0.07;
-        float ao = clamp(0.5 * (map(p + n * h1, rr) / h1 + map(p + n * h2, rr) / h2) / 0.7, 0.0, 1.0);
+        float rr, occ = 0.0;
+        for (int j = uZero; j < 2; j++) {
+          float hj = j == 0 ? 0.025 : 0.07;
+          occ += map(p + n * hj, rr) / hj;
+        }
+        float ao = clamp(0.5 * occ / 0.7, 0.0, 1.0);
         vec3 Lk = normalize(vec3(-0.45, 0.7, 0.55));           // lumière de studio, haute et de côté
         float key = max(dot(n, Lk), 0.0);
         float lit = (0.12 + 0.88 * key) * mix(0.5, 1.0, ao);
@@ -588,7 +597,7 @@ void main() {
         col = palette(tone * 0.35 + (1.0 - lit) * min(uSpread, 5.0) * 0.8 + ring * uShift * 0.15);
         col = mix(col, uPal[0], smoothstep(0.75, 1.0, fres) * 0.25);
       }
-      if (uShape == 1) {
+      if (SHAPE == 1) {
         // neige : sur les faces tournées vers le ciel, au-dessus d'une limite qui monte et descend (Breath)
         vec3 po = uRot * p, no = uRot * n;
         float line = 0.15 + uBreath * 0.12 * sin(TAU * uT) + 0.12 * (vnoise(po * 6.0) - 0.5);
@@ -627,10 +636,20 @@ uniform sampler2D uTex;
 uniform sampler2D uType;
 uniform float uGrain, uSeed, uTypeOn;
 out vec4 outColor;
-float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233)) + uSeed) * 43758.5453); }
+// Hasard sur entiers (PCG) : pas de trame. L'ancien fract(sin(…)) perdait sa précision sur les
+// grandes coordonnées et dessinait des bandes et des motifs répétés dans le grain.
+uint pcg(uint v) {
+  uint s = v * 747796405u + 2891336453u;
+  uint w = ((s >> ((s >> 28u) + 4u)) ^ s) * 277803737u;
+  return (w >> 22u) ^ w;
+}
+float rnd(uvec2 p, uint k) { return float(pcg(p.x + pcg(p.y + pcg(k)))) / 4294967295.0; }
 void main() {
   vec3 col = texture(uTex, vUV).rgb;
-  col += (hash(gl_FragCoord.xy) - 0.5) * uGrain * 0.22;
+  // deux tirages additionnés : un grain en cloche, comme celui d'une pellicule (même force qu'avant)
+  uvec2 px = uvec2(gl_FragCoord.xy);
+  uint k = uint(uSeed) * 2u;
+  col += (rnd(px, k) + rnd(px, k + 1u) - 1.0) * uGrain * 0.156;
   vec4 type = texture(uType, vec2(vUV.x, 1.0 - vUV.y));
   col = mix(col, type.rgb, type.a * uTypeOn);
   outColor = vec4(col, 1.0);
@@ -643,21 +662,48 @@ function compile(type, src) {
   if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
   return sh;
 }
-function program(fs) {
+// startProgram lance la compilation sans l'attendre ; finishProgram l'attend et lit les uniformes
+function startProgram(fs) {
   const prog = gl.createProgram();
-  gl.attachShader(prog, compile(gl.VERTEX_SHADER, FULL_VS));
-  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
+  const vs = gl.createShader(gl.VERTEX_SHADER), fsh = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(vs, FULL_VS);
+  gl.shaderSource(fsh, fs);
+  gl.compileShader(vs);
+  gl.compileShader(fsh);
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fsh);
   gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
-  const loc = {};
-  const n = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS);
-  for (let i = 0; i < n; i++) {
-    const name = gl.getActiveUniform(prog, i).name.replace(/\[0\]$/, "");
-    loc[name] = gl.getUniformLocation(prog, name);
-  }
-  return { prog, loc };
+  return { prog, shaders: [vs, fsh], loc: null };
 }
-const shapeProg = program(SHAPE_FS);
+function finishProgram(p) {
+  if (!gl.getProgramParameter(p.prog, gl.LINK_STATUS)) {
+    throw new Error(p.shaders.map((sh) => gl.getShaderInfoLog(sh)).join("\n") || gl.getProgramInfoLog(p.prog));
+  }
+  p.loc = {};
+  const n = gl.getProgramParameter(p.prog, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < n; i++) {
+    const name = gl.getActiveUniform(p.prog, i).name.replace(/\[0\]$/, "");
+    p.loc[name] = gl.getUniformLocation(p.prog, name);
+  }
+  return p;
+}
+const program = (fs) => finishProgram(startProgram(fs));
+
+// La forme : un programme par forme (chacun bien plus court à compiler que les trois réunis).
+// Bead rings est compilé au départ ; Peak et Cairn en arrière-plan quand le navigateur sait
+// compiler sans bloquer la page (KHR_parallel_shader_compile), sinon au premier choix.
+const SHAPE_IDS = { beads: 0, peak: 1, cairn: 2 };
+const shapeSource = (name) => SHAPE_FS.replace("#version 300 es", `#version 300 es\n#define SHAPE ${SHAPE_IDS[name]}`);
+const parallelCompile = gl.getExtension("KHR_parallel_shader_compile");
+const shapePrograms = {};
+// wait : attendre la compilation (export) ; sinon null tant qu'elle n'est pas finie
+function shapeProgram(name, wait) {
+  const p = (shapePrograms[name] ??= startProgram(shapeSource(name)));
+  if (p.loc) return p;
+  if (!wait && parallelCompile && !gl.getProgramParameter(p.prog, parallelCompile.COMPLETION_STATUS_KHR)) return null;
+  return finishProgram(p);
+}
+let drawnShape = controls.shape.value; // la forme réellement dessinée (l'ancienne reste affichée pendant que la nouvelle compile)
 const blurProg = program(BLUR_FS);
 const finalProg = program(FINAL_FS);
 const vao = gl.createVertexArray(); // aucun attribut : les sommets viennent de gl_VertexID
@@ -846,7 +892,7 @@ const PALETTES = {
   chrome:  { cycle: false, shift: 0.25, spread: 6.5, bg: "#e9e9eb", ink: "#000000",
              colors: ["#ffffff", "#d9dde3", "#9aa3ad", "#5b636d", "#2a2f36", "#0a0c0f"] },
 };
-const DEFAULT_PALETTE = "glacier"; // le bleu de Gradient body
+const DEFAULT_PALETTE = "thermal"; // dégradé thermique en boucle (Glacier : le bleu de Gradient body)
 let paletteName = DEFAULT_PALETTE;
 const palettePills = Array.from(document.querySelectorAll("#palettePills button"));
 function setPalette(name) {
@@ -871,7 +917,7 @@ function mulberry32(a) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-const DEFAULT_STONE_SEED = 1;
+const DEFAULT_STONE_SEED = 5; // choisie sur une planche des graines 1 à 12 : grosse base, pierres qui rétrécissent vers le haut
 let stoneSeed = DEFAULT_STONE_SEED;
 let cairnCache = null;
 function cairnStones() {
@@ -905,7 +951,7 @@ function cairnStones() {
 $("newStonesBtn").addEventListener("click", () => { stoneSeed++; });
 
 // ── Vue : orientation de la forme (glisser) et distance de la caméra (molette) ──
-const DEFAULT_VIEW = { tilt: 0.42, yaw: 0, zoom: 1 };
+const DEFAULT_VIEW = { tilt: 0, yaw: 0, zoom: 1.8 }; // vue de face, perpendiculaire à la pile (sans plongée) // plus près par défaut (la molette règle le reste)
 const viewState = { ...DEFAULT_VIEW };
 function rotationMatrix() {
   // la forme penche vers nous (tilt) puis tourne sur elle-même (yaw) ; colonnes d'abord, pour uRot * p
@@ -931,10 +977,15 @@ function render(fb, w, h, t, quality = 1) {
   // 1. la forme
   gl.bindFramebuffer(gl.FRAMEBUFFER, a.fb);
   gl.viewport(0, 0, sw, sh);
+  // l'export attend la forme choisie ; l'aperçu garde l'ancienne tant que la nouvelle compile
+  const wanted = controls.shape.value;
+  const shapeName = shapeProgram(wanted, fb !== null) ? wanted : drawnShape;
+  drawnShape = shapeName;
+  const shapeProg = shapeProgram(shapeName, true);
   gl.useProgram(shapeProg.prog);
   const S = shapeProg.loc;
   const rings = num("rings");
-  const shapeName = controls.shape.value, peak = shapeName === "peak", cairn = shapeName === "cairn";
+  const peak = shapeName === "peak", cairn = shapeName === "cairn";
   const C = cairn ? cairnStones() : null;
   // Breath ouvre le cairn et le referme pendant la boucle (0 au début et à la fin)
   const liftMax = num("breath") * 0.16;
@@ -946,7 +997,7 @@ function render(fb, w, h, t, quality = 1) {
   const fitH = halfExtent / 0.32 / 0.82, fitW = halfExtent / 0.32 / 0.82 / Math.min(1, w / h);
   gl.uniform2f(S.uRes, sw, sh);
   gl.uniform1f(S.uT, t);
-  gl.uniform1i(S.uShape, cairn ? 2 : peak ? 1 : 0);
+  gl.uniform1i(S.uZero, 0);
   if (cairn) {
     gl.uniform4fv(S.uStoneA, C.A);
     gl.uniform4fv(S.uStoneB, C.B);
@@ -1171,7 +1222,7 @@ function downloadBlob(blob, filename) {
 }
 $("exportBtn").addEventListener("click", () => {
   const { w, h } = FORMATS[currentFormat];
-  renderPoster(motionTime / loopDuration()).toBlob((blob) => downloadBlob(blob, `kinetic-v2-${currentFormat}-${w}x${h}.png`), "image/png");
+  renderPoster(motionTime / loopDuration()).toBlob((blob) => downloadBlob(blob, `cairn-generator-${currentFormat}-${w}x${h}.png`), "image/png");
 });
 
 const exportMp4Btn = $("exportMp4Btn");
@@ -1252,7 +1303,7 @@ async function exportMP4() {
   if (encodeError) throw encodeError;
   encoder.close();
   muxer.finalize();
-  downloadBlob(new Blob([muxer.target.buffer], { type: "video/mp4" }), `kinetic-v2-${currentFormat}-${w}x${h}-${loopDuration()}s.mp4`);
+  downloadBlob(new Blob([muxer.target.buffer], { type: "video/mp4" }), `cairn-generator-${currentFormat}-${w}x${h}-${loopDuration()}s.mp4`);
   motionTime = 0;
 }
 
@@ -1300,7 +1351,7 @@ async function recordWindow() {
     recorder.stop();
     await stopped;
     const ext = type.includes("mp4") ? "mp4" : "webm";
-    downloadBlob(new Blob(chunks, { type: type || "video/webm" }), `kinetic-v2-screen-${loopDuration()}s.${ext}`);
+    downloadBlob(new Blob(chunks, { type: type || "video/webm" }), `cairn-generator-screen-${loopDuration()}s.${ext}`);
   } finally {
     stream?.getTracks().forEach((t) => t.stop());
     setPlaying(true);
@@ -1328,6 +1379,8 @@ updateShapeRows();
 applyFormat(currentFormat);
 setMode("image");
 requestAnimationFrame(loop);
+// les formes non choisies au départ (Cairn par défaut) compilent en arrière-plan
+if (parallelCompile) setTimeout(() => Object.keys(SHAPE_IDS).forEach((name) => shapeProgram(name)), 1500);
 </script>
 </body>
 </html>
