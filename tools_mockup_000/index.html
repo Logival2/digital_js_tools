@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mockup</title>
+<!-- Mockup : une image ou une vidéo posée dans l'écran d'un téléphone photographié.
+     Repart de Mirror effect (import, formats, aperçu) et de Montage (vidéo, lecteur, export MP4). -->
+<!-- interface commune des outils (verre, typo, sliders), puis la mise en page propre à l'outil -->
+<link rel="stylesheet" href="../ui/ui_001.css" />
+<link rel="stylesheet" href="style.css" />
+<script defer src="../ui/ui_001.js"></script>
+</head>
+<body data-mobile="ok" data-layout="panels">
+
+<!-- Panneau latéral (paramètres) -->
+<aside id="panel">
+
+  <header id="panelHead">
+    <p class="eyebrow"><a class="badge backLink" href="../" title="Back to all tools">← Digital tools</a></p>
+    <h1 class="toolTitle">Mockup</h1>
+  </header>
+
+  <!-- Écran : le fichier importé (image ou vidéo), son cadrage -->
+  <div class="section">
+    <h2>Screen</h2>
+    <div class="btnRow">
+      <button id="fileBtn" class="primary" type="button">Import an image or a video</button>
+    </div>
+    <input id="fileInput" type="file" accept="image/*,video/*,.mp4,.m4v,.mov,.webm,.mkv,.ogv" hidden />
+    <p class="hint" id="fileInfo" hidden></p>
+    <div class="row">
+      <label for="fitSelect">Fit</label>
+      <select id="fitSelect" class="asPills">
+        <option value="cover" selected>Cover</option>
+        <option value="contain">Contain</option>
+      </select>
+    </div>
+    <div class="row"><label for="zoomSlider" title="Size of the file inside the screen (or the mouse wheel on the photo)">Zoom</label><input id="zoomSlider" type="range" min="0.5" max="4" step="0.01" value="1" /></div>
+    <div class="row"><label for="posXSlider" title="-1 = left of the file, 1 = right (or drag on the photo)">Position X</label><input id="posXSlider" type="range" min="-1" max="1" step="0.001" value="0" /></div>
+    <div class="row" id="posYRow"><label for="posYSlider" title="-1 = top of the file, 1 = bottom (or drag on the photo)">Position Y</label><input id="posYSlider" type="range" min="-1" max="1" step="0.001" value="-1" /></div>
+    <div class="row">
+      <label for="scrollSelect" title="For a file taller than the screen (a page exported from Figma): it goes from top to bottom during the loop">Scroll</label>
+      <select id="scrollSelect" class="asPills">
+        <option value="off" selected>Off</option>
+        <option value="smooth">Smooth</option>
+        <option value="flick">Flick</option>
+      </select>
+    </div>
+    <div class="row"><label for="brightnessSlider" title="Dims the screen, so it sits in the photo">Brightness</label><input id="brightnessSlider" type="range" min="0.3" max="1" step="0.01" value="1" /></div>
+    <div class="row"><label for="veilSlider" title="A grey layer over the whole screen: the white of the file turns slightly grey too">Veil</label><input id="veilSlider" type="range" min="0" max="1" step="0.01" value="0.15" /></div>
+    <div class="row"><label for="veilGreySlider" title="Grey of the veil: 0 = black, 1 = white">Veil grey</label><input id="veilGreySlider" type="range" min="0" max="1" step="0.01" value="0.58" /></div>
+    <div class="row">
+      <label for="veilBlendSelect" title="How the grey mixes with the file">Veil blend</label>
+      <select id="veilBlendSelect" class="asPills">
+        <option value="source-over">Normal</option>
+        <option value="multiply" selected>Multiply</option>
+        <option value="darken">Darken</option>
+      </select>
+    </div>
+    <div class="row"><label for="screenColor" title="Colour of the screen around a file that doesn't fill it">Screen colour</label><input id="screenColor" type="color" value="#000000" /></div>
+  </div>
+
+  <!-- Photo : le cadrage de la photo du téléphone dans le format -->
+  <div class="section">
+    <h2>Photo</h2>
+    <div class="row"><label for="photoZoomSlider" title="Closer to the phone">Zoom</label><input id="photoZoomSlider" type="range" min="1" max="2" step="0.01" value="1" /></div>
+    <div class="row"><label for="photoContrastSlider" title="Contrast of the photo (hand, phone, background); the screen is not changed">Contrast</label><input id="photoContrastSlider" type="range" min="0.5" max="2" step="0.01" value="1.15" /></div>
+  </div>
+
+  <!-- Affichage -->
+  <div class="section collapsed">
+    <h2>Display</h2>
+    <div class="btnRow">
+      <button id="fullscreenBtn" type="button">Full screen · F</button>
+      <button id="hidePanelBtn" type="button">Hide · H</button>
+    </div>
+  </div>
+
+  <footer id="panelFooter">
+    <button id="resetBtn" type="button">Reset</button>
+    <button id="privacyBtn" type="button">Privacy · GDPR</button>
+  </footer>
+</aside>
+
+<!-- Notice de confidentialité (RGPD) -->
+<dialog id="privacyDialog" aria-labelledby="privacyTitle">
+  <h2 id="privacyTitle">Privacy · GDPR</h2>
+
+  <h3>Data controller</h3>
+  <p>Valentin Maynadié — contact: <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
+
+  <h3>Images, videos and exports</h3>
+  <p>The images and videos you import are read only in your browser and are never uploaded: everything disappears when you close the page. PNG and MP4 files are made locally.</p>
+
+  <h3>Cookies and tracking</h3>
+  <p>This site uses no cookies, no analytics and no user accounts. Fonts are served with the page.</p>
+
+  <h3>Third-party services</h3>
+  <ul>
+    <li>jsDelivr — MP4 video muxer, when you export a video.</li>
+  </ul>
+  <p>This service receives your IP address, which it needs to send the file.</p>
+
+  <h3>Your rights</h3>
+  <p>This site keeps no personal data. For any question about your rights (access, rectification, erasure, objection), write to the address above. You can also contact the CNIL, the French data protection authority (cnil.fr).</p>
+
+  <form method="dialog">
+    <button type="submit">Close</button>
+  </form>
+</dialog>
+
+<!-- Zone principale : la photo, au format choisi -->
+<div id="main">
+  <canvas id="scene" data-crop></canvas>
+</div>
+
+<!-- Panneau de droite, calé en bas : mode, format, lecteur, export -->
+<aside id="rightPanel">
+  <div id="modeSwitch" role="group" aria-label="Mode">
+    <button type="button" data-mode="image" aria-pressed="true">Image</button>
+    <button type="button" data-mode="video" aria-pressed="false">Video</button>
+  </div>
+
+  <div id="formatButtons">
+    <button type="button" data-format="din">A4</button>
+    <button type="button" data-format="square">1:1</button>
+    <button type="button" data-format="portrait">4:5</button>
+    <button type="button" data-format="story">9:16</button>
+  </div>
+  <p id="formatInfo"></p>
+
+  <div class="rpBlock">
+    <div class="row">
+      <label for="durationInput">Duration</label>
+      <input id="durationInput" type="number" min="0.5" max="600" step="0.1" value="5" />
+    </div>
+    <p class="hint">In seconds. An imported video sets its own length.</p>
+    <div id="transport">
+      <button type="button" data-action="restart" title="Restart" aria-label="Restart">
+        <svg viewBox="0 0 16 16"><rect x="3" y="3" width="2" height="10"/><polygon points="13,3 13,13 6,8"/></svg>
+      </button>
+      <button type="button" data-action="pause" title="Pause" aria-label="Pause">
+        <svg viewBox="0 0 16 16"><rect x="4" y="3" width="3" height="10"/><rect x="9" y="3" width="3" height="10"/></svg>
+      </button>
+      <button type="button" data-action="play" title="Play" aria-label="Play">
+        <svg viewBox="0 0 16 16"><polygon points="4,3 4,13 12,8"/></svg>
+      </button>
+    </div>
+    <p id="timeLabel">0.00 / 5.00 s</p>
+  </div>
+
+  <div id="exportRow">
+    <button id="exportBtn" type="button">Export PNG</button>
+    <button id="exportMp4Btn" type="button" hidden>Export MP4</button>
+  </div>
+</aside>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const num = (id) => Number($(id).value);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+const mainEl = $("main");
+const scene = $("scene");
+const sceneCtx = scene.getContext("2d");
+const formatButtons = Array.from(document.querySelectorAll("#formatButtons button"));
+const modeButtons = Array.from(document.querySelectorAll("#modeSwitch button"));
+const transportButtons = Array.from(document.querySelectorAll("#transport button"));
+const durationInput = $("durationInput");
+const exportBtn = $("exportBtn");
+const exportMp4Btn = $("exportMp4Btn");
+
+// Au rechargement, le navigateur restaure les anciens réglages : on repart des valeurs du HTML
+const settingFields = Array.from(document.querySelectorAll("#panel input:not([type=file]), #panel select, #rightPanel input"));
+function resetFields() {
+  for (const el of settingFields) {
+    if (el.tagName === "SELECT") el.value = (Array.from(el.options).find((o) => o.defaultSelected) ?? el.options[0]).value;
+    else el.value = el.defaultValue;
+  }
+}
+resetFields();
+
+// ── Les photos de maquette (dossier ../images_mockup) ──
+// Pour en ajouter une : une ligne de plus, avec le rectangle de son écran blanc, en px de la photo
+// (mesuré sur le bord du blanc : le contenu est multiplié par la photo, qui dessine elle-même
+// le bord de l'écran, ses coins arrondis et tout ce qui passe devant).
+// crop : ce qu'on retire sur chaque bord de la photo (celle-ci a un filet sombre de 3 px tout autour, puis un liseré clair).
+const MOCKUPS = {
+  phone: { file: "Smartphone blanc tenu en silhouette.png", crop: 6, screen: { x: 428.8, y: 169.4, w: 394.9, h: 788.8 } },
+};
+const mockup = MOCKUPS.phone;
+const BLEED = 1.5;   // le contenu dépasse un peu sous le bord noir de l'écran, en px de la photo : pas de filet blanc
+let photo = null;
+{
+  const img = new Image();
+  img.src = `../images_mockup/${encodeURIComponent(mockup.file)}`;
+  img.decode().then(() => { photo = img; update(); })
+    .catch((err) => console.error("Could not load the mockup photo:", err));
+}
+
+// ── Ce qu'on met dans l'écran : une image ou une vidéo ; au départ, une page haute (1080 × 2799) ──
+const DEFAULT_CONTENT = `images sources/${encodeURIComponent("NORDWAY — A2 · Full bleed spec sheet — V2.png")}`;
+let content = { el: null, w: 0, h: 0, video: false };
+let contentUrl = null;   // adresse du fichier importé, libérée quand on le remplace
+{
+  const img = new Image();
+  img.src = DEFAULT_CONTENT;
+  img.decode().then(() => {
+    if (content.el) return;   // un fichier importé entre-temps garde la priorité
+    content = { el: img, w: img.naturalWidth, h: img.naturalHeight, video: false };
+    update();
+  }).catch((err) => console.error("Could not load the default image:", err));
+}
+
+// Formats : taille réelle d'export en px (les mêmes que les autres outils) ; la photo est carrée
+const FORMATS = {
+  portrait: { w: 1080, h: 1350 },
+  din:      { w: 1240, h: 1754 },
+  square:   { w: 1080, h: 1080 },
+  story:    { w: 1080, h: 1920 },
+};
+const DEFAULT_FORMAT = "square";
+const FPS = 30;
+let currentFormat = DEFAULT_FORMAT;
+
+let duration = 5;            // durée de la boucle (s)
+let durationTouched = false; // dès qu'on saisit une durée, une vidéo importée ne l'écrase plus
+let playing = true;
+let t = 0;                   // position dans la boucle (s)
+let lastNow = performance.now();
+let syncing = false;         // pendant un redémarrage, l'horloge attend la vidéo
+let exporting = false;
+let dirty = true;            // l'aperçu est à redessiner
+
+// ── Aperçu : la photo au format choisi, à la taille de l'écran ──
+const SCENE_MARGIN = 40;
+function applyFormat(key) {
+  currentFormat = key;
+  const { w, h } = FORMATS[key];
+  formatButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.format === key));
+  $("formatInfo").textContent = `${w} × ${h} px`;
+  resizeScene();
+}
+function resizeScene() {
+  const { w, h } = FORMATS[currentFormat];
+  const k = Math.min((mainEl.clientWidth - SCENE_MARGIN * 2) / w, (mainEl.clientHeight - SCENE_MARGIN * 2) / h);
+  scene.style.width = w * k + "px";
+  scene.style.height = h * k + "px";
+  const dpr = window.devicePixelRatio || 1;
+  scene.width = Math.max(1, Math.round(w * k * dpr));
+  scene.height = Math.max(1, Math.round(h * k * dpr));
+  dirty = true;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Dessin
+// ═══════════════════════════════════════════════════════════════════
+// La photo remplit le format (« cover »), agrandie par le zoom autour de l'écran du téléphone,
+// sans jamais découvrir un bord. Rend l'échelle, le coin haut gauche et la taille de la photo rognée.
+function photoLayout(W, H) {
+  const c = mockup.crop, r = mockup.screen;
+  const pw = photo.naturalWidth - c * 2, ph = photo.naturalHeight - c * 2;
+  const s = Math.max(W / pw, H / ph) * num("photoZoomSlider");
+  return {
+    s, pw, ph,
+    x: clamp(W / 2 - (r.x - c + r.w / 2) * s, W - pw * s, 0),
+    y: clamp(H / 2 - (r.y - c + r.h / 2) * s, H - ph * s, 0),
+  };
+}
+// le rectangle de l'écran dans l'image de sortie
+function screenRect(L) {
+  const r = mockup.screen, c = mockup.crop;
+  return { x: L.x + (r.x - c - BLEED) * L.s, y: L.y + (r.y - c - BLEED) * L.s, w: (r.w + BLEED * 2) * L.s, h: (r.h + BLEED * 2) * L.s };
+}
+// Taille du contenu dans un écran de Rw × Rh
+function contentBox(Rw, Rh) {
+  const { w, h } = content;
+  if (!w || !h) return { cw: 0, ch: 0 };
+  const fit = $("fitSelect").value === "cover" ? Math.max(Rw / w, Rh / h) : Math.min(Rw / w, Rh / h);
+  const k = fit * num("zoomSlider");
+  return { cw: w * k, ch: h * k };
+}
+
+// ── Défilement, du haut vers le bas de la page pendant la boucle (u de 0 à 1) ──
+// Rend la position Y, de -1 (le haut) à 1 (le bas). over : ce qui dépasse de l'écran, Rh : sa hauteur.
+const easeInOut = (x) => 0.5 - 0.5 * Math.cos(Math.PI * clamp(x, 0, 1));
+const flingOut = (x) => 1 - Math.pow(1 - clamp(x, 0, 1), 4);   // un coup de doigt : vite au départ, puis l'élan s'épuise
+function scrollY(u, over, Rh) {
+  const mode = $("scrollSelect").value;
+  // un temps d'arrêt en haut au début, et en bas à la fin
+  const START = 0.06, END = 0.9;
+  const p = (u - START) / (END - START);
+  if (mode === "smooth") return easeInOut(p) * 2 - 1;
+  // Flick : des coups de doigt d'une demi-hauteur d'écran au plus (3 au moins), chacun bref
+  // (0,8 s, ou 60 % de sa part de la boucle si elle est plus courte), puis une pause
+  const n = Math.max(3, Math.ceil(over / (Rh * 0.5)));
+  if (p <= 0) return -1;
+  if (p >= 1) return 1;
+  const i = Math.floor(p * n), local = p * n - i;
+  const share = ((END - START) * duration) / n;          // la part d'un coup dans la boucle, en s
+  const swipe = Math.min(0.8, share * 0.6) / share;      // la durée du geste, en part de cette tranche
+  return ((i + flingOut(local / swipe)) / n) * 2 - 1;
+}
+const scrolling = () => $("scrollSelect").value !== "off";
+
+// out : contexte de sortie de W × H px ; u : position dans la boucle, de 0 à 1
+function compose(out, W, H, u) {
+  out.setTransform(1, 0, 0, 1, 0, 0);
+  out.globalCompositeOperation = "source-over";
+  out.fillStyle = "#fff";
+  out.fillRect(0, 0, W, H);
+  if (!photo) return;
+  const L = photoLayout(W, H);
+  const R = screenRect(L);
+  out.imageSmoothingEnabled = true;
+  out.imageSmoothingQuality = "high";
+
+  // 1. l'écran : sa couleur, le contenu cadré, puis un voile noir pour la luminosité
+  out.save();
+  out.beginPath();
+  out.rect(R.x, R.y, R.w, R.h);
+  out.clip();
+  out.fillStyle = $("screenColor").value;
+  out.fillRect(R.x, R.y, R.w, R.h);
+  if (content.el) {
+    const box = contentBox(R.w, R.h);
+    // position : -1 = le début du fichier calé sur le bord de l'écran, 1 = la fin
+    const px = num("posXSlider");
+    const py = scrolling() ? scrollY(u, box.ch - R.h, R.h) : num("posYSlider");
+    out.drawImage(content.el, R.x + (R.w - box.cw) * (px + 1) / 2, R.y + (R.h - box.ch) * (py + 1) / 2, box.cw, box.ch);
+  }
+  // le voile : un calque gris sur tout l'écran, avec son mode de fusion et son opacité
+  // (le blanc du fichier grisonne aussi)
+  const tint = num("veilSlider");
+  if (tint > 0) {
+    const g = Math.round(num("veilGreySlider") * 255);
+    out.globalAlpha = tint;
+    out.globalCompositeOperation = $("veilBlendSelect").value;
+    out.fillStyle = `rgb(${g}, ${g}, ${g})`;
+    out.fillRect(R.x, R.y, R.w, R.h);
+    out.globalCompositeOperation = "source-over";
+    out.globalAlpha = 1;
+  }
+  const veil = 1 - num("brightnessSlider");
+  if (veil > 0) {
+    out.fillStyle = `rgba(0, 0, 0, ${veil})`;
+    out.fillRect(R.x, R.y, R.w, R.h);
+  }
+  out.restore();
+
+  // 2. la photo, multipliée : son écran blanc laisse passer le contenu, tout le reste le recouvre
+  out.globalCompositeOperation = "multiply";
+  out.drawImage(photoSource(), mockup.crop, mockup.crop, L.pw, L.ph, L.x, L.y, L.pw * L.s, L.ph * L.s);
+  out.globalCompositeOperation = "source-over";
+}
+
+// ── Contraste de la photo, hors écran ──
+// Une copie de la photo, recalculée quand le réglage change : chaque canal s'écarte du gris moyen.
+// Dans le rectangle de l'écran, les pixels blancs gardent leur valeur (fondu de 200 à 245 de luminosité),
+// pour que le contenu ne soit ni assombri ni modifié ; le bord noir et les coins, eux, suivent le contraste.
+const photoCache = { k: 1, canvas: null, orig: null };
+function photoSource() {
+  const k = num("photoContrastSlider");
+  if (Math.abs(k - 1) < 0.005) return photo;
+  if (photoCache.canvas && photoCache.k === k) return photoCache.canvas;
+  const w = photo.naturalWidth, h = photo.naturalHeight;
+  if (!photoCache.canvas) {
+    photoCache.canvas = document.createElement("canvas");
+    photoCache.canvas.width = w;
+    photoCache.canvas.height = h;
+    const c = photoCache.canvas.getContext("2d", { willReadFrequently: true });
+    c.drawImage(photo, 0, 0);
+    photoCache.orig = c.getImageData(0, 0, w, h);
+  }
+  const src = photoCache.orig.data;
+  const img = new ImageData(w, h);
+  const d = img.data;
+  const lut = new Uint8ClampedArray(256);
+  for (let v = 0; v < 256; v++) lut[v] = (v - 128) * k + 128;
+  const r = mockup.screen, m = 4;   // marge autour de l'écran, en px de la photo
+  const x0 = Math.floor(r.x - m), x1 = Math.ceil(r.x + r.w + m), y0 = Math.floor(r.y - m), y1 = Math.ceil(r.y + r.h + m);
+  for (let y = 0, i = 0; y < h; y++) {
+    const inY = y >= y0 && y < y1;
+    for (let x = 0; x < w; x++, i += 4) {
+      const R = src[i], G = src[i + 1], B = src[i + 2];
+      let keep = 0;
+      if (inY && x >= x0 && x < x1) {
+        const p = clamp(((R * 299 + G * 587 + B * 114) / 1000 - 200) / 45, 0, 1);
+        keep = p * p * (3 - 2 * p);
+      }
+      d[i] = lut[R] + (R - lut[R]) * keep;
+      d[i + 1] = lut[G] + (G - lut[G]) * keep;
+      d[i + 2] = lut[B] + (B - lut[B]) * keep;
+      d[i + 3] = 255;
+    }
+  }
+  photoCache.canvas.getContext("2d").putImageData(img, 0, 0);
+  photoCache.k = k;
+  return photoCache.canvas;
+}
+
+// ── Un réglage a changé : une nouvelle image ──
+function update() {
+  $("posYRow").hidden = scrolling();   // le défilement règle la position verticale
+  dirty = true;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Lecture : une horloge en boucle sur la durée ; la vidéo importée s'y recale
+// ═══════════════════════════════════════════════════════════════════
+function setDuration(s) {
+  if (!s || !isFinite(s)) return;
+  duration = Math.max(0.5, Math.round(s * 10) / 10);
+  durationInput.value = duration.toFixed(1);
+}
+durationInput.addEventListener("input", () => {
+  const v = Number(durationInput.value);
+  if (v > 0) { durationTouched = true; duration = v; t = Math.min(t, duration); }
+});
+
+// Attend que la vidéo soit positionnée sur le temps demandé
+function seek(v, time) {
+  return new Promise((resolve) => {
+    if (!v.duration) return resolve();
+    const target = time % v.duration;
+    if (Math.abs(v.currentTime - target) < 0.001) return resolve();
+    v.addEventListener("seeked", () => resolve(), { once: true });
+    v.currentTime = target;
+  });
+}
+// Redémarrage : la vidéo revient à 0, l'horloge repart au même instant
+async function restart() {
+  syncing = true;
+  if (content.video) {
+    const v = content.el;
+    v.pause();
+    await seek(v, 0);
+    if (playing && content.el === v) await v.play().catch(() => {});
+  }
+  t = 0;
+  lastNow = performance.now();
+  syncing = false;
+  dirty = true;
+}
+// Pendant la lecture, la vidéo est recalée sur l'horloge :
+// petit écart -> on accélère / ralentit légèrement, grand écart -> on repositionne.
+function keepInSync() {
+  const v = content.el;
+  if (v.seeking || !v.duration) return;
+  const target = t % v.duration;
+  let diff = v.currentTime - target;
+  if (diff > v.duration / 2) diff -= v.duration;     // passage de boucle
+  if (diff < -v.duration / 2) diff += v.duration;
+  if (Math.abs(diff) > 0.25) { v.currentTime = target; v.playbackRate = 1; }
+  else if (Math.abs(diff) > 0.02) v.playbackRate = 1 - clamp(diff * 2, -0.1, 0.1);
+  else v.playbackRate = 1;
+}
+function setPlaying(p) {
+  playing = p;
+  transportButtons.forEach((b) => {
+    const a = b.dataset.action;
+    b.classList.toggle("active", (a === "play" && p) || (a === "pause" && !p));
+  });
+  if (content.video) {
+    if (p) content.el.play().catch(() => {});
+    else content.el.pause();
+  }
+}
+transportButtons.forEach((btn) => btn.addEventListener("click", () => {
+  switch (btn.dataset.action) {
+    case "restart": restart(); break;
+    case "pause": setPlaying(false); break;
+    case "play": setPlaying(true); break;
+  }
+}));
+
+// ── Boucle d'affichage : on ne redessine que si quelque chose a bougé ──
+function loop(now) {
+  const dt = Math.min(0.1, Math.max(0, (now - lastNow) / 1000));
+  lastNow = now;
+  if (playing && !exporting && !syncing) {
+    t += dt;
+    if (t >= duration) {
+      t = 0;
+      if (content.video) restart();   // fin de la boucle : la vidéo repart du début
+    } else if (content.video) keepInSync();
+  }
+  // une vidéo change d'image d'elle-même ; un défilement, tant que l'horloge tourne
+  const animated = content.video || (playing && scrolling());
+  if (!exporting && (dirty || animated)) {
+    dirty = false;
+    compose(sceneCtx, scene.width, scene.height, t / duration);
+  }
+  $("timeLabel").textContent = `${t.toFixed(2)} / ${duration.toFixed(2)} s`;
+  requestAnimationFrame(loop);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Import : bouton, coller, glisser — une image ou une vidéo
+// ═══════════════════════════════════════════════════════════════════
+function setContent(next, url, label) {
+  if (content.video) {   // l'ancienne vidéo s'arrête et rend sa mémoire
+    content.el.pause();
+    content.el.removeAttribute("src");
+    content.el.load();
+  }
+  if (contentUrl) URL.revokeObjectURL(contentUrl);
+  contentUrl = url;
+  content = next;
+  $("fileInfo").hidden = false;
+  $("fileInfo").textContent = label;
+  if (next.video && !durationTouched) setDuration(next.el.duration);
+  if (next.video && !playing) next.el.pause();
+  restart();
+  update();
+}
+function useFile(file) {
+  if (!file) return;
+  // le type, ou à défaut l'extension : sous Windows, un .mov ou un .mkv arrive souvent sans type
+  const isImage = file.type.startsWith("image/") || (!file.type && /\.(png|jpe?g|gif|webp|avif|bmp|svg)$/i.test(file.name));
+  const isVideo = file.type.startsWith("video/") || (!file.type && /\.(mp4|m4v|mov|webm|mkv|ogv)$/i.test(file.name));
+  if (!isImage && !isVideo) {
+    $("fileInfo").hidden = false;
+    $("fileInfo").textContent = "This file is neither an image nor a video.";
+    return;
+  }
+  const url = URL.createObjectURL(file);
+  const fail = (err) => {
+    console.error("Could not read the file:", err);
+    $("fileInfo").hidden = false;
+    $("fileInfo").textContent = isVideo
+      ? "The browser can't read this video. An iPhone MOV in HEVC often can't be: export it as an MP4 (H.264)."
+      : "This file could not be read as an image.";
+    URL.revokeObjectURL(url);
+  };
+  if (isImage) {
+    const img = new Image();
+    img.src = url;
+    img.decode().then(() => {
+      setContent({ el: img, w: img.naturalWidth, h: img.naturalHeight, video: false }, url,
+        `${file.name || "Pasted image"} · ${img.naturalWidth} × ${img.naturalHeight} px`);
+    }).catch(fail);
+    return;
+  }
+  // vidéo : lue en boucle, sans le son, hors de la page ; elle remplace l'ancien contenu
+  // une fois sa première image prête
+  const v = document.createElement("video");
+  v.muted = true;
+  v.loop = true;
+  v.playsInline = true;
+  v.preload = "auto";
+  v.addEventListener("loadeddata", () => {
+    setContent({ el: v, w: v.videoWidth, h: v.videoHeight, video: true }, url,
+      `${file.name || "Pasted video"} · ${v.videoWidth} × ${v.videoHeight} px · ${v.duration.toFixed(1)} s`);
+  }, { once: true });
+  v.addEventListener("error", () => fail(v.error), { once: true });
+  v.src = url;
+  v.play().catch(() => {});
+}
+$("fileBtn").addEventListener("click", () => $("fileInput").click());
+$("fileInput").addEventListener("change", (e) => {
+  useFile(e.target.files[0]);
+  e.target.value = "";
+});
+window.addEventListener("paste", (e) => {
+  const item = Array.from(e.clipboardData?.items ?? []).find((it) => it.kind === "file" && /^(image|video)\//.test(it.type));
+  if (item) { e.preventDefault(); useFile(item.getAsFile()); }
+});
+mainEl.addEventListener("dragover", (e) => { e.preventDefault(); mainEl.classList.add("over"); });
+mainEl.addEventListener("dragleave", () => mainEl.classList.remove("over"));
+mainEl.addEventListener("drop", (e) => {
+  e.preventDefault();
+  mainEl.classList.remove("over");
+  useFile(e.dataTransfer.files[0]);
+});
+
+// ── Souris sur la photo : glisser déplace le contenu dans l'écran, la molette le grossit ──
+const setSlider = (id, v) => { $(id).value = v; };   // la valeur affichée suit (ui_001.js relit les sliders)
+let drag = null;
+scene.addEventListener("pointerdown", (e) => {
+  scene.setPointerCapture(e.pointerId);
+  scene.classList.add("dragging");
+  drag = { x: e.clientX, y: e.clientY, px: num("posXSlider"), py: num("posYSlider") };
+});
+scene.addEventListener("pointermove", (e) => {
+  if (!drag || !photo) return;
+  const k = scene.width / scene.clientWidth;   // px de l'aperçu par px de la page
+  const R = screenRect(photoLayout(scene.width, scene.height));
+  const box = contentBox(R.w, R.h);
+  // le jeu entre l'écran et le contenu : toute la course du slider (de -1 à 1) le parcourt
+  const move = (id, from, d, play) => { if (Math.abs(play) > 0.5) setSlider(id, clamp(from + (2 * d * k) / play, -1, 1)); };
+  move("posXSlider", drag.px, e.clientX - drag.x, R.w - box.cw);
+  move("posYSlider", drag.py, e.clientY - drag.y, R.h - box.ch);
+  update();
+});
+const endDrag = () => { drag = null; scene.classList.remove("dragging"); };
+scene.addEventListener("pointerup", endDrag);
+scene.addEventListener("pointercancel", endDrag);
+scene.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  setSlider("zoomSlider", clamp(num("zoomSlider") * Math.exp(-e.deltaY * 0.001), 0.5, 4));
+  update();
+}, { passive: false });
+
+// ═══════════════════════════════════════════════════════════════════
+// Réglages
+// ═══════════════════════════════════════════════════════════════════
+for (const el of settingFields) {
+  el.addEventListener("input", update);
+  el.addEventListener("change", update);
+}
+formatButtons.forEach((btn) => btn.addEventListener("click", () => applyFormat(btn.dataset.format)));
+window.addEventListener("resize", resizeScene);
+
+// ── Mode Image / Vidéo : le bouton d'export change ──
+modeButtons.forEach((btn) => btn.addEventListener("click", () => setMode(btn.dataset.mode)));
+function setMode(mode) {
+  modeButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+  exportBtn.hidden = mode === "video";
+  exportMp4Btn.hidden = mode !== "video";
+}
+
+// panneau caché : la photo reprend la place libérée
+const togglePanel = () => {
+  document.body.classList.toggle("panel-hidden");
+  resizeScene();
+};
+const toggleFullscreen = () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen?.();
+};
+$("fullscreenBtn").addEventListener("click", toggleFullscreen);
+$("hidePanelBtn").addEventListener("click", togglePanel);
+window.addEventListener("keydown", (e) => {
+  if (e.target.closest?.("input, textarea, select")) return;
+  if (e.key === "h" || e.key === "H") togglePanel();
+  if (e.key === "f" || e.key === "F") toggleFullscreen();
+});
+
+// ── Réinitialiser : réglages, format et mode par défaut ; le fichier importé reste ──
+$("resetBtn").addEventListener("click", () => {
+  resetFields();
+  durationTouched = false;
+  duration = Number(durationInput.value);
+  if (content.video) setDuration(content.el.duration);
+  applyFormat(DEFAULT_FORMAT);
+  setMode("image");
+  setPlaying(true);
+  restart();
+  update();
+});
+$("privacyBtn").addEventListener("click", () => $("privacyDialog").showModal());
+
+// ═══════════════════════════════════════════════════════════════════
+// Exports : la même image, recalculée à la taille réelle du format
+// ═══════════════════════════════════════════════════════════════════
+const poster = document.createElement("canvas");
+const posterCtx = poster.getContext("2d");
+function renderPoster(u) {
+  const { w, h } = FORMATS[currentFormat];
+  if (poster.width !== w || poster.height !== h) { poster.width = w; poster.height = h; }
+  compose(posterCtx, w, h, u);
+  return poster;
+}
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// PNG : l'image au temps courant
+exportBtn.addEventListener("click", () => {
+  const { w, h } = FORMATS[currentFormat];
+  renderPoster(t / duration).toBlob((blob) => downloadBlob(blob, `mockup-${currentFormat}-${w}x${h}.png`), "image/png");
+});
+
+// MP4 : chaque image est positionnée et dessinée à son temps exact, puis encodée
+exportMp4Btn.addEventListener("click", () => {
+  exportMP4().catch((err) => {
+    console.error(err);
+    alert("MP4 export failed: " + err.message);
+  }).finally(() => {
+    exportMp4Btn.disabled = false;
+    exportMp4Btn.textContent = "Export MP4";
+    exporting = false;
+    setPlaying(true);
+    restart();
+  });
+});
+
+// Firefox donne une description avcC fautive : on la reconstruit depuis les SPS / PPS de l'image clé
+// (même correctif que Montage et Cairn generator, pour qu'After Effects lise le fichier)
+function fixAvcDescription(chunk, meta) {
+  if (!meta?.decoderConfig) return meta;
+  const data = new Uint8Array(chunk.byteLength);
+  chunk.copyTo(data);
+  const view = new DataView(data.buffer);
+  const sps = [], pps = [];
+  for (let p = 0; p + 4 <= data.length; ) {
+    const len = view.getUint32(p);
+    if (len === 0 || p + 4 + len > data.length) break;
+    const nal = data.subarray(p + 4, p + 4 + len);
+    if ((nal[0] & 31) === 7) sps.push(nal);
+    if ((nal[0] & 31) === 8) pps.push(nal);
+    p += 4 + len;
+  }
+  if (!sps.length || !pps.length) return meta;
+  const bytes = [1, sps[0][1], sps[0][2], sps[0][3], 0xff, 0xe0 | sps.length];
+  for (const nal of sps) bytes.push(nal.length >> 8, nal.length & 255, ...nal);
+  bytes.push(pps.length);
+  for (const nal of pps) bytes.push(nal.length >> 8, nal.length & 255, ...nal);
+  return { ...meta, decoderConfig: { ...meta.decoderConfig, description: new Uint8Array(bytes) } };
+}
+
+async function exportMP4() {
+  if (!("VideoEncoder" in window)) throw new Error("this browser can't encode video (use Chrome or Edge).");
+  if (!photo) throw new Error("the photo isn't loaded yet.");
+  exporting = true;
+  exportMp4Btn.disabled = true;
+  exportMp4Btn.textContent = "Export… 0 %";
+  setPlaying(false);
+
+  const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/+esm");
+  const { w, h } = FORMATS[currentFormat];
+  // H.264 Baseline, niveau 5.1, sans images B (l'encodeur de Firefox les rend dans le désordre)
+  const config = { codec: "avc1.42e033", width: w, height: h, bitrate: 12_000_000, framerate: FPS, avc: { format: "avc" } };
+  const { supported } = await VideoEncoder.isConfigSupported(config);
+  if (!supported) throw new Error(`H.264 encoding at ${w}×${h} isn't supported by this browser.`);
+
+  const muxer = new Muxer({
+    target: new ArrayBufferTarget(),
+    video: { codec: "avc", width: w, height: h, frameRate: FPS },
+    fastStart: "in-memory",
+  });
+  let encodeError = null;
+  const encoder = new VideoEncoder({
+    output: (chunk, meta) => muxer.addVideoChunk(chunk, fixAvcDescription(chunk, meta)),
+    error: (e) => { encodeError = e; },
+  });
+  encoder.configure(config);
+
+  const length = duration;   // figée : le champ peut changer pendant l'export
+  const total = Math.round(length * FPS);
+  const frameDuration = 1e6 / FPS;
+  for (let i = 0; i < total; i++) {
+    if (encodeError) throw encodeError;
+    const time = i / FPS;
+    if (content.video) await seek(content.el, time);
+    const canvas = renderPoster(time / length);
+    const frame = new VideoFrame(canvas, { timestamp: i * frameDuration, duration: frameDuration });
+    encoder.encode(frame, { keyFrame: i % FPS === 0 });
+    frame.close();
+    // l'aperçu suit l'export
+    t = time;
+    sceneCtx.drawImage(canvas, 0, 0, scene.width, scene.height);
+    while (encoder.encodeQueueSize > 4) await new Promise((r) => setTimeout(r, 0));
+    exportMp4Btn.textContent = `Export… ${Math.round(((i + 1) / total) * 100)} %`;
+    if (i % 5 === 0) await new Promise((r) => setTimeout(r, 0));
+  }
+  await encoder.flush();
+  if (encodeError) throw encodeError;
+  encoder.close();
+  muxer.finalize();
+  downloadBlob(new Blob([muxer.target.buffer], { type: "video/mp4" }), `mockup-${currentFormat}-${w}x${h}-${length}s.mp4`);
+}
+
+// ── Démarrage ──
+applyFormat(currentFormat);
+setMode("image");
+setPlaying(true);
+update();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

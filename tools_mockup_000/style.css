@@ -1,0 +1,33 @@
+/* Mockup — mise en page propre à l'outil (reprise de Mirror effect et de Montage).
+   Couleurs, typo, panneaux et contrôles : ../ui/ui_001.css */
+
+/* Zone principale : la photo au format choisi, à l'échelle de l'écran */
+#main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* on attrape l'image pour déplacer ce qu'il y a dans l'écran du téléphone */
+#scene {
+  display: block;
+  flex: none;
+  background: #fff;
+  cursor: grab;
+  touch-action: none;
+}
+#scene.dragging { cursor: grabbing; }
+/* panneau caché (H) : la photo prend toute la place */
+body.panel-hidden #panel { display: none; }
+/* un fichier glissé sur la photo */
+#main.over #scene { outline: 2px dashed var(--text); outline-offset: 6px; }
+
+/* Panneau de droite : durée et lecture, séparés par un filet (comme Montage) */
+.rpBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--dash);
+}
