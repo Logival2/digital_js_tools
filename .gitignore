@@ -1,8 +1,9 @@
 # Ce qui reste sur l'ordinateur et ne part jamais sur GitHub
 
-# Archives locales : les anciennes versions sont rangées ici en local,
-# mais restent en ligne dans le dépôt (extraction partielle, voir .git/info/sparse-checkout)
-/00-OLD/
+# Anciennes versions : rangées hors du dépôt, dans « DIGITAL TOOLS OCT 2026/ZZ -OLD » ;
+# par sécurité, un dossier d'archives remis ici par erreur ne part pas non plus
+00-OLD/
+ZZ*/
 
 # Polices : Helvetica Neue est sous licence, seules les deux graisses utilisées sont en ligne
 /fonts/Helvetica Neue LT Std/*
@@ -10,8 +11,11 @@
 !/fonts/Helvetica Neue LT Std/HelveticaNeueLTStd-BlkEx.otf
 /fonts/_source_complete/
 
-# Projets After Effects et captures vidéo (lourds, personnels)
-/AFTER EFFECT/
+# Projets After Effects et captures vidéo (lourds, personnels) : rangés hors du dépôt,
+# dans « DIGITAL TOOLS OCT 2026/ZZ - COM TOOLS/AFTER EFFECT » ; par sécurité, jamais en ligne
+AFTER EFFECT/
+*.aep
+*.aep_AME/
 
 # Médias personnels de l'outil Montage
 /tools_montage_*/INPUT/
