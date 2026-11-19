@@ -96,9 +96,17 @@
   background: var(--pill);
 }
 
-/* Aide au lancement du serveur local */
-#helperHelp { display: flex; flex-direction: column; gap: 6px; }
+/* Tuto : lancer le programme local, pas à pas */
+#helperHelp { display: flex; flex-direction: column; gap: 8px; }
+.stepsTitle { margin-top: 6px !important; font-size: var(--fs-small); letter-spacing: 0.02em; }
 .steps { margin: 0; padding-left: 18px; }
-.steps li + li { margin-top: 3px; }
-.steps a { color: inherit; text-underline-offset: 3px; }
-.steps code { font: inherit; }
+.steps li + li { margin-top: 10px; }
+.steps li::marker { font-weight: 700; }
+.steps strong { font-weight: 700; }
+.steps .note,
+.steps .files { display: block; margin-top: 4px; }
+.steps .note { color: rgba(0, 0, 0, 0.7); }
+.steps .files { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; }
+#helperHelp a { color: inherit; text-underline-offset: 3px; }
+.steps .files a { padding: 1px 8px; text-decoration: none; border-radius: 999px; background: var(--pill); }
+.steps code { font: inherit; padding: 0 4px; border-radius: var(--radius); background: var(--pill); }

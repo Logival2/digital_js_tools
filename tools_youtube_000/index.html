@@ -51,14 +51,40 @@
   <!-- Serveur local : YouTube ne se télécharge pas depuis une page web seule -->
   <div class="section">
     <h2>Helper</h2>
-    <p class="mono" id="helperState">Looking for the helper…</p>
+    <p class="mono" id="helperState">Recherche du programme…</p>
+    <!-- Tuto : en français, pas à pas ; les fichiers se téléchargent directement depuis cette page -->
     <div id="helperHelp" hidden>
-      <p class="hint">This tool needs a small program on your computer (Python + yt-dlp): a web page alone cannot download from YouTube.</p>
+      <p class="hint">Une page web ne peut pas télécharger depuis YouTube toute seule. Il faut un petit programme gratuit qui tourne sur ton ordinateur pendant que tu utilises l'outil.</p>
+
+      <p class="stepsTitle">La première fois</p>
       <ol class="hint steps">
-        <li>Get the <code>helper</code> folder from the <a href="https://github.com/Logival2/digital_js_tools/tree/main/tools_youtube_000/helper" target="_blank" rel="noopener">repository</a> (Python 3 needed).</li>
-        <li>Double-click <code>start.bat</code> (Windows) or <code>start.command</code> (macOS).</li>
-        <li>Keep its window open: this page connects by itself.</li>
+        <li>
+          <strong>Installe Python</strong> (gratuit) depuis <a href="https://www.python.org/downloads/" target="_blank" rel="noopener">python.org/downloads</a>.
+          <span class="note">Windows&nbsp;: dans la première fenêtre de l'installation, coche «&nbsp;Add python.exe to PATH&nbsp;» avant de cliquer sur «&nbsp;Install Now&nbsp;».</span>
+        </li>
+        <li>
+          <strong>Télécharge ces 2&nbsp;fichiers</strong> et range-les dans un même dossier (par exemple Documents/YouTube download)&nbsp;:
+          <span class="files">
+            <a href="helper/yt_server.py" download>yt_server.py</a>
+            <span>+</span>
+            <a href="helper/start.bat" download>start.bat</a> (Windows)
+            <span>ou</span>
+            <a href="helper/start.command" download>start.command</a> (Mac)
+          </span>
+        </li>
+        <li>
+          <strong>Lance le programme.</strong>
+          <span class="note">Windows&nbsp;: double-clique sur start.bat. Si un écran bleu dit «&nbsp;Windows a protégé votre ordinateur&nbsp;», clique sur «&nbsp;Informations complémentaires&nbsp;» puis «&nbsp;Exécuter quand même&nbsp;».</span>
+          <span class="note">Mac&nbsp;: ouvre l'app Terminal, tape <code>bash</code> suivi d'un espace, glisse start.command dans la fenêtre, puis appuie sur Entrée.</span>
+        </li>
+        <li>
+          <strong>Laisse la fenêtre noire ouverte.</strong> La première fois, elle installe yt-dlp (1&nbsp;à&nbsp;2&nbsp;minutes). Cette page se connecte toute seule&nbsp;: le voyant ci-dessus passe à «&nbsp;● Connecté&nbsp;».
+          <span class="note">Si Chrome demande l'accès aux appareils du réseau local, clique sur «&nbsp;Autoriser&nbsp;».</span>
+        </li>
       </ol>
+
+      <p class="stepsTitle">Les fois suivantes</p>
+      <p class="hint">Lance seulement start.bat (ou start.command) et garde la fenêtre ouverte. Pour arrêter, ferme-la.</p>
     </div>
   </div>
 
@@ -137,11 +163,11 @@ let helper = null;
 async function checkHelper() {
   try {
     helper = await api("/api/status");
-    $("helperState").textContent = `● Connected · yt-dlp ${helper.ytdlp}` + (helper.ffmpeg ? "" : " · ffmpeg missing");
+    $("helperState").textContent = `● Connecté · yt-dlp ${helper.ytdlp}` + (helper.ffmpeg ? "" : " · ffmpeg manquant");
     $("helperHelp").hidden = true;
   } catch {
     helper = null;
-    $("helperState").textContent = "○ Helper not running";
+    $("helperState").textContent = "○ Programme non lancé : suis les étapes ci-dessous";
     $("helperHelp").hidden = false;
     setTimeout(checkHelper, 3000);
   }
@@ -221,7 +247,7 @@ function update() {
   const valid = YOUTUBE_URL.test(url);
   $("exportBtn").disabled = !helper || !valid || video?.isLive;
   $("formatInfo").textContent =
-      !helper ? "Waiting for the helper"
+      !helper ? "En attente du programme"
     : !url ? "No link"
     : !valid ? "Not a YouTube link"
     : infoFor ? "Reading the link…"

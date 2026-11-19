@@ -37,6 +37,10 @@ PORT = 8765
 HOST = "127.0.0.1"
 ROOT = Path(__file__).resolve().parents[2]          # MULTI-DIGITAL TOOLS/
 TOOL_PATH = "/tools_youtube_000/"
+# Le serveur sert les pages des outils seulement s'il est rangé dans le dépôt (…/tools_youtube_000/helper/).
+# Téléchargé seul (dans Téléchargements…), il ne sert aucun fichier et ouvre la page en ligne.
+IN_REPO = (ROOT / "tools_youtube_000" / "index.html").is_file() and (ROOT / "ui").is_dir()
+ONLINE_TOOL = "https://logival2.github.io/digital_js_tools/tools_youtube_000/"
 WORK = Path(tempfile.gettempdir()) / "digital_tools_youtube"
 
 # Pages autorisées à parler au serveur : le site en ligne, et ce serveur / un serveur local de dev
@@ -205,7 +209,9 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         parsed = urlparse(self.path)
         if not parsed.path.startswith("/api/"):
-            return super().do_GET()          # les pages des outils
+            if IN_REPO:
+                return super().do_GET()      # les pages des outils
+            return self.send_json({"error": "not found"}, 404)
         if not self.origin_ok():
             return self.send_json({"error": "origin not allowed"}, 403)
         query = parse_qs(parsed.query)
@@ -276,9 +282,9 @@ def main():
         server = ThreadingHTTPServer((HOST, PORT), Handler)
     except OSError:
         print(f"Port {PORT} is busy: the helper is probably already running.")
-        webbrowser.open(f"http://{HOST}:{PORT}{TOOL_PATH}")
+        webbrowser.open(f"http://{HOST}:{PORT}{TOOL_PATH}" if IN_REPO else ONLINE_TOOL)
         return
-    url = f"http://{HOST}:{PORT}{TOOL_PATH}"
+    url = f"http://{HOST}:{PORT}{TOOL_PATH}" if IN_REPO else ONLINE_TOOL
     print(f"\n  YouTube download helper - yt-dlp {yt_dlp.version.__version__} - "
           f"ffmpeg {'ok' if FFMPEG else 'MISSING'}")
     print(f"  {url}\n  Keep this window open while you use the tool. Ctrl+C to stop.\n")

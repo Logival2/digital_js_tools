@@ -914,6 +914,9 @@ dialog h2 {
 dialog h3 { margin: 18px 0 6px; font-weight: 400; }
 dialog p,
 dialog ul { margin: 0 0 8px; }
+/* les paragraphes se lisent : casse d'origine (les titres restent en capitales) */
+dialog p,
+dialog li { text-transform: none; }
 dialog ul { padding-left: 18px; }
 dialog a { color: var(--text); text-underline-offset: 3px; }
 dialog form { margin-top: 18px; }

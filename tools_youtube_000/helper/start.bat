@@ -4,8 +4,9 @@ rem Met d'abord yt-dlp à jour (YouTube change souvent, une vieille version cess
 title YouTube download helper
 cd /d "%~dp0"
 
-set PY=python
-where python >nul 2>nul || set PY=py
+rem « py » d'abord : celui de python.org ; « python » seul peut être le raccourci du Microsoft Store, qui n'installe rien
+set PY=py
+where py >nul 2>nul || set PY=python
 where %PY% >nul 2>nul || (
   echo Python is not installed: get it from https://www.python.org/downloads/ ^(tick "Add to PATH"^).
   pause
