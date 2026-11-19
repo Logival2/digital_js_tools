@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>YouTube download</title>
+<!-- interface commune des outils (verre, typo, pilules), puis la mise en page propre à l'outil -->
+<link rel="stylesheet" href="../ui/ui_001.css" />
+<link rel="stylesheet" href="style.css" />
+<script defer src="../ui/ui_001.js"></script>
+</head>
+<body>
+
+<!-- Panneau latéral (paramètres) -->
+<aside id="panel">
+
+  <header id="panelHead">
+    <p class="eyebrow"><a class="badge backLink" href="../" title="Back to all tools">← Digital tools</a></p>
+    <h1 class="toolTitle">YouTube<br>download</h1>
+  </header>
+
+  <!-- Lien : collé, tapé ou déposé sur la page ; les infos arrivent toutes seules -->
+  <div class="section">
+    <h2>Link</h2>
+    <input id="urlInput" type="text" placeholder="https://www.youtube.com/watch?v=…" spellcheck="false" autocomplete="off" />
+    <p class="hint">Paste a youtube.com or youtu.be link, or drop it on the page.</p>
+  </div>
+
+  <!-- Format : MP4 (vidéo) ou MP3 (son seul, 320 kb/s) -->
+  <div class="section">
+    <h2>Format</h2>
+    <div class="row">
+      <label for="kind">File</label>
+      <select id="kind" class="asPills">
+        <option value="mp4" selected>MP4 video</option>
+        <option value="mp3">MP3 320</option>
+      </select>
+    </div>
+    <div class="row" id="heightRow">
+      <label for="height">Quality</label>
+      <select id="height" class="asPills">
+        <option value="max">Max</option>
+        <option value="1080" selected>1080p</option>
+        <option value="720">720p</option>
+        <option value="480">480p</option>
+      </select>
+    </div>
+    <p class="hint" id="formatHint"></p>
+  </div>
+
+  <!-- Serveur local : YouTube ne se télécharge pas depuis une page web seule -->
+  <div class="section">
+    <h2>Helper</h2>
+    <p class="mono" id="helperState">Looking for the helper…</p>
+    <div id="helperHelp" hidden>
+      <p class="hint">This tool needs a small program on your computer (Python + yt-dlp): a web page alone cannot download from YouTube.</p>
+      <ol class="hint steps">
+        <li>Get the <code>helper</code> folder from the <a href="https://github.com/Logival2/digital_js_tools/tree/main/tools_youtube_000/helper" target="_blank" rel="noopener">repository</a> (Python 3 needed).</li>
+        <li>Double-click <code>start.bat</code> (Windows) or <code>start.command</code> (macOS).</li>
+        <li>Keep its window open: this page connects by itself.</li>
+      </ol>
+    </div>
+  </div>
+
+  <footer id="panelFooter">
+    <button id="resetBtn" type="button">Reset</button>
+    <button id="privacyBtn" type="button">Privacy · GDPR</button>
+  </footer>
+</aside>
+
+<!-- Notice de confidentialité (RGPD) et d'usage -->
+<dialog id="privacyDialog" aria-labelledby="privacyTitle">
+  <h2 id="privacyTitle">Privacy · GDPR</h2>
+
+  <h3>Data controller</h3>
+  <p>Valentin Maynadié — contact: <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
+
+  <h3>Your links and files</h3>
+  <p>Links are sent only to the helper running on your own computer (127.0.0.1), which fetches the video from YouTube. Nothing goes through this site. Files are made on your computer and removed from its temporary folder when the helper stops.</p>
+
+  <h3>What you may download</h3>
+  <p>Download only what you have the right to: your own videos, Creative Commons content, or with the author's permission. YouTube's terms of service do not allow other downloads.</p>
+
+  <h3>Cookies and tracking</h3>
+  <p>This site uses no cookies, no analytics and no user accounts. Video thumbnails are shown from YouTube's image server (i.ytimg.com).</p>
+
+  <h3>Your rights</h3>
+  <p>This site keeps no personal data. For any question about your rights (access, rectification, erasure, objection), write to the address above. You can also contact the CNIL, the French data protection authority (cnil.fr).</p>
+
+  <form method="dialog">
+    <button type="submit">Close</button>
+  </form>
+</dialog>
+
+<!-- Zone principale : la vidéo trouvée, puis les téléchargements -->
+<div id="main">
+  <p id="empty">Paste a YouTube link</p>
+  <article id="video" hidden>
+    <div class="thumb" id="thumb"></div>
+    <div class="info">
+      <span class="line"><span id="vTitle" class="name"></span><span id="vDuration" class="mono"></span></span>
+      <span id="vMeta" class="mono"></span>
+    </div>
+  </article>
+  <div id="jobs"></div>
+</div>
+
+<!-- Panneau de droite, calé en bas : état, téléchargement -->
+<aside id="rightPanel">
+  <p id="formatInfo">No link</p>
+  <div id="exportRow">
+    <button id="exportBtn" type="button" disabled>Download MP4</button>
+  </div>
+</aside>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const urlInput = $("urlInput");
+const kind = $("kind");
+const height = $("height");
+
+// Au rechargement, le navigateur restaure les anciens réglages : on repart du HTML
+urlInput.value = "";
+kind.value = "mp4";
+height.value = "1080";
+
+// Le serveur local : même adresse quand il sert lui-même la page, sinon 127.0.0.1:8765
+const HELPER = location.host === "127.0.0.1:8765" || location.host === "localhost:8765" ? "" : "http://127.0.0.1:8765";
+const api = (path, init) => fetch(HELPER + path, init).then(async (r) => {
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+  return data;
+});
+
+// ── Serveur local : on le cherche au chargement, puis toutes les 3 s tant qu'il manque ──
+let helper = null;
+async function checkHelper() {
+  try {
+    helper = await api("/api/status");
+    $("helperState").textContent = `● Connected · yt-dlp ${helper.ytdlp}` + (helper.ffmpeg ? "" : " · ffmpeg missing");
+    $("helperHelp").hidden = true;
+  } catch {
+    helper = null;
+    $("helperState").textContent = "○ Helper not running";
+    $("helperHelp").hidden = false;
+    setTimeout(checkHelper, 3000);
+  }
+  update();
+  if (helper && urlInput.value && !video) fetchInfo();
+}
+
+// ── Lien → infos (titre, miniature, durée) ──
+const YOUTUBE_URL = /^https?:\/\/([a-z0-9-]+\.)?(youtube\.com|youtu\.be|youtube-nocookie\.com)\//i;
+const cleanUrl = (text) => (text.match(/https?:\/\/\S+/) || [text])[0].trim();
+let video = null;          // infos de la vidéo du lien
+let infoError = null;
+let infoFor = "";          // lien dont on attend les infos
+let infoTimer = 0;
+
+function onUrlChange() {
+  clearTimeout(infoTimer);
+  video = null;
+  infoError = null;
+  showVideo();
+  update();
+  if (YOUTUBE_URL.test(cleanUrl(urlInput.value))) infoTimer = setTimeout(fetchInfo, 350);
+}
+
+async function fetchInfo() {
+  const url = cleanUrl(urlInput.value);
+  if (!helper || !YOUTUBE_URL.test(url) || infoFor === url) return;
+  infoFor = url;
+  update();
+  try {
+    const data = await api(`/api/info?url=${encodeURIComponent(url)}`);
+    if (cleanUrl(urlInput.value) !== url) return;    // le lien a changé entre-temps
+    video = data;
+  } catch (err) {
+    if (cleanUrl(urlInput.value) !== url) return;
+    infoError = err.message;
+  } finally {
+    if (infoFor === url) infoFor = "";
+  }
+  showVideo();
+  update();
+}
+
+const duration = (s) => {
+  if (s == null) return "";
+  s = Math.round(s);
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = String(s % 60).padStart(2, "0");
+  return h ? `${h}:${String(m).padStart(2, "0")}:${sec}` : `${m}:${sec}`;
+};
+
+function showVideo() {
+  $("video").hidden = !video;
+  $("empty").hidden = !!video || jobs.length > 0;
+  if (!video) return;
+  const thumb = video.thumbnail || `https://i.ytimg.com/vi/${video.id}/hqdefault.jpg`;
+  $("thumb").style.backgroundImage = `url("${encodeURI(thumb)}")`;
+  $("vTitle").textContent = video.title || video.id;
+  $("vDuration").textContent = video.isLive ? "live" : duration(video.duration);
+  $("vMeta").textContent = [video.channel, video.maxHeight && `source up to ${video.maxHeight}p`].filter(Boolean).join(" · ");
+}
+
+// ── Format ──
+const HINTS = {
+  mp4: {
+    max: "Best picture available, up to 4K / 8K. Often VP9 or AV1: After Effects and Premiere may not open it.",
+    std: "H.264 + AAC, up to the chosen height: opens everywhere, After Effects and Premiere included.",
+  },
+  mp3: "Best sound available, encoded at 320 kb/s, with cover and tags. YouTube streams sound at about 130–160 kb/s: 320 keeps all of it, it cannot add any.",
+};
+function update() {
+  const isMp3 = kind.value === "mp3";
+  $("heightRow").hidden = isMp3;
+  $("formatHint").textContent = isMp3 ? HINTS.mp3 : height.value === "max" ? HINTS.mp4.max : HINTS.mp4.std;
+  $("exportBtn").textContent = isMp3 ? "Download MP3" : "Download MP4";
+
+  const url = cleanUrl(urlInput.value);
+  const valid = YOUTUBE_URL.test(url);
+  $("exportBtn").disabled = !helper || !valid || video?.isLive;
+  $("formatInfo").textContent =
+      !helper ? "Waiting for the helper"
+    : !url ? "No link"
+    : !valid ? "Not a YouTube link"
+    : infoFor ? "Reading the link…"
+    : infoError ? `Error: ${infoError}`
+    : video?.isLive ? "Live streams cannot be downloaded"
+    : video ? (isMp3 ? "MP3 · 320 kb/s" : `MP4 · ${height.value === "max" ? "max quality" : height.value + "p"}`)
+    : "Ready";
+}
+
+kind.addEventListener("change", update);
+height.addEventListener("change", update);
+urlInput.addEventListener("input", onUrlChange);
+urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter" && !$("exportBtn").disabled) startDownload(); });
+
+// Un lien déposé (depuis la barre d'adresse ou une page) remplit le champ
+const mainEl = $("main");
+let dragDepth = 0;
+window.addEventListener("dragenter", (e) => { e.preventDefault(); dragDepth++; mainEl.classList.add("dragover"); });
+window.addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; mainEl.classList.remove("dragover"); } });
+window.addEventListener("dragover", (e) => e.preventDefault());
+window.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dragDepth = 0;
+  mainEl.classList.remove("dragover");
+  const text = e.dataTransfer.getData("text/uri-list") || e.dataTransfer.getData("text/plain");
+  if (text) { urlInput.value = cleanUrl(text); onUrlChange(); }
+});
+// Coller n'importe où dans la page (hors champ) : le lien va dans le champ
+window.addEventListener("paste", (e) => {
+  if (e.target === urlInput) return;
+  const text = e.clipboardData.getData("text");
+  if (YOUTUBE_URL.test(cleanUrl(text))) { urlInput.value = cleanUrl(text); onUrlChange(); }
+});
+
+// ── Téléchargements : le serveur travaille, la page suit l'avancement puis récupère le fichier ──
+let jobs = [];
+async function startDownload() {
+  const url = cleanUrl(urlInput.value);
+  const btn = $("exportBtn");
+  btn.disabled = true;
+  try {
+    const job = await api("/api/download", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, kind: kind.value, height: height.value }),
+    });
+    addJob(job, video?.title || url);
+  } catch (err) {
+    $("formatInfo").textContent = `Error: ${err.message}`;
+  } finally {
+    btn.disabled = false;
+    update();
+  }
+}
+$("exportBtn").addEventListener("click", startDownload);
+
+function addJob(job, title) {
+  const el = document.createElement("div");
+  el.className = "job";
+  el.innerHTML = `
+    <div class="line"><span class="name"></span><span class="kind mono"></span></div>
+    <div class="bar"><div></div></div>
+    <div class="line"><span class="state mono">Starting…</span><button type="button" hidden>Save again</button></div>`;
+  el.querySelector(".name").textContent = title;
+  el.querySelector(".name").title = title;
+  el.querySelector(".kind").textContent = job.kind === "mp3" ? "MP3 320" : `MP4 ${job.height === "max" ? "max" : job.height + "p"}`;
+  el.querySelector("button").addEventListener("click", () => saveFile(job.id));
+  $("jobs").prepend(el);
+  jobs.push({ ...job, el });
+  showVideo();
+  pollJob(job.id, el);
+}
+
+const mb = (bytes) => bytes == null ? "" : `${(bytes / 1e6).toFixed(1)} MB`;
+async function pollJob(id, el) {
+  let job;
+  try {
+    job = await api(`/api/job?id=${id}`);
+  } catch {
+    el.querySelector(".state").textContent = "Lost the helper";
+    return;
+  }
+  const bar = el.querySelector(".bar > div");
+  const state = el.querySelector(".state");
+  if (job.state === "done") {
+    bar.style.width = "100%";
+    el.classList.add("done");
+    state.textContent = `Done · ${mb(job.size)} · ${job.filename}`;
+    el.querySelector("button").hidden = false;
+    saveFile(id);
+    return;
+  }
+  if (job.state === "error") {
+    el.classList.add("failed");
+    state.textContent = `Error: ${job.error}`;
+    return;
+  }
+  const pct = job.progress == null ? null : Math.round(job.progress * 100);
+  bar.style.width = `${pct ?? 0}%`;
+  state.textContent =
+      job.state === "queued" ? "Starting…"
+    : job.state === "processing" ? (job.kind === "mp3" ? "Encoding MP3…" : "Assembling MP4…")
+    : `${job.kind === "mp4" ? (job.stream === "audio" ? "Sound" : "Picture") + " · " : ""}${pct ?? "…"} %`
+      + (job.speed ? ` · ${mb(job.speed)}/s` : "") + (job.eta != null ? ` · ${duration(job.eta)} left` : "");
+  setTimeout(() => pollJob(id, el), 500);
+}
+
+// Le fichier arrive du serveur en pièce jointe : le navigateur le range dans Téléchargements
+function saveFile(id) {
+  const link = document.createElement("a");
+  link.href = `${HELPER}/api/file?id=${encodeURIComponent(id)}`;
+  link.download = "";
+  link.click();
+}
+
+// ── Pied de panneau ──
+$("resetBtn").addEventListener("click", () => {
+  urlInput.value = "";
+  kind.value = "mp4";
+  height.value = "1080";
+  for (const j of jobs) j.el.remove();
+  jobs = [];
+  onUrlChange();
+});
+const privacyDialog = $("privacyDialog");
+$("privacyBtn").addEventListener("click", () => privacyDialog.showModal());
+
+// Un lien dans l'adresse (…/tools_youtube_000/?url=…) remplit le champ : pratique depuis un favori
+const fromAddress = new URLSearchParams(location.search).get("url");
+if (fromAddress) urlInput.value = cleanUrl(fromAddress);
+
+update();
+checkHelper();
+</script>
+</body>
+</html>
