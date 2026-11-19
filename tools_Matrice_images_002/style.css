@@ -1,4 +1,4 @@
-/* Matrice d'images 002 — mise en page propre à l'outil. Le style graphique (verre, titre MingLiU Prop,
+/* Matrice d'images 002 — mise en page propre à l'outil. Le style graphique (verre, titre Nord Regular,
    aides en Roboto Mono, pilules, bloc vert, filets pointillés, poignées carrées) vient de ../ui/ui_001.css,
    qui l'a repris de cet outil pour tous les autres. */
 
@@ -67,7 +67,6 @@ body.panel-hidden #panel {
   margin: 0;
   transform: translateX(-50%);
   font-size: var(--fs-small);
-  letter-spacing: 0.02em;
   line-height: 1.1;
   text-align: center;
   opacity: 0;

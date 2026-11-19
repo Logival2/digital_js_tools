@@ -28,7 +28,7 @@
 <!-- Panneau de droite (paramètres), posé en colonne -->
 <aside id="panel">
 
-  <!-- En-tête : retour au menu et nombre de cartes, titre (dessiné en MingLiU Prop par ui_001.js) -->
+  <!-- En-tête : retour au menu et nombre de cartes, titre (dessiné en Nord Regular par ui_001.js) -->
   <header id="panelHead">
     <p class="eyebrow"><a class="badge backLink" href="../" title="Back to all tools">← Digital tools</a><span id="bigCount" class="mono">50 cards</span></p>
     <h1 class="toolTitle">Image matrice</h1>
@@ -791,7 +791,6 @@ function buildAtlas() {
   ctx.textBaseline = "middle";
   const fs = Math.round(CELL_H * 0.3);
   ctx.font = `500 ${fs}px "Roboto Mono", Menlo, monospace`;
-  if ("letterSpacing" in ctx) ctx.letterSpacing = `${(fs * 0.02).toFixed(1)}px`; // même interlettrage que le panneau
   const spots = mode === "terrain" ? terrainSpots(n) : null;
   // texte trop long pour la largeur de la carte : coupé, terminé par « … »
   const fit = (text, maxW) => {

@@ -14,7 +14,7 @@
 <!-- Panneau latéral (paramètres) -->
 <aside id="panel">
 
-  <!-- En-tête : retour au menu, titre (dessiné en MingLiU Prop par ui_001.js) -->
+  <!-- En-tête : retour au menu, titre (dessiné en Nord Regular par ui_001.js) -->
   <header id="panelHead">
     <p class="eyebrow"><a class="badge backLink" href="../" title="Back to all tools">← Digital tools</a></p>
     <h1 class="toolTitle">Card ring</h1>
@@ -35,7 +35,9 @@ CHALLENGED.</textarea>
     <div id="bigFontControl" class="row">
       <label for="bigFontSelect">Font</label>
       <select id="bigFontSelect" class="asPills">
-        <option value="MingLiU-01">MingLiU</option>
+        <option value="Nord Regular">NORD REGULAR</option>
+        <option value="Nord SemiBold">NORD SEMIBOLD</option>
+        <option value="Nord Mono">NORD MONO</option>
         <option value="HN Roman">Helvetica Regular</option>
         <option value="HN Black Extended">Helvetica Black Extended</option>
       </select>
@@ -318,17 +320,19 @@ function rowY(i) {
 
 // Police "maison" chargée depuis /font, utilisée uniquement pour le titre sur l'affiche
 const posterFace = new FontFace(
-  "MingLiU-01",
-  "url('../fonts/MingLiU-01.ttf')"
+  "Nord Mono",
+  "url('../fonts/Nord_pro_mono.ttf')"
 );
 posterFace.load().then((loaded) => {
   document.fonts.add(loaded); // la boucle d'animation redessinera au prochain tick
 }).catch((err) => {
-  console.error("Could not load the MingLiU-01 font:", err);
+  console.error("Could not load the Nord Mono font:", err);
 });
 
-// Polices proposées pour le gros titre pleine largeur : MingLiU (plus haut) et deux Helvetica
+// Polices proposées pour le gros titre pleine largeur : Nord Regular, Nord SemiBold, Nord Mono (plus haut) et deux Helvetica
 const HELVETICA_FILES = {
+  "Nord Regular": "../fonts/Nord_pro_regular.ttf",
+  "Nord SemiBold": "../fonts/Nord_pro_SemiBold.ttf",
   "HN Roman": "../fonts/Helvetica Neue LT Std/HelveticaNeueLTStd-Roman.otf",
   "HN Black Extended": "../fonts/Helvetica Neue LT Std/HelveticaNeueLTStd-BlkEx.otf",
 };
@@ -339,10 +343,6 @@ for (const [name, url] of Object.entries(HELVETICA_FILES)) {
     console.error(`Could not load the ${name} font:`, err);
   });
 }
-
-// MingLiU n'existe qu'en une graisse fine : on l'épaissit légèrement avec un
-// contour de la même couleur (faux gras), proportionnel à la taille du texte.
-const POSTER_EMBOLDEN = 0.025; // épaisseur du contour, en fraction de la taille de police
 
 // Logo affiché en petit au centre de l'affiche
 const LOGO_SIZE = 90; // largeur du logo (px, repère de la page)
@@ -755,8 +755,8 @@ const DEFAULT_BIG_FONT = bigFontSelect.value;
 const BIG_FONT = (size) => `${size}px "${bigFontSelect.value}", "Helvetica Neue", Helvetica, Arial, sans-serif`;
 
 function drawBigText() {
-  // MingLiU : en capitales, avec le même faux gras arrondi que dans la Typo cinétique 3D
-  const mingliu = bigFontSelect.value === "MingLiU-01";
+  // Nord Mono : en capitales, telle que dessinée dans la police
+  const mingliu = bigFontSelect.value === "Nord Mono";
   const lines = (mingliu ? bigText.toUpperCase() : bigText).split("\n");
   if (!lines.some((line) => line.trim())) return;
 
@@ -789,12 +789,6 @@ function drawBigText() {
     const m = sctx.measureText(line);
     const x = sceneW / 2 - inkWidth(m) / 2 + m.actualBoundingBoxLeft;
     sctx.fillText(line, x, firstBaseline + i * lineH);
-    if (mingliu) {
-      sctx.strokeStyle = "#000000";
-      sctx.lineWidth = size * POSTER_EMBOLDEN; // 2,5 % de la taille, comme MINGLIU_EMBOLDEN
-      sctx.lineJoin = "round";
-      sctx.strokeText(line, x, firstBaseline + i * lineH);
-    }
   });
 }
 
@@ -804,7 +798,7 @@ const FOOTER_SIZE = 11; // taille du texte (repère de la page, petit côté = 8
 
 function drawFooterNote() {
   sctx.fillStyle = "#000000";
-  sctx.font = `${FOOTER_SIZE}px "MingLiU-01", serif`;
+  sctx.font = `${FOOTER_SIZE}px "Nord Mono", serif`;
   sctx.letterSpacing = "0px"; // indépendant du slider d'interlettrage
   sctx.textAlign = "center";
   sctx.textBaseline = "bottom";
@@ -813,16 +807,15 @@ function drawFooterNote() {
 
 // Chaque champ est centré dans sa zone de colonnes (TEXT_SLOTS) et son bloc
 // de lignes est centré verticalement sur l'affiche.
-const POSTER_LINE_HEIGHT = 1.6; // interligne fixe des deux textes MingLiU (× leur taille)
+const POSTER_LINE_HEIGHT = 1.6; // interligne fixe des deux textes Nord Mono (× leur taille)
 
 function drawPosterLines() {
   sctx.fillStyle = "#000000";
   sctx.strokeStyle = "#000000";
-  sctx.lineWidth = posterFontSize * POSTER_EMBOLDEN;
   sctx.lineJoin = "round";
   sctx.textAlign = "center";
   sctx.textBaseline = "top";
-  sctx.font = `${posterFontSize}px "MingLiU-01", serif`;
+  sctx.font = `${posterFontSize}px "Nord Mono", serif`;
   const spacing = posterFontSize * letterSpacingEm;
   sctx.letterSpacing = `${spacing}px`;
 
@@ -831,7 +824,6 @@ function drawPosterLines() {
   // d'un demi-espacement pour que le mot reste centré dans sa zone
   const drawLine = (line, x, y) => {
     sctx.fillText(line, x + spacing / 2, y);
-    sctx.strokeText(line, x + spacing / 2, y);
   };
 
   posterLines.forEach((text, i) => {

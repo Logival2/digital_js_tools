@@ -2,8 +2,8 @@
    Couleurs, typo, panneau et contrôles : ../ui/ui_001.css
    La zone principale garde le style de la page Ressources (Roboto Mono). */
 @font-face {
-  font-family: "MingLiU-01";
-  src: url("../fonts/MingLiU-01.ttf") format("truetype");
+  font-family: "Nord Mono";
+  src: url("../fonts/Nord_pro_mono.ttf") format("truetype");
   font-display: swap;
 }
 /* servie avec la page, comme les autres polices (plus de Google Fonts) */
@@ -68,7 +68,6 @@
   font-size: var(--t2);
   font-weight: 400;
   line-height: 1.45;
-  letter-spacing: 0;
   text-transform: none;
 }
 
@@ -135,10 +134,9 @@
   margin-top: auto;
   padding-top: 16px;
   text-align: center;
-  font-family: "MingLiU-01", serif;
+  font-family: "Nord Mono", serif;
   font-size: 11px;
   text-transform: none;
-  letter-spacing: 0;
 }
 
 /* Téléphone : l'aperçu est une longue page à lire, il passe sous les réglages au lieu de rester en haut */

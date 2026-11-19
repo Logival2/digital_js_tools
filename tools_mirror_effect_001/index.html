@@ -35,7 +35,7 @@
         <select id="fontSelect"></select>
       </div>
       <textarea id="textInput" rows="2" maxlength="200" placeholder="Text, one line per row">NORD</textarea>
-      <div class="row"><label for="trackingSlider" title="Space between the letters, in em">Tracking</label><input id="trackingSlider" type="range" min="-0.2" max="0.6" step="0.005" value="-0.08" /></div>
+      <div class="row"><label for="trackingSlider" title="Space between the letters, in em">Tracking</label><input id="trackingSlider" type="range" min="-0.2" max="0.6" step="0.005" value="0" /></div>
     </div>
     <div id="imageControls" hidden>
       <div class="row">
@@ -162,14 +162,16 @@ const panelFields = Array.from(document.querySelectorAll("#panel input:not([type
 const FONTS = {
   "Happy Times":             { file: "happy-times-at-the-ikob.ttf" },
   "Flor de Ruina":           { file: "FlorDeRuina-Flor.ttf" },
-  "Roboto Mono":             { shared: true }, // déclarée par ui_001.css (fichier variable)
-  "MingLiU-01":              { file: "MingLiU-01.ttf", label: "MingLiU", upper: true },
+  "Roboto Mono":             { shared: true }, // déclarée par ui_001.css
+  "Nord Regular":            { file: "Nord_pro_regular.ttf", label: "NORD REGULAR" },
+  "Nord SemiBold":           { file: "Nord_pro_SemiBold.ttf", label: "NORD SEMIBOLD" },
+  "Nord Mono":               { file: "Nord_pro_mono.ttf", label: "NORD MONO", upper: true },
   "SangBleu Kingdom":        { file: "SangBleuKingdom-Regular.otf" },
   "Century Schoolbook Mono": { file: "Century-Schoolbook-Monospace-BT.otf" },
   "HN Roman":                { file: "Helvetica Neue LT Std/HelveticaNeueLTStd-Roman.otf", label: "Helvetica Roman" },
   "HN Black Extended":       { file: "Helvetica Neue LT Std/HelveticaNeueLTStd-BlkEx.otf", label: "Helvetica Black Extended" },
 };
-const DEFAULT_FONT = "MingLiU-01";
+const DEFAULT_FONT = "Nord Mono";
 for (const [name, { label }] of Object.entries(FONTS)) $("fontSelect").add(new Option(label ?? name, name, name === DEFAULT_FONT));
 
 // Au rechargement, le navigateur restaure les anciens réglages : on repart des valeurs du HTML

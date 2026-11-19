@@ -1,8 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
    Digital tools — interface commune, version 001 (d'après tools_Matrice_images_002,
    elle-même fusion de ui_000 et d'une variante inspirée de Raide Research)
-   · Helvetica Neue Roman en capitales pour les libellés ; titre en MingLiU Prop, gros faux gras arrondi
-   · aides et valeurs en Roboto Mono Medium 13 px, en minuscules : peu de hiérarchie
+   · Nord SemiBold par défaut (libellés en capitales, titre) ; Roboto Mono pour les aides et les valeurs (NORDWAY : Nord Regular)
+   · aides et valeurs en Roboto Mono, en minuscules : peu de hiérarchie
+   · typo réglée dans les fichiers des polices (fonts/) : ni interlettrage, ni faux gras, ni étirement ajoutés ici
    · panneaux en verre gris foncé, très léger (20 %, flou de 8 px) : on voit le rendu à travers
    · filets pointillés entre les sections, choix en pilules, action principale en vert acide #e4fb02,
      curseurs à poignée carrée, aucun effet au survol
@@ -15,35 +16,40 @@
   font-weight: 400;
   font-display: swap;
 }
+/* Nord : Regular, SemiBold, Mono (fonts/Nord_pro_*), mêmes fichiers que les outils NORDWAY */
 @font-face {
-  font-family: "MingLiU-01";
-  src: url("../fonts/MingLiU-01.ttf") format("truetype");
+  font-family: "Nord Regular";
+  src: url("../fonts/Nord_pro_regular.ttf") format("truetype");
   font-display: swap;
 }
 @font-face {
-  font-family: "MingLiU Prop";
-  src: url("../fonts/MingLiU-Prop-Regular_1.ttf") format("truetype");
+  font-family: "Nord SemiBold";
+  src: url("../fonts/Nord_pro_SemiBold.ttf") format("truetype");
   font-display: swap;
 }
-/* Roboto Mono, fichier variable (toutes les graisses) ; on prend Medium, 500. Licence OFL : fonts/RobotoMono-OFL.txt */
+@font-face {
+  font-family: "Nord Mono";
+  src: url("../fonts/Nord_pro_mono.ttf") format("truetype");
+  font-display: swap;
+}
+/* Roboto Mono Regular. Licence OFL : fonts/RobotoMono-OFL.txt */
 @font-face {
   font-family: "Roboto Mono";
-  src: url("../fonts/RobotoMono-Variable.ttf") format("truetype");
-  font-weight: 100 700;
+  src: url("../fonts/RobotoMono-Regular.ttf") format("truetype");
+  font-weight: 400;
   font-display: swap;
 }
 
 :root {
   color-scheme: light;
-  --sans: "Helvetica Neue LT", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --sans: "Nord SemiBold", serif;  /* police par défaut de l'interface (Helvetica reste proposée dans les outils) */
   --mono: "Roboto Mono", "SF Mono", Menlo, Consolas, monospace;
-  --title: "MingLiU Prop", "MingLiU-01", serif;
+  --title: "Nord SemiBold", serif;
   /* les tailles : titre (15 % plus petit qu'en 000), texte 14 px, petit 11 px, mono 13 px */
   --fs-title: calc(clamp(3.5rem, 2.6rem + 2.4vw, 4.75rem) * 0.85);
   --fs-text: 14px;
   --fs-small: 11px;
   --fs-mono: 11.5px;
-  --track-mono: 0.02em;
   /* verre : gris foncé très léger (en 000 : gris 190 à 70 %, flou 20 px) */
   --glass: rgba(145, 145, 145, 0.2);
   --blur: 8px;
@@ -76,7 +82,6 @@ html, body {
   font-size: var(--fs-text);
   font-weight: 400;
   line-height: 1.3;
-  letter-spacing: -0.02em;
   text-transform: uppercase;
   color: var(--text);
   background: var(--page);
@@ -93,9 +98,8 @@ body {
 #panelFooter,
 dialog h3 {
   font-size: var(--fs-small);
-  letter-spacing: 0.02em;
 }
-/* Aides et données : Roboto Mono Medium 11,5 px, interligne 1,3, casse d'origine, alignées à gauche
+/* Aides et données : Roboto Mono 11,5 px, interligne 1,3, casse d'origine, alignées à gauche
    (une mono justifiée creuse des blancs) */
 .hint,
 .mono,
@@ -105,10 +109,9 @@ dialog h3 {
 #timeLabel,
 #simInfo {
   font-family: var(--mono);
-  font-weight: 500;
+  font-weight: 400;
   font-size: var(--fs-mono);
   line-height: 1.3;
-  letter-spacing: var(--track-mono);
   text-transform: none;
   text-align: left;
 }
@@ -170,9 +173,8 @@ dialog h3 {
   color: inherit;
   text-decoration: none;
 }
-/* Titre en MingLiU Prop, gros faux gras : contour de la couleur du texte, épais de 0,065 × la taille,
-   jointures arrondies. Le SVG est construit et ajusté à la largeur par ui_001.js ; il n'occupe que 85 %
-   de la largeur, pour rester 15 % plus petit même quand la largeur le limite. */
+/* Titre en Nord SemiBold, tel que dessiné dans la police. Le SVG est construit et ajusté à la largeur
+   par ui_001.js ; il n'occupe que 85 % de la largeur, pour rester 15 % plus petit même quand la largeur le limite. */
 .toolTitle {
   margin: 12px 0 0;
   font-size: var(--fs-title);
@@ -184,11 +186,7 @@ dialog h3 {
   width: 85%;
   overflow: visible;
   font-family: var(--title);
-  letter-spacing: 0.02em;
   fill: currentColor;
-  stroke: currentColor;
-  stroke-width: 0.065em;
-  stroke-linejoin: round;
 }
 .visuallyHidden {
   position: absolute;
@@ -265,7 +263,6 @@ dialog h3 {
 /* ── Boutons : bloc de verre, principal vert acide, aucun survol ── */
 button {
   font: inherit;
-  letter-spacing: inherit;
   text-transform: inherit;
   color: inherit;
   cursor: pointer;
@@ -387,7 +384,6 @@ input[type="password"] {
   min-width: 0;
   padding: 4px 6px;
   font: inherit;
-  letter-spacing: inherit;
   text-transform: none; /* ce qu'on tape garde sa casse (certaines polices la respectent) */
   color: var(--text);
   border: none;
@@ -437,7 +433,6 @@ option, optgroup { text-transform: uppercase; color: #000; background: #fff; }
     min-height: 0;
     padding: 0;
     font: inherit;
-    letter-spacing: inherit;
     text-transform: inherit;
     text-align: left;
     color: inherit;
@@ -495,7 +490,6 @@ option, optgroup { text-transform: uppercase; color: #000; background: #fff; }
     padding: 2px 12px;
     font-family: var(--sans);
     font-size: var(--fs-text);
-    letter-spacing: -0.02em;
     text-transform: uppercase;
     color: var(--text);
     border-radius: 999px;
@@ -533,7 +527,6 @@ select.uiMenuSource { display: none !important; }
   min-height: 0;
   padding: 4px 11px 4px 12px;
   font: inherit;
-  letter-spacing: inherit;
   text-align: left;
   text-transform: uppercase;
   color: var(--text);
@@ -568,7 +561,6 @@ select.uiMenuSource { display: none !important; }
   overscroll-behavior: contain;
   font-family: var(--sans);
   font-size: var(--fs-text);
-  letter-spacing: -0.02em;
   text-transform: uppercase;
   color: var(--text);
   border: none;
@@ -811,7 +803,6 @@ canvas.camPreview {
   font-size: 40px;
   font-weight: 400;
   line-height: 1;
-  letter-spacing: 0.02em;
 }
 #desktopOnly p:not(.eyebrow) {
   margin: 0;

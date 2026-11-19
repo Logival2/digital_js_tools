@@ -14,7 +14,7 @@
 <!-- Panneau latéral (paramètres) -->
 <aside id="panel">
 
-  <!-- En-tête : retour au menu, titre (dessiné en MingLiU Prop par ui_001.js) -->
+  <!-- En-tête : retour au menu, titre (dessiné en Nord Regular par ui_001.js) -->
   <header id="panelHead">
     <p class="eyebrow"><a class="badge backLink" href="../" title="Back to all tools">← Digital tools</a></p>
     <h1 class="toolTitle">Organic<br>type</h1>
@@ -23,18 +23,20 @@
   <!-- Texte : sert de graine à la croissance -->
   <div class="section">
     <h2>Text (seed)</h2>
-    <textarea id="textInput" class="posterLine" rows="3" maxlength="200">NORDWAY</textarea>
+    <textarea id="textInput" class="posterLine" rows="3" maxlength="200" style="text-transform: uppercase">PROSPECTIVE</textarea>
     <div class="row">
       <label for="fontSelect">Font</label>
       <select id="fontSelect" class="asPills">
         <option value="Replica Mono">Replica Mono</option>
-        <option value="MingLiU-01">MingLiU</option>
+        <option value="Nord Regular">NORD REGULAR</option>
+        <option value="Nord SemiBold">NORD SEMIBOLD</option>
+        <option value="Nord Mono">NORD MONO</option>
         <option value="Roboto Mono">Roboto Mono</option>
       </select>
     </div>
-    <div class="row"><label for="fontSizeSlider">Size</label><input id="fontSizeSlider" type="range" min="20" max="600" step="1" value="190" /></div>
+    <div class="row"><label for="fontSizeSlider">Size</label><input id="fontSizeSlider" type="range" min="20" max="600" step="1" value="115" /></div>
     <div class="row"><label for="lineHeightSlider">Line height</label><input id="lineHeightSlider" type="range" min="0.5" max="2" step="0.01" value="0.9" /></div>
-    <div class="row"><label for="letterSpacingSlider">Letter spacing</label><input id="letterSpacingSlider" type="range" min="-0.2" max="1" step="0.01" value="-0.04" /></div>
+    <div class="row"><label for="letterSpacingSlider">Letter spacing</label><input id="letterSpacingSlider" type="range" min="-0.2" max="1" step="0.01" value="0" /></div>
     <div class="row">
       <label for="sourceSelect">Source</label>
       <select id="sourceSelect" class="asPills">
@@ -329,7 +331,9 @@ const GRID_MARGIN = 10, GRID_GUTTER = 10, GRID_COLS = 5, GRID_ROWS = 10;
 // ── Polices ──
 const FONT_FILES = {
   "Replica Mono": "../fonts/Replica-Mono.otf",
-  "MingLiU-01": "../fonts/MingLiU-01.ttf",
+  "Nord Regular": "../fonts/Nord_pro_regular.ttf",
+  "Nord SemiBold": "../fonts/Nord_pro_SemiBold.ttf",
+  "Nord Mono": "../fonts/Nord_pro_mono.ttf",
 };
 for (const [name, url] of Object.entries(FONT_FILES)) {
   new FontFace(name, `url('${url}')`).load().then((face) => {
@@ -599,8 +603,9 @@ function pass(prog, setUniforms) {
 // ── Graine : texte + image + tracés dessinés dans le masque ──
 let sourceImage = null; // ImageBitmap importée
 
+// toujours en capitales, quoi qu'on tape
 function textLines() {
-  return controls.text.value.split("\n");
+  return controls.text.value.toUpperCase().split("\n");
 }
 
 // Dessine le bloc de texte centré, dans le repère de la page (ctx déjà mis à l'échelle)
@@ -795,11 +800,11 @@ const crispColor = () => gradColorInputs[2].value;
 
 let cursor = null; // { x, y, active, hand } dans le repère de la page
 // Mention centrée en bas de l'affiche, mêmes réglages que dans l'outil Cercle
-// (MingLiU, 11 unités, à 10 + 6 du bas), dans la couleur de la matière
+// (Nord Mono, 11 unités, à 10 + 6 du bas), dans la couleur de la matière
 function drawFooterNote(ctx) {
   ctx.save();
   ctx.fillStyle = gradColorInputs[2].value;
-  ctx.font = `11px "MingLiU-01", serif`;
+  ctx.font = `11px "Nord Mono", serif`;
   ctx.letterSpacing = "0px";
   ctx.textAlign = "center";
   ctx.textBaseline = "bottom";

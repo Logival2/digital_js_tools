@@ -74,7 +74,6 @@ body.panel-hidden #panel {
   padding: 5px 9px;
   font-size: var(--fs-small);
   line-height: 1.2;
-  letter-spacing: 0.02em;
   white-space: nowrap;
   color: var(--text);
   background: var(--glass);

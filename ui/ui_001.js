@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════
 // Digital tools — interface commune, version 001 (va avec ui_001.css ; même comportement que ui_000.js)
 // Chargé en <script defer> avant le script de l'outil, il ne touche qu'à l'affichage :
-// · titre en MingLiU Prop (SVG, ajusté à la largeur du panneau),
+// · titre en Nord SemiBold (SVG, ajusté à la largeur du panneau),
 // · volets « + / – » sur les titres de section,
 // · valeur de chaque slider à droite de son libellé, piste remplie jusqu'au curseur,
 // · clic à côté d'une fenêtre (RGPD) pour la fermer.

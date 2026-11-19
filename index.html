@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Digital JS tools</title>
-<!-- même interface que les outils (ui_001) : verre gris, Helvetica en capitales, titre en MingLiU Prop, aides en Roboto Mono,
+<!-- même interface que les outils (ui_001) : verre gris, Nord SemiBold en capitales, titre en Nord SemiBold, aides en Roboto Mono,
      filets pointillés ; mise en page d'après raideresearch.com (rubriques sous un filet, fiches nom + numéro) -->
 <link rel="stylesheet" href="ui/ui_001.css" />
 <script defer src="ui/ui_001.js"></script>
@@ -19,7 +19,7 @@
   }
 
   /* en-tête : la même plaque de verre que le panneau des outils, et le même haut de panneau
-     (ligne du nom, titre en MingLiU Prop, puis le texte en mono, le compteur à droite) */
+     (ligne du nom, titre en Nord SemiBold, puis le texte en mono, le compteur à droite) */
   #top {
     display: flex;
     flex-direction: column;
@@ -31,7 +31,7 @@
     border-radius: var(--radius-panel);
   }
   /* barre du haut (nom, liens) : la même taille que le nom des outils sur les cartes */
-  #top .eyebrow { flex-wrap: wrap; font-size: var(--fs-text); letter-spacing: -0.02em; }
+  #top .eyebrow { flex-wrap: wrap; font-size: var(--fs-text);}
   #top nav {
     display: flex;
     gap: 16px;
@@ -59,6 +59,7 @@
     padding: 8px var(--pad) 0;
     border-top: 1px dashed var(--dash);
   }
+  .groupIntro { margin: -4px 0 0; padding: 0 var(--pad); max-width: 62ch; }
   .groupHead h2 {
     margin: 0;
     font-size: var(--fs-text);
@@ -144,7 +145,7 @@
 <main>
   <section class="group" aria-labelledby="toolsTitle">
     <div class="groupHead">
-      <h2 id="toolsTitle">Tools</h2>
+      <h2 id="toolsTitle">Experimental Tools</h2>
       <span class="mono count"></span>
     </div>
     <div class="toolGrid" id="tools"></div>
@@ -156,6 +157,15 @@
       <span class="mono count"></span>
     </div>
     <div class="toolGrid" id="pipeline"></div>
+  </section>
+  <!-- Brand guideline tools : les outils déclinés pour une marque (NORDWAY), publiés sur leur propre site -->
+  <section class="group" aria-labelledby="brandTitle">
+    <div class="groupHead">
+      <h2 id="brandTitle">Brand guideline tools</h2>
+      <span class="mono count"></span>
+    </div>
+    <p class="hint groupIntro">NORDWAY, a fictional outdoor brand: the same tools set in its identity, and its brand library, on their own site.</p>
+    <div class="toolGrid" id="brand"></div>
   </section>
 </main>
 
@@ -243,20 +253,35 @@ const PIPELINE = [
   },
 ];
 
+// Brand guideline tools : un carton par marque, qui mène au site de ses outils (NORDWAY : dépôt nordway_digital_tools).
+// lien = adresse complète ; pas de numéro (ce n'est pas un outil), une flèche à la place.
+const BRAND = [
+  {
+    lien: "https://logival2.github.io/nordway_digital_tools/",
+    marque: true,
+    dossier: "nordway_digital_tools",
+    nom: "NORDWAY",
+    desc: "Six of these tools set in the NORDWAY identity, and its brand library. The brand seal is the navigation, one point per tool.",
+    apercu: "apercu/nordway.png",
+  },
+];
+
 // numéros sur deux chiffres, à la suite d'une rubrique à l'autre (01 à 09), comme une référence
 const pad2 = (n) => String(n).padStart(2, "0");
 let number = 0;
-for (const [listId, entries] of [["tools", TOOLS], ["pipeline", PIPELINE]]) {
+for (const [listId, entries] of [["tools", TOOLS], ["pipeline", PIPELINE], ["brand", BRAND]]) {
   const list = document.getElementById(listId);
-  for (const t of entries) list.appendChild(toolCard(t, ++number));
-  list.closest(".group").querySelector(".count").textContent = `${entries.length} tools`;
+  // le carton d'une marque (marque: true) n'est pas un outil : pas de numéro, pas compté parmi les outils
+  for (const t of entries) list.appendChild(toolCard(t, t.marque ? null : ++number));
+  list.closest(".group").querySelector(".count").textContent =
+    listId === "brand" ? `${entries.length} brand${entries.length > 1 ? "s" : ""}` : `${entries.length} tools`;
 }
 document.getElementById("toolCount").textContent = `${number} tools`;
 
 function toolCard(t, n) {
   const a = document.createElement("a");
   a.className = "tool";
-  a.href = t.dossier + "/";
+  a.href = t.lien ?? t.dossier + "/";
   a.innerHTML = `
     <div class="thumb"><div></div></div>
     <div class="info">
@@ -266,7 +291,7 @@ function toolCard(t, n) {
     </div>`;
   if (t.apercu) a.querySelector(".thumb > div").style.backgroundImage = `url("${t.apercu}")`;
   a.querySelector(".name").textContent = t.nom;
-  a.querySelector(".num").textContent = pad2(n);
+  a.querySelector(".num").textContent = n == null ? "→" : pad2(n);
   a.querySelector(".folder").textContent = t.dossier;
   a.querySelector(".desc").textContent = t.desc;
   return a;

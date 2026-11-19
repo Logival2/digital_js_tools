@@ -14,7 +14,7 @@
 <!-- Panneau latéral (paramètres) -->
 <aside id="panel">
 
-  <!-- En-tête : retour au menu, titre (dessiné en MingLiU Prop par ui_001.js) -->
+  <!-- En-tête : retour au menu, titre (dessiné en Nord Regular par ui_001.js) -->
   <header id="panelHead">
     <p class="eyebrow"><a class="badge backLink" href="../" title="Back to all tools">← Digital tools</a></p>
     <h1 class="toolTitle">3D kinetic<br>type</h1>
@@ -37,13 +37,15 @@
   <!-- Texte : dessiné à plat puis enroulé sur une surface 3D -->
   <div class="section">
     <h2>Text</h2>
-    <textarea id="textInput" class="posterLine" rows="3" maxlength="200">NORDWAY</textarea>
+    <textarea id="textInput" class="posterLine" rows="3" maxlength="200">prospective</textarea>
     <div class="row">
       <label for="fontSelect">Font</label>
       <select id="fontSelect" class="asPills">
         <option value="HN Black Extended">Black Extended</option>
         <option value="HN Roman">Regular</option>
-        <option value="MingLiU-01" selected>MingLiU</option>
+        <option value="Nord Regular">NORD REGULAR</option>
+        <option value="Nord SemiBold">NORD SEMIBOLD</option>
+        <option value="Nord Mono" selected>NORD MONO</option>
       </select>
     </div>
     <div class="row"><label for="sizeSlider" title="Height of one row of text">Size</label><input id="sizeSlider" type="range" min="0.06" max="0.9" step="0.01" value="0.37" /></div>
@@ -289,8 +291,10 @@ let sceneW = 800;
 let sceneH = 800;
 const SCENE_MARGIN = 40;
 
-// ── Polices : Helvetica Neue LT Std, Regular (Roman) et Black Extended ──
+// ── Polices : Nord Regular et SemiBold, Helvetica Neue LT Std (Roman, Black Extended) ; Nord Mono plus bas ──
 const FONT_FILES = {
+  "Nord Regular": "../fonts/Nord_pro_regular.ttf",
+  "Nord SemiBold": "../fonts/Nord_pro_SemiBold.ttf",
   "HN Roman": "../fonts/Helvetica Neue LT Std/HelveticaNeueLTStd-Roman.otf",
   "HN Black Extended": "../fonts/Helvetica Neue LT Std/HelveticaNeueLTStd-BlkEx.otf",
 };
@@ -300,12 +304,12 @@ for (const [name, url] of Object.entries(FONT_FILES)) {
     if (controls.font.value === name) buildTextTexture(); // redessine avec la vraie police
   }).catch((err) => console.error(`Could not load the ${name} font:`, err));
 }
-// MingLiU : le texte d'arrière-plan (liste des boutiques)
-new FontFace("MingLiU-01", "url('../fonts/MingLiU-01.ttf')").load().then((face) => {
+// Nord Mono : le texte d'arrière-plan (liste des boutiques)
+new FontFace("Nord Mono", "url('../fonts/Nord_pro_mono.ttf')").load().then((face) => {
   document.fonts.add(face);
   clearBackgroundCache(); // redessine avec la vraie police
-  if (controls.font.value === "MingLiU-01") buildTextTexture();
-}).catch((err) => console.error("Could not load the MingLiU-01 font:", err));
+  if (controls.font.value === "Nord Mono") buildTextTexture();
+}).catch((err) => console.error("Could not load the Nord Mono font:", err));
 
 // ═══════════════════════════════════════════════════════════════════
 // WebGL : une grille (u, v) déformée dans le vertex shader selon la forme.
@@ -496,7 +500,7 @@ function program(vs, fs) {
 const typeProg = program(VS, FS);
 
 // ═══════════════════════════════════════════════════════════════════
-// Arrière-plan permanent : deux blocs d'adresses en MingLiU, derrière la typo 3D.
+// Arrière-plan permanent : deux blocs d'adresses en Nord Mono, derrière la typo 3D.
 // Dessinés en 2D à la taille exacte du rendu, puis posés en fond par WebGL
 // (donc présents à l'écran, dans le PNG et dans le MP4).
 // ═══════════════════════════════════════════════════════════════════
@@ -549,7 +553,6 @@ const BG = {
   body: 9.8,           // taille du texte courant
   title: 11,           // taille des pays (en capitales)
   tracking: 0,         // interlettrage (en fraction de la taille) : 0 = celui de la police
-  embolden: 0.05,      // contour arrondi des titres (faux gras), en fraction de leur taille
   titlePitch: 11.3,    // du titre à la première ligne
   bodyPitch: 10.35,    // d'une ligne à la suivante
   entryPitch: 21,      // de la dernière ligne au titre suivant
@@ -570,15 +573,11 @@ function drawStoreBlocks(ctx, w, h) {
   const cx = sceneW / 2;
   const line = (text, size, y, bold) => {
     const spacing = size * BG.tracking;
-    ctx.font = `${size}px "MingLiU-01", serif`;
+    ctx.font = `${size}px "Nord Mono", serif`;
     ctx.letterSpacing = `${spacing}px`;
     // le canvas compte l'espacement après la dernière lettre : on recentre d'un demi-espacement
     const x = cx - spacing / 2;
     ctx.fillText(text, x, y);
-    if (bold) {
-      ctx.lineWidth = size * BG.embolden;
-      ctx.strokeText(text, x, y);
-    }
   };
   // les adresses des magasins (France, USA…), à masquer avec « Store addresses »
   if (on("stores")) for (const block of BG.blocks) {
@@ -594,7 +593,7 @@ function drawStoreBlocks(ctx, w, h) {
     });
   }
   // mention centrée en bas de page, mêmes réglages que dans l'outil Cercle
-  ctx.font = `11px "MingLiU-01", serif`;
+  ctx.font = `11px "Nord Mono", serif`;
   ctx.letterSpacing = "0px";
   ctx.textBaseline = "bottom";
   ctx.fillText("[For experimental purposes only]", cx, sceneH - 10 - 6);
@@ -710,11 +709,10 @@ const textTex = gl.createTexture();
 const aniso = gl.getExtension("EXT_texture_filter_anisotropic");
 let tileAspect = 1; // largeur / hauteur de la tuile
 
-// MingLiU : toujours en capitales, avec un léger faux gras arrondi (contour de même couleur)
-const MINGLIU_EMBOLDEN = 0.025; // épaisseur du contour, en fraction de la taille
+// Nord Mono : toujours en capitales, telle que dessinée dans la police
 
 function buildTextTexture() {
-  const mingliu = controls.font.value === "MingLiU-01";
+  const mingliu = controls.font.value === "Nord Mono";
   const raw = mingliu ? controls.text.value.toUpperCase() : controls.text.value;
   const lines = raw.split("\n");
   const MAX_W = Math.min(8192, gl.getParameter(gl.MAX_TEXTURE_SIZE));
@@ -738,12 +736,10 @@ function buildTextTexture() {
   // les capitales sont centrées dans leur ligne
   const capH = tctx.measureText("H").actualBoundingBoxAscent;
   tctx.strokeStyle = "#fff";
-  tctx.lineWidth = F * MINGLIU_EMBOLDEN;
   tctx.lineJoin = "round";
   lines.forEach((line, i) => {
     const y = (i + 0.5) * lh + capH / 2;
     tctx.fillText(line, tileW / 2, y);
-    if (mingliu) tctx.strokeText(line, tileW / 2, y);
   });
   tileAspect = tileW / tileH;
 

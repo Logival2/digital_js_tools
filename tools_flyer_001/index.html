@@ -14,7 +14,7 @@
 <!-- Panneau latéral (paramètres) -->
 <aside id="panel">
 
-  <!-- En-tête : retour au menu, titre (dessiné en MingLiU Prop par ui_001.js) -->
+  <!-- En-tête : retour au menu, titre (dessiné en Nord Regular par ui_001.js) -->
   <header id="panelHead">
     <p class="eyebrow"><a class="badge backLink" href="../" title="Back to all tools">← Digital tools</a></p>
     <h1 class="toolTitle">Type flyer</h1>
@@ -145,18 +145,18 @@ const formatInfo = $("formatInfo");
 const panelFields = Array.from(document.querySelectorAll("#panel input, #panel textarea, #panel select"));
 
 // Polices proposées (dossier ../fonts), au choix pour chacun des trois blocs.
-// MingLiU garde le traitement des autres outils : capitales, faux gras arrondi
-// (contour de 2,5 % de la taille) et chasse élargie (bien plus étroite que le Times de la référence).
+// Nord Mono reste en capitales ; la typo (interlettrage, graisse, chasse) se règle dans les fichiers des polices.
 const FONTS = {
   "Happy Times":             { file: "happy-times-at-the-ikob.ttf" },
   "Flor de Ruina":           { file: "FlorDeRuina-Flor.ttf" },
-  "Roboto Mono":             { shared: true }, // déclarée par ui_001.css (fichier variable)
-  "MingLiU-01":              { file: "MingLiU-01.ttf", label: "MingLiU", width: 1.2, embolden: 0.025, upper: true },
-  "MingLiU Prop":            { shared: true }, // MingLiU-Prop-Regular_1.ttf, déclarée par ui_001.css (police des titres)
+  "Roboto Mono":             { shared: true }, // déclarée par ui_001.css
+  "Nord Regular":            { shared: true, label: "NORD REGULAR" },   // fonts/Nord_pro_regular.ttf, déclarée par ui_001.css
+  "Nord SemiBold":           { shared: true, label: "NORD SEMIBOLD" },  // fonts/Nord_pro_SemiBold.ttf, déclarée par ui_001.css
+  "Nord Mono":               { shared: true, label: "NORD MONO", upper: true }, // fonts/Nord_pro_mono.ttf, déclarée par ui_001.css
   "SangBleu Kingdom":        { file: "SangBleuKingdom-Regular.otf" },
   "Century Schoolbook Mono": { file: "Century-Schoolbook-Monospace-BT.otf" },
 };
-const DEFAULT_FONT = "MingLiU-01";
+const DEFAULT_FONT = "Nord Mono";
 for (const select of document.querySelectorAll(".fontSelect")) {
   for (const [name, { label }] of Object.entries(FONTS)) {
     select.add(new Option(label ?? name, name, name === DEFAULT_FONT));
@@ -245,33 +245,26 @@ const MIDDLE_POS = 0.755;    // ligne de base du milieu (× la hauteur de l'affi
 const BOTTOM_RATIO = 0.17;   // taille du bas (× la taille de référence)
 const BOTTOM_LEADING = 1.25; // interligne du bas (× sa taille)
 const TITLE_TOP = 0.07;     // marge au-dessus du titre (× la hauteur de la page)
-const TRACKING =-0.03;     // interlettrage des trois blocs, en em
 
 // Lignes d'un bloc, dans la police choisie pour lui (à appeler après setType)
 const linesOf = (id) => (font().upper ? $(id).value.toUpperCase() : $(id).value).split("\n");
 const inkWidth = (m) => m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
 
-// Une ligne centrée sur cx d'après le contour réel des lettres, élargie selon la police,
-// remplie puis (MingLiU) épaissie par un contour arrondi de la même couleur.
+// Une ligne centrée sur cx d'après le contour réel des lettres, remplie telle que dessinée dans la police.
 function drawLine(line, cx, baseline) {
   if (!line.trim()) return;
   const m = ctx.measureText(line);
   const x = -inkWidth(m) / 2 + m.actualBoundingBoxLeft;
   ctx.save();
   ctx.translate(cx, baseline);
-  ctx.scale(font().width ?? 1, 1);
   ctx.fillText(line, x, 0);
-  if (strokeW > 0) ctx.strokeText(line, x, 0);
   ctx.restore();
 }
 
-let strokeW = 0; // épaisseur du faux gras de la taille en cours
 function setType(size, selectId) {
   fontName = $(selectId).value;
   ctx.font = `${size}px "${fontName}", serif`;
-  ctx.letterSpacing = `${size * TRACKING}px`;
-  strokeW = size * (font().embolden ?? 0); // 0 = pas de faux gras (le canvas refuse un lineWidth de 0)
-  ctx.lineWidth = strokeW || 1;
+  ctx.letterSpacing = "0px";
 }
 
 // colors : { bg, ink } imposées (masque du métal : texte blanc sur noir), sinon celles du panneau
@@ -290,7 +283,7 @@ function draw(colors) {
   const margin = (MARGIN_PX * SCENE_SHORT_SIDE) / Math.min(w, h);
   const cx = sceneW / 2;
 
-  // Titre : la ligne la plus large va d'une marge à l'autre (contour compris),
+  // Titre : la ligne la plus large va d'une marge à l'autre 
   // sans dépasser TITLE_MAX × la taille de référence ; le haut des capitales de
   // la 1re ligne est à TITLE_TOP de la hauteur de la page.
   // Taille de référence : celle du titre par défaut (« THE TOOLS » d'une marge à
@@ -300,7 +293,7 @@ function draw(colors) {
   setType(REF, "titleFont");
   const fitSize = (lines) => {
     const widest = Math.max(0, ...lines.map((l) => inkWidth(ctx.measureText(l))));
-    return widest > 0 ? (REF * (sceneW - margin * 2)) / ((font().width ?? 1) * (widest + strokeW)) : REF;
+    return widest > 0 ? (REF * (sceneW - margin * 2)) / widest : REF;
   };
   const casing = (text) => (font().upper ? text.toUpperCase() : text);
   const refSize = fitSize(casing($("titleInput").defaultValue).split("\n"));
@@ -309,7 +302,7 @@ function draw(colors) {
   const firstLine = title.find((l) => l.trim());
   if (firstLine) {
     setType(titleSize, "titleFont");
-    const top = sceneH * TITLE_TOP + ctx.measureText(firstLine).actualBoundingBoxAscent + strokeW / 2;
+    const top = sceneH * TITLE_TOP + ctx.measureText(firstLine).actualBoundingBoxAscent;
     title.forEach((line, i) => drawLine(line, cx, top + i * titleSize * TITLE_LEADING));
   }
 
@@ -324,7 +317,7 @@ function draw(colors) {
   const bottomSize = refSize * BOTTOM_RATIO;
   setType(bottomSize, "bottomFont");
   const bottom = linesOf("bottomInput");
-  const lastBaseline = sceneH - margin - strokeW / 2;
+  const lastBaseline = sceneH - margin;
   bottom.forEach((line, i) =>
     drawLine(line, cx, lastBaseline - (bottom.length - 1 - i) * bottomSize * BOTTOM_LEADING));
 }

@@ -21,7 +21,7 @@
 <!-- Panneau flottant à gauche -->
 <aside id="panel">
 
-  <!-- En-tête : retour au menu, titre (dessiné en MingLiU Prop par ui_001.js) -->
+  <!-- En-tête : retour au menu, titre (dessiné en Nord Regular par ui_001.js) -->
   <header id="panelHead">
     <p class="eyebrow"><a class="badge backLink" href="../" title="Back to all tools">← Digital tools</a></p>
     <h1 class="toolTitle">Gradient<br>body</h1>
@@ -794,14 +794,14 @@ const octx = overlay.getContext("2d");
 
 // Mention centrée en bas de l'écran, mêmes proportions que dans l'outil Cercle
 // (11 unités et marge de 10 + 6 sur un petit côté de 800), en blanc sur le fond sombre
-new FontFace("MingLiU-01", "url('../fonts/MingLiU-01.ttf')").load()
+new FontFace("Nord Mono", "url('../fonts/Nord_pro_mono.ttf')").load()
   .then((face) => document.fonts.add(face))
-  .catch((err) => console.error("Could not load the MingLiU-01 font:", err));
+  .catch((err) => console.error("Could not load the Nord Mono font:", err));
 function drawFooterNote() {
   const k = Math.min(overlay.width, overlay.height) / 800;
   octx.setTransform(1, 0, 0, 1, 0, 0);
   octx.fillStyle = "#ffffff";
-  octx.font = `${11 * k}px "MingLiU-01", serif`;
+  octx.font = `${11 * k}px "Nord Mono", serif`;
   octx.letterSpacing = "0px";
   octx.textAlign = "center";
   octx.textBaseline = "bottom";
