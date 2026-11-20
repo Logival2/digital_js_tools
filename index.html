@@ -233,11 +233,11 @@ const SECTIONS = [
   ["Pipeline", [
     { dossier: "tools_heif_000", nom: "HEIF to JPEG", desc: "Converts iPhone HEIC / HEIF photos to JPEG in the browser, several at once, all exported in one ZIP.", apercu: "apercu/tools_heif_000.png" },
     { dossier: "tools_montage_001", nom: "Montage", desc: "One video in the background, one in a central frame, in sync: PNG or MP4 export in Instagram formats.", apercu: "apercu/tools_montage_001.png" },
-    { dossier: "tools_mockup_000", video: "apercu/video/tools_mockup_000.mp4", nom: "Mockup", desc: "Your image or screen recording in the screen of a phone held in silhouette: framing, smooth or flick scroll for tall pages, PNG or MP4 export.", apercu: "apercu/tools_mockup_000.png" },
+    { dossier: "tools_mockup_000", nom: "Mockup", desc: "Your image or screen recording in the screen of a phone held in silhouette: framing, smooth or flick scroll for tall pages, PNG or MP4 export.", apercu: "apercu/tools_mockup_000.png" },
     { dossier: "tools_favoris_001", nom: "Bookmarks → Resources", desc: "Drop your Firefox bookmarks export: two folders become ressources.json, sent to the repository for the Resources page.", apercu: "apercu/tools_favoris_001.png" },
   ]],
   ["Brand guideline tools", [
-    { lien: "https://logival2.github.io/nordway_digital_tools/", marque: true, dossier: "nordway_digital_tools", video: "apercu/video/nordway.mp4", nom: "NORDWAY", desc: "Six of these tools set in the NORDWAY identity, and its brand library. The brand seal is the navigation, one point per tool.", apercu: "apercu/nordway.png" },
+    { lien: "https://logival2.github.io/nordway_digital_tools/", marque: true, dossier: "nordway_digital_tools", nom: "NORDWAY", desc: "Six of these tools set in the NORDWAY identity, and its brand library. The brand seal is the navigation, one point per tool.", apercu: "apercu/nordway.png" },
   ]],
 ];
 
@@ -336,7 +336,7 @@ const drum = $("drum");
 const faces = rows.map(([t]) => {
   const el = document.createElement(t.video ? "video" : "img");
   el.className = "face";
-  if (t.video) Object.assign(el, { src: t.video, poster: t.apercu, muted: true, loop: true, playsInline: true, preload: "auto" });
+  if (t.video) Object.assign(el, { src: t.video, poster: t.apercu, muted: true, loop: true, playsInline: true, preload: "metadata" });
   else Object.assign(el, { src: t.apercu, alt: "" });
   drum.append(el);
   return el;
