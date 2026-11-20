@@ -3,299 +3,367 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Digital JS tools</title>
-<!-- même interface que les outils (ui_001) : verre gris, Nord SemiBold en capitales, titre en Nord SemiBold, aides en Roboto Mono,
-     filets pointillés ; mise en page d'après raideresearch.com (rubriques sous un filet, fiches nom + numéro) -->
-<link rel="stylesheet" href="ui/ui_001.css" />
-<script defer src="ui/ui_001.js"></script>
+<title>Digital tools</title>
+<!-- Accueil : un sommaire (liste des outils à droite, vitrine fixe à gauche),
+     habillé comme valentinmaynadie.com : sa barre de navigation à l'identique (« Digital tools » à la place de
+     « Projets »), fond gris #d1d1d1, filets #777, marges de 7 px ; Roboto Mono Medium en capitales (12,5 px, 15,3 px
+     sur grand écran) pour la nav, les rubriques, les numéros et les libellés ; Nord SemiBold pour le texte. -->
 <style>
-  /* page qui défile, en colonne (ui_001.css fige l'écran pour les outils) */
-  html, body { height: auto; min-height: 100%; overflow: auto; }
-  body {
-    min-height: 100vh;
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px;
-  }
+  @font-face { font-family: "Nord SemiBold"; src: url("fonts/Nord_pro_SemiBold.ttf") format("truetype"); font-display: swap; }
+  @font-face { font-family: "Roboto Mono"; src: url("fonts/RobotoMono-Medium.ttf") format("truetype"); font-display: swap; }
 
-  /* en-tête : la même plaque de verre que le panneau des outils, et le même haut de panneau
-     (ligne du nom, titre en Nord SemiBold, puis le texte en mono, le compteur à droite) */
-  #top {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: var(--pad);
-    background: var(--glass);
-    -webkit-backdrop-filter: blur(var(--blur));
-    backdrop-filter: blur(var(--blur));
-    border-radius: var(--radius-panel);
+  :root {
+    --page: #d1d1d1;      /* fond du site */
+    --ink: #000;
+    --mute: #797979;      /* le gris du site (.grey) */
+    --rule: #777777;      /* filets du site */
+    --display: "Nord SemiBold", serif;
+    --mono: "Roboto Mono", ui-monospace, Menlo, Consolas, monospace;
+    --fs-mono: 12.5px;    /* h1, h2, liens du site */
+    --fs-text: 14.5px;    /* p du site */
+    --gut: 7px;           /* la marge du site */
+    --nav-h: 56px;        /* hauteur de la nav, mise à jour par le script */
   }
-  /* barre du haut (nom, liens) : la même taille que le nom des outils sur les cartes */
-  #top .eyebrow { flex-wrap: wrap; font-size: var(--fs-text);}
-  #top nav {
-    display: flex;
-    gap: 16px;
-  }
-  #top nav a { color: inherit; text-underline-offset: 3px; }
-  /* le titre a la largeur de celui d'un panneau d'outil (10 px : la place de sa barre de défilement) : même taille, même CSS */
-  #top .toolTitle { margin: 2px 0 0; width: calc(clamp(300px, 24vw, 420px) - var(--pad) * 2 - 10px); max-width: 100%; }
-  #top .intro {
-    display: flex;
-    justify-content: space-between;
-    align-items: end;
-    gap: 8px 24px;
-  }
-  #top .intro p { margin: 0; max-width: 62ch; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--page); color: var(--ink); }
+  body { font-family: var(--display); -webkit-font-smoothing: antialiased; text-transform: uppercase; }   /* tout en capitales par défaut */
+  a { color: inherit; }
+  /* les deux niveaux du site : mono en capitales (nav, rubriques, libellés), Nord SemiBold pour le texte */
+  .mono { font-family: var(--mono); font-size: var(--fs-mono); line-height: 1.4; letter-spacing: -0.025em; text-transform: uppercase; }
+  .serif { font-family: var(--display); font-size: var(--fs-text); line-height: 1.1; text-transform: uppercase; letter-spacing: normal; }
 
-  /* rubrique : un filet pointillé sur toute la largeur, puis le nom et le nombre d'outils
-     (comme « Ski Packs » chez Raide, ou le titre d'une section du panneau) */
-  .group { display: flex; flex-direction: column; gap: 10px; }
-  .group + .group { margin-top: 14px; }
-  .groupHead {
+  /* ── la barre de navigation de valentinmaynadie.com, reprise de son style.css ── */
+  .wrapper_nav {
+    position: sticky; top: 0; z-index: 10;
+    display: grid; grid-template-columns: 7fr 3fr;
+    padding: 7px;
+    background: var(--page);
+    border-bottom: 1px solid var(--rule);
+  }
+  .wrapper_nav a, .wrapper_nav summary, .dispo_auto_scroll {
+    font-family: var(--mono); font-size: var(--fs-mono); letter-spacing: -0.025em; text-transform: uppercase;
+    color: var(--ink); text-decoration: none;
+  }
+  .wrapper_nav a:hover, .wrapper_nav summary:hover { text-decoration: underline; }
+  .wrapper_nav .ident span { display: block; }
+  .top_links_right { margin-left: 30px; float: right; }
+  .explore_menu, .burger_menu { position: relative; }
+  .explore_menu summary, .burger_menu summary { list-style: none; cursor: pointer; }
+  .explore_menu summary::-webkit-details-marker, .burger_menu summary::-webkit-details-marker { display: none; }
+  .explore_menu ul, .burger_menu ul {
+    position: absolute; left: 0; top: 100%; z-index: 99;
+    margin: 4px 0 0; padding: 4px 8px; list-style: none; white-space: nowrap;
+    background: var(--page); border: 1px solid var(--rule);
+  }
+  .burger_menu ul { left: auto; right: 0; }
+  .burger_icon { display: inline-block; width: 16px; height: 2px; margin: 6px 0; background: #000; box-shadow: 0 -5px #000, 0 5px #000; vertical-align: middle; }
+  .picto_espace img { height: 1.2em; width: auto; vertical-align: middle; }
+  .dispo_auto_scroll { display: none; }
+
+  /* ── deux colonnes : vitrine fixe à gauche, sommaire à droite ── */
+  .layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: baseline;
-    gap: 16px;
-    padding: 8px var(--pad) 0;
-    border-top: 1px dashed var(--dash);
+    grid-template-columns: minmax(280px, 0.8fr) 1.2fr;
+    min-height: calc(100vh - var(--nav-h));
   }
-  .groupIntro { margin: -4px 0 0; padding: 0 var(--pad); max-width: 62ch; }
-  .groupHead h2 {
-    margin: 0;
-    font-size: var(--fs-text);
-    font-weight: 400;
+  .vitrine {
+    position: sticky; top: var(--nav-h); align-self: start;
+    height: calc(100vh - var(--nav-h));
+    display: flex; flex-direction: column;
+    border-right: 1px solid var(--rule);
   }
-
-  /* outils : une plaque de verre par outil, aperçu au format A4, puis le nom à gauche
-     et son numéro en mono à droite (le prix d'une fiche Raide) */
-  .toolGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(288px, 1fr));
-    gap: 10px;
+  /* titre de la page : lu par les lecteurs d'écran, pas affiché (la nav dit déjà « Digital tools ») */
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .vitrine .shot {
+    flex: 1; min-height: 0;
+    display: flex; align-items: center; justify-content: center;
+    container-type: size;
   }
-  .tool {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: var(--pad);
-    color: inherit;
-    text-decoration: none;
-    background: var(--glass);
-    -webkit-backdrop-filter: blur(var(--blur));
-    backdrop-filter: blur(var(--blur));
-    border-radius: var(--radius-panel);
-    transition: background-color 0.3s cubic-bezier(0.4, 0, 0, 1);
+  /* l'aperçu A4 de face, aussi grand que la colonne le permet (le rouleau fait environ 1,5 fois sa hauteur) */
+  .vitrine .paper {
+    position: relative;
+    height: min(66cqh, (100cqw - 2 * var(--gut)) * 297 / 210);
+    aspect-ratio: 210 / 297;
   }
-  .tool .thumb {
-    aspect-ratio: 210 / 297; /* A4, comme les affiches */
-    overflow: hidden;
-    border-radius: var(--radius);
+  /* le rouleau : tous les aperçus empilés ; celui de l'outil survolé de face, les autres en tranches
+     de plus en plus fines, étroites et sombres (recadrées, pas écrasées) au-dessus et au-dessous, comme sur un tambour */
+  .vitrine .paper .face {
+    position: absolute; top: 0; left: 0;
+    object-fit: cover;
+    will-change: transform, filter;
+  }
+  .vitrine .shot img {
+    display: block; width: 100%; height: 100%; object-fit: cover;
     background: #fff;
   }
-  .tool .thumb > div {
-    width: 100%;
-    height: 100%;
-    background: center / cover no-repeat;
+  /* deux étiquettes qui flottent autour de l'aperçu, comme les tags de Gradient body :
+     le type d'outil (sa rubrique) et sa description */
+  .vitrine .shot { position: relative; }
+  .tags { position: absolute; inset: 0; z-index: 20; overflow: hidden; pointer-events: none; }
+  .tag {
+    position: absolute; top: 0; left: 0;
+    display: flex; align-items: center; gap: 7px;
+    max-width: 34ch; padding: 6px 10px;
+    font-family: var(--mono); font-size: 12px; line-height: 1.2; letter-spacing: -0.025em; text-transform: uppercase;
+    color: var(--ink);
+    background: rgba(209, 209, 209, 0.62);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    will-change: transform;
   }
-  .tool .info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .tool .line {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 8px;
-  }
-  .tool .desc { margin-top: 6px; }
-  .tool:hover { background: rgba(145, 145, 145, 0.3); }
-  .tool:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+  .tag::before { content: ""; flex: none; width: 4px; height: 4px; background: currentColor; }
+  .tag.kind { background: var(--ink); color: var(--page); }
 
-  /* mention en bas de page : le style des aides (.hint, Roboto Mono 13 px), centrée */
-  #note {
-    margin: auto 0 0;
-    padding-top: 14px;
-    text-align: center;
+  /* ── le sommaire ── */
+  .index { padding: 0 0 var(--gut);   /* pas de marge : les filets vont d'un bord à l'autre */ }
+  .index h2 {
+    position: sticky; top: var(--nav-h); z-index: 1;
+    margin: 0; padding: 22px var(--gut) 8px;
+    background: var(--page);
+    font-family: var(--mono); font-size: var(--fs-mono); font-weight: 400; letter-spacing: -0.025em; text-transform: uppercase;
+    color: var(--mute);
+    display: flex; justify-content: space-between;
+    border-bottom: 1px solid var(--rule);
   }
+  .index ol { list-style: none; margin: 0; padding: 0; }
+  .index li a {
+    display: grid;
+    grid-template-columns: 3.2em minmax(0, 1fr);   /* le numéro, puis le nom */
+    align-items: baseline; gap: 12px;
+    padding: 10px var(--gut) 8px;
+    border-bottom: 1px solid var(--rule);
+    text-decoration: none;
+  }
+  .index .n { font-family: var(--mono); font-size: var(--fs-mono); letter-spacing: -0.025em; }
+  .index .name { font-size: clamp(30px, 4.4vw, 68px); line-height: 1.05; }
+  /* au survol : rien ne bouge, le nom se souligne, comme les liens du site */
+  .index li a:hover .name, .index li a:focus-visible .name { text-decoration: underline; }
+  .index li a:focus-visible { outline: none; }
+  .index .desc { display: none; }
 
+  .foot { padding: 28px var(--gut) 0; color: var(--mute); }
+  .foot a { text-decoration: none; }
+  .foot a:hover { text-decoration: underline; }
+
+  /* ── grand écran : les tailles et la grille du site au-delà de 1100 px ── */
+  @media (min-width: 1100px) {
+    :root { --fs-mono: 15.3px; --fs-text: 16.5px; }
+    .wrapper_nav { grid-template-columns: 3fr 7fr; }
+    .burger_menu { display: none; }
+    /* le bandeau « Available for freelance work » qui défile */
+    .dispo_auto_scroll {
+      display: inline-flex; position: relative; top: 3px;
+      max-width: 280px; overflow: hidden; white-space: nowrap;
+      border: 1px solid var(--rule); line-height: 1.4;
+      margin: -10px 0 0 50px;
+    }
+    .dispo_auto_scroll > span { flex: none; animation: dispo 11s linear infinite; }
+  }
+  @keyframes dispo { to { transform: translateX(-100%); } }
+  @media (max-width: 1099px) { .nav_desktop { display: none; } }
+
+  /* ── téléphone : une colonne, la description sous chaque nom, pas de vitrine ── */
   @media (max-width: 760px) {
-    #top .intro { flex-direction: column; align-items: start; }
-    #top .toolTitle { width: auto; }   /* sur téléphone, le panneau des outils prend toute la largeur : le titre aussi */
+    .layout { display: block; }
+    .vitrine { display: none; }
+    body { overflow-x: clip; }
+    .index li a { grid-template-columns: 2.6em minmax(0, 1fr); }
+    .index .desc { display: block; grid-column: 2; margin-top: 4px; }   /* texte courant en noir, comme les p du site */
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .vitrine .shot img { transition: none; }
+    .dispo_auto_scroll > span { animation: none; }
   }
 </style>
 </head>
-<body data-mobile="ok">
+<body>
 
-<header id="top">
-  <div class="eyebrow">
-    <span>Valentin Maynadié</span>
-    <nav>
-      <a href="https://valentinmaynadie.com/">Back to the website</a>
-      <a href="https://github.com/Logival2/digital_js_tools">GitHub</a>
-    </nav>
+<nav class="wrapper_nav" id="siteNav">
+  <a class="ident" href="https://valentinmaynadie.com/"><span>Valentin Maynadié</span><span>Design graphique</span></a>
+  <div>
+    <a href="#" aria-current="page">Digital tools</a>
+    <span class="dispo_auto_scroll">
+      <span>Available for freelance work &nbsp; &diams; &nbsp; Available for freelance work &nbsp; &diams; &nbsp; Available for freelance work &nbsp; &diams; &nbsp;&nbsp;</span>
+      <span aria-hidden="true">Available for freelance work &nbsp; &diams; &nbsp; Available for freelance work &nbsp; &diams; &nbsp; Available for freelance work &nbsp; &diams; &nbsp;&nbsp;</span>
+    </span>
+    <details class="top_links_right burger_menu">
+      <summary aria-label="Menu"><span class="burger_icon"></span></summary>
+      <ul>
+        <li><a href="https://valentinmaynadie.com/contact.html">Infos</a></li>
+        <li><a href="https://valentinmaynadie.com/enseignement/ressources.html">Enseignement</a></li>
+        <li><a href="https://valentinmaynadie.com/tools/">Web tools</a></li>
+        <li><a href="https://valentinmaynadie.com/espace.html">Espace</a></li>
+      </ul>
+    </details>
+    <a class="top_links_right nav_desktop" href="https://valentinmaynadie.com/contact.html">Infos</a>
+    <details class="top_links_right explore_menu nav_desktop">
+      <summary>Explore</summary>
+      <ul>
+        <li><a href="https://valentinmaynadie.com/enseignement/ressources.html">Enseignement</a></li>
+        <li><a href="https://valentinmaynadie.com/tools/">Web tools</a></li>
+        <li><a href="https://valentinmaynadie.com/espace.html">Espace</a></li>
+      </ul>
+    </details>
+    <a class="top_links_right picto_espace nav_desktop" href="https://valentinmaynadie.com/espace.html"><img src="ui/picto_espace.png" alt="Espace" /></a>
   </div>
-  <h1 class="toolTitle">Digital tools</h1>
-  <div class="intro">
-    <p class="hint">Tools I make for my own graphic work: posters, type, images and video. Each one runs in your browser, with no account and no install.</p>
-    <span class="mono" id="toolCount"></span>
-  </div>
-</header>
+</nav>
 
-<main>
-  <section class="group" aria-labelledby="toolsTitle">
-    <div class="groupHead">
-      <h2 id="toolsTitle">Experimental Tools</h2>
-      <span class="mono count"></span>
-    </div>
-    <div class="toolGrid" id="tools"></div>
-  </section>
-  <!-- Pipeline : les outils de préparation et de publication (convertir, monter, publier) -->
-  <section class="group" aria-labelledby="pipelineTitle">
-    <div class="groupHead">
-      <h2 id="pipelineTitle">Pipeline</h2>
-      <span class="mono count"></span>
-    </div>
-    <div class="toolGrid" id="pipeline"></div>
-  </section>
-  <!-- Brand guideline tools : les outils déclinés pour une marque (NORDWAY), publiés sur leur propre site -->
-  <section class="group" aria-labelledby="brandTitle">
-    <div class="groupHead">
-      <h2 id="brandTitle">Brand guideline tools</h2>
-      <span class="mono count"></span>
-    </div>
-    <p class="hint groupIntro">NORDWAY, a fictional outdoor brand: the same tools set in its identity, and its brand library, on their own site.</p>
-    <div class="toolGrid" id="brand"></div>
-  </section>
-</main>
+<div class="layout">
+  <h1 class="sr-only">Digital tools</h1>
+  <aside class="vitrine">
+    <div class="shot"><div class="paper" id="drum"></div><div class="tags" id="tags" aria-hidden="true"></div></div>
+    <p class="sr-only" id="vText" aria-live="polite"></p>
+  </aside>
 
-<footer id="note" class="hint">[For experimental purposes only]</footer>
+  <main class="index" id="index"></main>
+</div>
 
 <script>
-// Pour ajouter un outil : une ligne de plus dans TOOLS (outils de création) ou PIPELINE
-// (préparation et publication) — dossier = nom du dossier dans le dépôt,
-// apercu = une image dans le dossier apercu/, facultative.
-const TOOLS = [
-  {
-    dossier: "tools_Matrice_images_002",
-    nom: "Image matrice",
-    desc: "An image viewer in WebGL: your images as an endless 2D index, a 3D sphere, a 3D space, or pinned over the Mont Blanc massif.",
-    apercu: "apercu/tools_Matrice_images_002.png",
-  },
-  {
-    dossier: "tools_flyer_001",
-    nom: "Type flyer",
-    desc: "Typographic flyer: a title stretched from margin to margin, a middle line and a footer, one font per block. Flat, metal plate, sunburnt skin or glossy black, PNG export.",
-    apercu: "apercu/tools_flyer_001.png",
-  },
-  {
-    dossier: "tools_mirror_effect_001",
-    nom: "Mirror effect",
-    desc: "Text or image cut into strips or a grid, each piece shifted further from the centre: echoes, mirrored strips, motion, PNG export.",
-    apercu: "apercu/tools_mirror_effect_001.png",
-  },
-  {
-    dossier: "tools_DA_cercle_002",
-    nom: "Card ring",
-    desc: "Nordway poster: title, gradient and a spinning ring of cards, driven by your hand through the webcam.",
-    apercu: "apercu/tools_DA_cercle_002.png",
-  },
-  {
-    dossier: "tools_vibe_002",
-    nom: "Organic type",
-    desc: "The text is the seed: an organic matter grows around the letters.",
-    apercu: "apercu/tools_vibe_002.png",
-  },
-  {
-    dossier: "tools_3D_kinetic_typo_002",
-    nom: "3D kinetic type",
-    desc: "Text wraps around 3D shapes (stairs, cylinder, helix…) that move in a loop, with image and video export.",
-    apercu: "apercu/tools_3D_kinetic_typo_002.png",
-  },
-  {
-    dossier: "tools_kinetic_v2_000",
-    nom: "Cairn generator",
-    desc: "A pile of split stones that turns in a perfect loop, blurred and grainy, with a type layer on top. Also bead rings and a floating peak.",
-    apercu: "apercu/tools_kinetic_v2_000.png",
-  },
-  {
-    dossier: "tools_gradient_body_001",
-    nom: "Gradient body",
-    desc: "Full screen: the webcam cuts out your silhouette (MediaPipe), which leaves a grainy glacier-blue aura, with tags on the tracked blobs.",
-    apercu: "apercu/tools_gradient_body_001.jpg",
-  },
+// Mêmes listes que index.html (à garder en phase) : dossier, nom, description, aperçu ; lien = adresse externe.
+const SECTIONS = [
+  ["Experimental tools", [
+    { dossier: "tools_Matrice_images_002", video: "apercu/video/tools_Matrice_images_002.mp4", nom: "Image matrice", desc: "An image viewer in WebGL: your images as an endless 2D index, a 3D sphere, a 3D space, or pinned over the Mont Blanc massif.", apercu: "apercu/tools_Matrice_images_002.png" },
+    { dossier: "tools_flyer_001", nom: "Type flyer", desc: "Typographic flyer: a title stretched from margin to margin, a middle line and a footer, one font per block. Flat, metal plate, sunburnt skin or glossy black, PNG export.", apercu: "apercu/tools_flyer_001.png" },
+    { dossier: "tools_mirror_effect_001", video: "apercu/video/tools_mirror_effect_001.mp4", nom: "Mirror effect", desc: "Text or image cut into strips or a grid, each piece shifted further from the centre: echoes, mirrored strips, motion, PNG export.", apercu: "apercu/tools_mirror_effect_001.png" },
+    { dossier: "tools_DA_cercle_002", video: "apercu/video/tools_DA_cercle_002.mp4", nom: "Card ring", desc: "Nordway poster: title, gradient and a spinning ring of cards, driven by your hand through the webcam.", apercu: "apercu/tools_DA_cercle_002.png" },
+    { dossier: "tools_vibe_002", video: "apercu/video/tools_vibe_002.mp4", nom: "Organic type", desc: "The text is the seed: an organic matter grows around the letters.", apercu: "apercu/tools_vibe_002.png" },
+    { dossier: "tools_3D_kinetic_typo_002", video: "apercu/video/tools_3D_kinetic_typo_002.mp4", nom: "3D kinetic type", desc: "Text wraps around 3D shapes (stairs, cylinder, helix…) that move in a loop, with image and video export.", apercu: "apercu/tools_3D_kinetic_typo_002.png" },
+    { dossier: "tools_kinetic_v2_000", video: "apercu/video/tools_kinetic_v2_000.mp4", nom: "Cairn generator", desc: "A pile of split stones that turns in a perfect loop, blurred and grainy, with a type layer on top. Also bead rings and a floating peak.", apercu: "apercu/tools_kinetic_v2_000.png" },
+    { dossier: "tools_gradient_body_001", video: "apercu/video/tools_gradient_body_001.mp4", nom: "Gradient body", desc: "Full screen: the webcam cuts out your silhouette (MediaPipe), which leaves a grainy glacier-blue aura, with tags on the tracked blobs.", apercu: "apercu/tools_gradient_body_001.jpg" },
+  ]],
+  ["Pipeline", [
+    { dossier: "tools_heif_000", nom: "HEIF to JPEG", desc: "Converts iPhone HEIC / HEIF photos to JPEG in the browser, several at once, all exported in one ZIP.", apercu: "apercu/tools_heif_000.png" },
+    { dossier: "tools_montage_001", nom: "Montage", desc: "One video in the background, one in a central frame, in sync: PNG or MP4 export in Instagram formats.", apercu: "apercu/tools_montage_001.png" },
+    { dossier: "tools_mockup_000", video: "apercu/video/tools_mockup_000.mp4", nom: "Mockup", desc: "Your image or screen recording in the screen of a phone held in silhouette: framing, smooth or flick scroll for tall pages, PNG or MP4 export.", apercu: "apercu/tools_mockup_000.png" },
+    { dossier: "tools_favoris_001", nom: "Bookmarks → Resources", desc: "Drop your Firefox bookmarks export: two folders become ressources.json, sent to the repository for the Resources page.", apercu: "apercu/tools_favoris_001.png" },
+  ]],
+  ["Brand guideline tools", [
+    { lien: "https://logival2.github.io/nordway_digital_tools/", marque: true, dossier: "nordway_digital_tools", video: "apercu/video/nordway.mp4", nom: "NORDWAY", desc: "Six of these tools set in the NORDWAY identity, and its brand library. The brand seal is the navigation, one point per tool.", apercu: "apercu/nordway.png" },
+  ]],
 ];
 
-const PIPELINE = [
-  {
-    dossier: "tools_heif_000",
-    nom: "HEIF to JPEG",
-    desc: "Converts iPhone HEIC / HEIF photos to JPEG in the browser, several at once, all exported in one ZIP.",
-    apercu: "apercu/tools_heif_000.png",
-  },
-  {
-    dossier: "tools_montage_001",
-    nom: "Montage",
-    desc: "One video in the background, one in a central frame, in sync: PNG or MP4 export in Instagram formats.",
-    apercu: "apercu/tools_montage_001.png",
-  },
-  {
-    dossier: "tools_mockup_000",
-    nom: "Mockup",
-    desc: "Your image or screen recording in the screen of a phone held in silhouette: framing, smooth or flick scroll for tall pages, PNG or MP4 export.",
-    apercu: "apercu/tools_mockup_000.png",
-  },
-  {
-    dossier: "tools_favoris_001",
-    nom: "Bookmarks → Resources",
-    desc: "Drop your Firefox bookmarks export: two folders become ressources.json, sent to the repository for the Resources page.",
-    apercu: "apercu/tools_favoris_001.png",
-  },
-];
-
-// Brand guideline tools : un carton par marque, qui mène au site de ses outils (NORDWAY : dépôt nordway_digital_tools).
-// lien = adresse complète ; pas de numéro (ce n'est pas un outil), une flèche à la place.
-const BRAND = [
-  {
-    lien: "https://logival2.github.io/nordway_digital_tools/",
-    marque: true,
-    dossier: "nordway_digital_tools",
-    nom: "NORDWAY",
-    desc: "Six of these tools set in the NORDWAY identity, and its brand library. The brand seal is the navigation, one point per tool.",
-    apercu: "apercu/nordway.png",
-  },
-];
-
-// numéros sur deux chiffres, à la suite d'une rubrique à l'autre (01 à 09), comme une référence
+const $ = (id) => document.getElementById(id);
 const pad2 = (n) => String(n).padStart(2, "0");
 let number = 0;
-for (const [listId, entries] of [["tools", TOOLS], ["pipeline", PIPELINE], ["brand", BRAND]]) {
-  const list = document.getElementById(listId);
-  // le carton d'une marque (marque: true) n'est pas un outil : pas de numéro, pas compté parmi les outils
-  for (const t of entries) list.appendChild(toolCard(t, t.marque ? null : ++number));
-  list.closest(".group").querySelector(".count").textContent =
-    listId === "brand" ? `${entries.length} brand${entries.length > 1 ? "s" : ""}` : `${entries.length} tools`;
-}
-document.getElementById("toolCount").textContent = `${number} tools`;
+const rows = [];
 
-function toolCard(t, n) {
-  const a = document.createElement("a");
-  a.className = "tool";
-  a.href = t.lien ?? t.dossier + "/";
-  a.innerHTML = `
-    <div class="thumb"><div></div></div>
-    <div class="info">
-      <span class="line"><span class="name"></span><span class="num mono"></span></span>
-      <span class="folder mono"></span>
-      <span class="desc hint"></span>
-    </div>`;
-  if (t.apercu) a.querySelector(".thumb > div").style.backgroundImage = `url("${t.apercu}")`;
-  a.querySelector(".name").textContent = t.nom;
-  a.querySelector(".num").textContent = n == null ? "→" : pad2(n);
-  a.querySelector(".folder").textContent = t.dossier;
-  a.querySelector(".desc").textContent = t.desc;
-  return a;
+// La nav est collante : la vitrine et les titres de rubrique se calent juste dessous
+const nav = $("siteNav");
+new ResizeObserver(() => document.documentElement.style.setProperty("--nav-h", `${nav.offsetHeight}px`)).observe(nav);
+
+// Le sommaire : une rubrique (titre mono + nombre), puis une ligne par outil
+for (const [title, items] of SECTIONS) {
+  const h2 = document.createElement("h2");
+  const tools = items.filter((t) => !t.marque).length;
+  h2.innerHTML = "<span></span><span></span>";
+  h2.firstChild.textContent = title;
+  h2.lastChild.textContent = tools ? `${tools} tools` : `${items.length} brand`;
+  const ol = document.createElement("ol");
+  for (const t of items) {
+    const li = document.createElement("li");
+    li.innerHTML = `<a><span class="n"></span><span class="name"></span><span class="desc serif"></span></a>`;
+    const a = li.firstChild;
+    a.href = t.lien ?? `${t.dossier}/`;
+    a.querySelector(".n").textContent = t.marque ? "→" : pad2(++number);
+    a.querySelector(".name").textContent = t.nom;
+    a.querySelector(".desc").textContent = t.desc;
+    t.rubrique = title;
+    a.addEventListener("pointerenter", () => show(t, a));
+    a.addEventListener("focus", () => show(t, a));
+    rows.push([t, a]);
+    ol.append(li);
+  }
+  $("index").append(h2, ol);
 }
+const foot = document.createElement("p");
+foot.className = "foot mono";  // mention du bas : mono gris, comme le footer du site
+foot.innerHTML = `[For experimental purposes only] — ${number} tools — <a href="https://github.com/Logival2/digital_js_tools">GitHub ↗</a>`;
+$("index").append(foot);
+
+// La vitrine : aperçu, nom, dossier, description de l'outil survolé
+let current = null;
+function show(t, a) {
+  if (current === a) return;
+  current = a;
+  target = rows.findIndex(([, r]) => r === a);
+  $("vText").textContent = `${t.nom}, ${t.rubrique}: ${t.desc}`;
+  setTags([t.rubrique, t.desc]);
+}
+
+// ── Les étiquettes : chacune a son point d'ancrage autour de l'aperçu et dérive lentement autour,
+//    comme les tags qui suivent les taches dans Gradient body ──
+const ANCHORS = [[0.3, 0.1], [0.68, 0.82]];   // le type en haut à gauche, la description en bas à droite
+const tagLayer = $("tags");
+const still = matchMedia("(prefers-reduced-motion: reduce)");
+let tags = [];
+function setTags(texts) {
+  tagLayer.replaceChildren();
+  tags = texts.map((text, i) => {
+    const el = document.createElement("span");
+    el.className = i ? "tag" : "tag kind";
+    el.textContent = text;
+    tagLayer.append(el);
+    const [ax, ay] = ANCHORS[i % ANCHORS.length];
+    return { el, ax, ay, ph: i * 1.9, w: 0, h: 0 };
+  });
+  measure();
+  place(performance.now());
+}
+function measure() { for (const t of tags) { t.w = t.el.offsetWidth; t.h = t.el.offsetHeight; } }
+function place(now) {
+  const W = tagLayer.clientWidth, H = tagLayer.clientHeight, s = still.matches ? 0 : now / 1000;
+  for (const t of tags) {
+    const x = t.ax * W - t.w / 2 + Math.sin(s * 0.55 + t.ph) * 46;
+    const y = t.ay * H - t.h / 2 + Math.cos(s * 0.41 + t.ph * 1.3) * 34;
+    t.el.style.transform = `translate(${Math.max(4, Math.min(W - t.w - 4, x))}px, ${Math.max(4, Math.min(H - t.h - 4, y))}px)`;
+  }
+}
+new ResizeObserver(() => { measure(); place(performance.now()); }).observe(tagLayer);
+(function tick(now) { if (!still.matches && tagLayer.offsetParent) place(now); requestAnimationFrame(tick); })(performance.now());
+
+// ── Le rouleau d'aperçus ──
+// Pour un écart d (en nombre d'outils) avec l'outil de face : hauteur de la tranche, largeur, luminosité,
+// et position de son centre (en hauteurs d'aperçu). Valeurs relevées sur l'image de référence, interpolées entre deux.
+const ROLL = {
+  h:   [1, 0.11, 0.065, 0.05, 0],
+  w:   [1, 0.775, 0.66, 0.53, 0.45],
+  lum: [1, 0.35, 0.55, 0.75, 0.8],
+  y:   [0, 0.555, 0.6425, 0.7, 0.75],
+};
+const lerpAt = (arr, d) => { const i = Math.min(Math.floor(d), arr.length - 2), f = Math.min(d - i, 1); return arr[i] + (arr[i + 1] - arr[i]) * f; };
+const drum = $("drum");
+// chaque tranche : la mini boucle vidéo de l'outil (apercu/video/), ou son image fixe quand il n'en a pas
+// (les outils qui attendent un fichier ou une caméra n'ont rien à montrer seuls)
+const faces = rows.map(([t]) => {
+  const el = document.createElement(t.video ? "video" : "img");
+  el.className = "face";
+  if (t.video) Object.assign(el, { src: t.video, poster: t.apercu, muted: true, loop: true, playsInline: true, preload: "auto" });
+  else Object.assign(el, { src: t.apercu, alt: "" });
+  drum.append(el);
+  return el;
+});
+let target = 0, pos = 0, last = performance.now(), paperW = drum.clientWidth, paperH = drum.clientHeight;
+new ResizeObserver(() => { paperW = drum.clientWidth; paperH = drum.clientHeight; }).observe(drum);
+function roll(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  pos = still.matches ? target : pos + (target - pos) * Math.min(1, dt * 7);
+  faces.forEach((el, i) => {
+    const k = i - pos, d = Math.abs(k);
+    if (d >= 4) { el.style.visibility = "hidden"; if (el.tagName === "VIDEO" && !el.paused) el.pause(); return; }
+    el.style.visibility = "";
+    if (el.tagName === "VIDEO" && el.paused && !still.matches) el.play().catch(() => {});   // seules les tranches visibles tournent
+    el.style.zIndex = String(10 - Math.round(d));
+    // une tranche = l'image recadrée (object-fit: cover) à la taille de la bande, sans déformation
+    const w = lerpAt(ROLL.w, d) * paperW, h = lerpAt(ROLL.h, d) * paperH;
+    el.style.width = `${w}px`;
+    el.style.height = `${h}px`;
+    el.style.transform = `translate(${(paperW - w) / 2}px, ${(paperH - h) / 2 + Math.sign(k) * lerpAt(ROLL.y, d) * paperH}px)`;
+    el.style.filter = `brightness(${lerpAt(ROLL.lum, d)})`;
+  });
+  requestAnimationFrame(roll);
+}
+requestAnimationFrame(roll);
+
+show(...rows[0]);
 </script>
 </body>
 </html>
