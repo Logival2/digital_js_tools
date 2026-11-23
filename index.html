@@ -86,7 +86,7 @@
     aspect-ratio: 210 / 297;
   }
   /* le rouleau : tous les aperçus empilés ; celui de l'outil survolé de face, les autres en tranches
-     de plus en plus fines, étroites et sombres (recadrées, pas écrasées) au-dessus et au-dessous, comme sur un tambour */
+     de plus en plus petites, entières, qui dépassent derrière la carte de face au-dessus et au-dessous, comme sur un tambour */
   .vitrine .paper .face {
     position: absolute; top: 0; left: 0;
     object-fit: cover;
@@ -127,7 +127,7 @@
   .index ol { list-style: none; margin: 0; padding: 0; }
   .index li a {
     display: grid;
-    grid-template-columns: 3.2em minmax(0, 1fr);   /* le numéro, puis le nom */
+    grid-template-columns: 2em minmax(0, 1fr);   /* le numéro, puis le nom (écart réduit de 40 %) */
     align-items: baseline; gap: 12px;
     padding: 10px var(--gut) 8px;
     border-bottom: 1px solid var(--rule);
@@ -140,7 +140,7 @@
   .index li a:focus-visible { outline: none; }
   .index .desc { display: none; }
 
-  .foot { padding: 28px var(--gut) 0; color: var(--mute); }
+  .foot { padding: 28px var(--gut) 0; color: var(--mute); font-size: 12px; text-align: center; }   /* petit, comme les étiquettes */
   .foot a { text-decoration: none; }
   .foot a:hover { text-decoration: underline; }
 
@@ -166,8 +166,8 @@
     .layout { display: block; }
     .vitrine { display: none; }
     body { overflow-x: clip; }
-    .index li a { grid-template-columns: 2.6em minmax(0, 1fr); }
-    .index .desc { display: block; grid-column: 2; margin-top: 4px; }   /* texte courant en noir, comme les p du site */
+    .index li a { grid-template-columns: 1.6em minmax(0, 1fr); }
+    .index .desc { display: block; grid-column: 2; margin-top: 6px; font-family: var(--mono); font-size: 12px; line-height: 1.4; letter-spacing: -0.025em; }   /* en Roboto Mono, comme les étiquettes */
   }
   @media (prefers-reduced-motion: reduce) {
     .vitrine .shot img { transition: none; }
@@ -276,7 +276,7 @@ for (const [title, items] of SECTIONS) {
 }
 const foot = document.createElement("p");
 foot.className = "foot mono";  // mention du bas : mono gris, comme le footer du site
-foot.innerHTML = `[For experimental purposes only] — ${number} tools — <a href="https://github.com/Logival2/digital_js_tools">GitHub ↗</a>`;
+foot.textContent = "[For experimental purposes only]";   // la même mention que NORDWAY
 $("index").append(foot);
 
 // La vitrine : aperçu, nom, dossier, description de l'outil survolé
@@ -326,7 +326,6 @@ new ResizeObserver(() => { measure(); place(performance.now()); }).observe(tagLa
 const ROLL = {
   h:   [1, 0.11, 0.065, 0.05, 0],
   w:   [1, 0.775, 0.66, 0.53, 0.45],
-  lum: [1, 0.35, 0.55, 0.75, 0.8],
   y:   [0, 0.555, 0.6425, 0.7, 0.75],
 };
 const lerpAt = (arr, d) => { const i = Math.min(Math.floor(d), arr.length - 2), f = Math.min(d - i, 1); return arr[i] + (arr[i + 1] - arr[i]) * f; };
@@ -346,18 +345,21 @@ new ResizeObserver(() => { paperW = drum.clientWidth; paperH = drum.clientHeight
 function roll(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   pos = still.matches ? target : pos + (target - pos) * Math.min(1, dt * 7);
+  const off = !drum.offsetParent;   // vitrine masquée (téléphone) : aucune vidéo ne tourne
   faces.forEach((el, i) => {
     const k = i - pos, d = Math.abs(k);
-    if (d >= 4) { el.style.visibility = "hidden"; if (el.tagName === "VIDEO" && !el.paused) el.pause(); return; }
+    if (d >= 4 || off) { el.style.visibility = "hidden"; if (el.tagName === "VIDEO" && !el.paused) el.pause(); return; }
     el.style.visibility = "";
     if (el.tagName === "VIDEO" && el.paused && !still.matches) el.play().catch(() => {});   // seules les tranches visibles tournent
     el.style.zIndex = String(10 - Math.round(d));
-    // une tranche = l'image recadrée (object-fit: cover) à la taille de la bande, sans déformation
-    const w = lerpAt(ROLL.w, d) * paperW, h = lerpAt(ROLL.h, d) * paperH;
+    // chaque carte reste entière, juste plus petite ; elle est calée sur le bord extérieur de sa bande,
+    // et les cartes plus proches la recouvrent : seul ce bord dépasse, au-dessus ou au-dessous
+    const sc = lerpAt(ROLL.w, d), w = sc * paperW, h = sc * paperH;
+    const edge = (lerpAt(ROLL.y, d) + lerpAt(ROLL.h, d) / 2) * paperH;   // du centre au bord extérieur de la bande
+    const top = k < 0 ? paperH / 2 - edge : paperH / 2 + edge - h;
     el.style.width = `${w}px`;
     el.style.height = `${h}px`;
-    el.style.transform = `translate(${(paperW - w) / 2}px, ${(paperH - h) / 2 + Math.sign(k) * lerpAt(ROLL.y, d) * paperH}px)`;
-    el.style.filter = `brightness(${lerpAt(ROLL.lum, d)})`;
+    el.style.transform = `translate(${(paperW - w) / 2}px, ${top}px)`;
   });
   requestAnimationFrame(roll);
 }

@@ -123,7 +123,7 @@ dialog h3 {
   background: var(--glass);
   -webkit-backdrop-filter: blur(var(--blur));
   backdrop-filter: blur(var(--blur));
-  border-radius: var(--radius-panel);
+  border-radius: 0;   /* panneaux d'outils et d'export à angles droits */
   z-index: 1;
   scrollbar-width: thin;
   scrollbar-color: var(--line-faint) transparent;
