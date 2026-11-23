@@ -162,9 +162,18 @@
   @media (max-width: 1099px) { .nav_desktop { display: none; } }
 
   /* ── téléphone : une colonne, la description sous chaque nom, pas de vitrine ── */
+  .mcap { display: none; }
+  /* ── téléphone : pas de liste, seulement le rouleau ; on le fait tourner du doigt, on touche la carte pour ouvrir l'outil ── */
   @media (max-width: 760px) {
     .layout { display: block; }
-    .vitrine { display: none; }
+    .index { display: none; }
+    .vitrine { position: static; height: calc(100svh - var(--nav-h)); border-right: none; }
+    .vitrine .shot { touch-action: none; cursor: pointer; }
+    .mcap {
+      display: grid; grid-template-columns: 2.2em minmax(0, 1fr) auto; gap: 8px; align-items: baseline;
+      padding: 10px var(--gut) 12px; border-top: 1px solid var(--rule); text-decoration: none;
+    }
+    .mcap .mname { font-family: var(--display); font-size: 30px; line-height: 1; }
     body { overflow-x: clip; }
     .index li a { grid-template-columns: 1.6em minmax(0, 1fr); }
     .index .desc { display: block; grid-column: 2; margin-top: 6px; font-family: var(--mono); font-size: 12px; line-height: 1.4; letter-spacing: -0.025em; }   /* en Roboto Mono, comme les étiquettes */
@@ -211,6 +220,7 @@
   <h1 class="sr-only">Digital tools</h1>
   <aside class="vitrine">
     <div class="shot"><div class="paper" id="drum"></div><div class="tags" id="tags" aria-hidden="true"></div></div>
+    <a class="mcap mono" id="mCap"><span id="mNum"></span><span class="mname" id="mName"></span><span>↑ ↓</span></a>
     <p class="sr-only" id="vText" aria-live="polite"></p>
   </aside>
 
@@ -287,6 +297,9 @@ function show(t, a) {
   target = rows.findIndex(([, r]) => r === a);
   $("vText").textContent = `${t.nom}, ${t.rubrique}: ${t.desc}`;
   setTags([t.rubrique, t.desc]);
+  $("mNum").textContent = a.querySelector(".n").textContent;   // la légende du téléphone : numéro, nom, lien
+  $("mName").textContent = t.nom;
+  $("mCap").href = a.href;
 }
 
 // ── Les étiquettes : chacune a son point d'ancrage autour de l'aperçu et dérive lentement autour,
@@ -360,10 +373,26 @@ function roll(now) {
     el.style.width = `${w}px`;
     el.style.height = `${h}px`;
     el.style.transform = `translate(${(paperW - w) / 2}px, ${top}px)`;
+    el.style.filter = d < 0.02 ? "none" : `blur(${(d <= 1 ? 1.75 * d : 1.75 + (Math.min(d, 3) - 1) * 1.375).toFixed(2)}px)`;   // l'arrière-plan flou (1,75 px derrière, jusqu'à 4,5 px), la carte de face nette
   });
   requestAnimationFrame(roll);
 }
 requestAnimationFrame(roll);
+
+// ── Téléphone : glisser le doigt fait tourner le rouleau, toucher la carte ouvre l'outil ──
+const phone = matchMedia("(max-width: 760px)");
+const shotEl = drum.parentElement;
+const go = (i) => { i = Math.max(0, Math.min(rows.length - 1, i)); if (i !== target) show(...rows[i]); };
+let y0 = null, moved = false;
+shotEl.addEventListener("pointerdown", (e) => { if (!phone.matches) return; y0 = e.clientY; moved = false; shotEl.setPointerCapture(e.pointerId); });
+shotEl.addEventListener("pointermove", (e) => {
+  if (y0 === null) return;
+  const dy = e.clientY - y0;
+  if (Math.abs(dy) > 48) { go(target + (dy < 0 ? 1 : -1)); y0 = e.clientY; moved = true; }   // vers le haut : l'outil suivant
+});
+shotEl.addEventListener("pointerup", () => { if (y0 !== null && !moved) location.href = rows[target][1].href; y0 = null; });
+shotEl.addEventListener("pointercancel", () => { y0 = null; });
+shotEl.addEventListener("wheel", (e) => { if (!phone.matches || Math.abs(e.deltaY) < 20) return; e.preventDefault(); go(target + Math.sign(e.deltaY)); }, { passive: false });
 
 show(...rows[0]);
 </script>
