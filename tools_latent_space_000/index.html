@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="../ui/ui_001.css" />
 <link rel="stylesheet" href="style.css" />
 <!-- la liste des images de la série (images/pierre/make_list.py la réécrit après chaque ajout) -->
-<script src="images/pierre_forme/list.js"></script>
+<script src="images/pierre_forme_1200/list.js"></script>
 </head>
 <body>
 
@@ -129,14 +129,14 @@ function newProjection() {
 }
 
 // ═════════════════════════════════════════════════════════════════
-//  La série d'images (images/pierre_forme/) : chaque nom donne la place de l'image dans l'espace.
+//  La série d'images (images/pierre_forme_1200/) : chaque nom donne la place de l'image dans l'espace.
 //  Le centre (0, 0, 0) est la pierre noire de départ ; X tire vers le granite, Y vers le grès, Z vers le calcaire.
 //  Dans chaque bloc, le centre est la pierre noire, et plus une case s'éloigne du centre sur un axe, plus elle
 //  prend de matière (jusqu'à 0,9 au bord) : les bords de deux blocs voisins se rejoignent, l'espace reste continu.
 //  Chaque case montre l'image la plus proche de ses poids parmi celles déjà chargées : tant que la série est
 //  incomplète, les images se répètent pour remplir tout l'espace, et se précisent à chaque image ajoutée.
 // ═════════════════════════════════════════════════════════════════
-const SET_DIR = "images/pierre_forme/";
+const SET_DIR = "images/pierre_forme_1200/";
 const MATTER = ["granite", "grès", "calcaire"];
 const STONES = (window.LATENT_IMAGES || []).map((file) => {
   const m = file.match(/_x(-?\d+(?:\.\d+)?)_y(-?\d+(?:\.\d+)?)_z(-?\d+(?:\.\d+)?)\./i);
@@ -164,6 +164,22 @@ function assignImages() {
     cardImage[i] = best;
   }
 }
+// les images dont la matrice a besoin : pour chaque case, la plus proche de ses poids parmi toute la série
+// (calculé d'après les noms, sans rien charger). Seules celles-là sont chargées : une grande série (1 200 images)
+// ne coûte pas plus qu'une petite, et chaque image garde une bonne définition.
+const NEEDED = (() => {
+  const set = new Set();
+  for (let a = 0; a < GRID[0]; a++) for (let b = 0; b < GRID[1]; b++) for (let c = 0; c < GRID[2]; c++) {
+    const w = [cellWeight(a, GRID[0]), cellWeight(b, GRID[1]), cellWeight(c, GRID[2])];
+    let best = -1, bd = Infinity;
+    for (const st of STONES) {
+      const d = (st.w[0] - w[0]) ** 2 + (st.w[1] - w[1]) ** 2 + (st.w[2] - w[2]) ** 2;
+      if (d < bd) { bd = d; best = st.idx; }
+    }
+    if (best >= 0) set.add(best);
+  }
+  return STONES.filter((st) => set.has(st.idx));
+})();
 const weightsLabel = (w) => MATTER.map((m, a) => `${m} ${w[a].toFixed(2)}`).join(" · ");
 
 // ═════════════════════════════════════════════════════════════════
@@ -284,9 +300,9 @@ function refreshCards(final = false) {
 function loadStones() {
   if (!gl || !IMAGE_MODE) return;
   let made = false, w = 0, h = 0;
-  const LAYERS = Math.min(STONES.length, gl.getParameter(gl.MAX_ARRAY_TEXTURE_LAYERS) || 256);
-  if (LAYERS < STONES.length) console.warn(`Latent space: ${STONES.length} images, this graphics card holds ${LAYERS}: the others are skipped.`);
-  const queue = STONES.slice(0, LAYERS);
+  const LAYERS = Math.min(NEEDED.length, gl.getParameter(gl.MAX_ARRAY_TEXTURE_LAYERS) || 256);
+  if (LAYERS < NEEDED.length) console.warn(`Latent space: ${NEEDED.length} images, this graphics card holds ${LAYERS}: the others are skipped.`);
+  const queue = NEEDED.slice(0, LAYERS);
   let pending = queue.length;
   const done = () => { if (--pending === 0 && made) refreshCards(true); };
   const next = () => {
@@ -504,7 +520,7 @@ function frame(now) {
   readout.innerHTML = `x ${fmt(cam.pos[0])} · y ${fmt(cam.pos[1])} · z ${fmt(cam.pos[2])}<br>`
     + `dims ${dims.map((d) => String(d + 1).padStart(2, "0")).join(" · ")} of ${DIMS}<br>∞ images · blocks of ${COUNT}`;
   if (IMAGE_MODE) readout.innerHTML = `x ${fmt(cam.pos[0])} · y ${fmt(cam.pos[1])} · z ${fmt(cam.pos[2])}<br>`
-    + `x granite · y grès · z calcaire<br>${STONES.filter((st) => st.layer >= 0).length} / ${STONES.length} images · ∞ cards`;
+    + `x granite · y grès · z calcaire<br>${STONES.filter((st) => st.layer >= 0).length} of ${STONES.length} images in view · ∞ cards`;
   requestAnimationFrame(frame);
 }
 const smooth = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -838,7 +854,7 @@ if (IMAGE_MODE) {
     name.innerHTML = `<b>${"XYZ"[a]}</b> → ${m}`;
     const strip = document.createElement("div");
     strip.className = "strip";
-    const onAxis = STONES.filter((st) => st.w.every((v, b) => (b === a ? v > 0 : v === 0))).sort((x, y) => x.w[a] - y.w[a]);
+    const onAxis = NEEDED.filter((st) => st.w.every((v, b) => (b === a ? v > 0 : v === 0))).sort((x, y) => x.w[a] - y.w[a]);
     for (const st of [center, ...onAxis].filter(Boolean)) {
       const fig = document.createElement("figure");
       fig.innerHTML = `<img alt="" loading="lazy" /><figcaption>${st.w[a].toFixed(2)}</figcaption>`;
