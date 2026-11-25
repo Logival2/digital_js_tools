@@ -63,12 +63,12 @@ body.dragging #empty { background: var(--lime); }
   .card.dropBefore::before, .card.dropAfter::after { animation: none; }
 }
 
-/* ── Colonne « Set aside » : tout à gauche, frames hors du deck, à la taille des cartes du deck ── */
+/* ── Colonne « Set aside » : tout à droite, frames hors du deck, à la taille des cartes du deck ── */
 #bench {
-  order: -1;   /* tout à gauche de la page, avant le panneau */
+  order: 1;   /* tout à droite de la page, après le deck */
   flex: 0 0 auto; width: calc(var(--card) + 32px);   /* + marges, bord et barre de défilement */
   height: calc(100vh - 20px); box-sizing: border-box;
-  margin: 10px 0 10px 10px; padding: 10px;
+  margin: 10px 10px 10px 0; padding: 10px;
   display: flex; flex-direction: column; gap: 10px;
   border: 1px dashed var(--dash); border-radius: var(--radius);
   overflow-y: auto; scrollbar-width: thin;
