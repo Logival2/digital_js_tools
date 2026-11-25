@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Slides + live web</title>
+<!-- seulement les polices et couleurs communes -->
+<link rel="stylesheet" href="../ui/ui_001.css" />
+<style>
+  body {
+    margin: 0; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--page);
+  }
+  form { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  h1 { margin: 0; font: var(--fs-text) var(--sans); text-transform: uppercase; }
+  .line { display: flex; align-items: center; border-bottom: 1px solid var(--line); }
+  input {
+    width: 200px; padding: 6px 0 6px 24px;
+    border: 0; border-radius: 0; background: none; outline: none;
+    font: var(--fs-text) var(--mono); text-align: center; color: var(--text);
+  }
+  .line button {
+    width: 24px; padding: 0; border: 0; background: none; cursor: pointer;
+    font: var(--fs-text) var(--mono); color: var(--text);
+  }
+  .line button:hover { background: var(--lime); }
+  #msg { margin: 0; min-height: 1.2em; font: var(--fs-small) var(--mono); }
+  #back {
+    position: fixed; top: var(--pad); left: var(--pad);
+    font: var(--fs-small) var(--mono); color: var(--text); text-decoration: none;
+  }
+  #back:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<!-- Page de code : le code n'est écrit nulle part.
+     Son empreinte SHA-256 (16 premiers caractères) est le nom du dossier caché de l'outil.
+     Mauvais code → dossier introuvable → « Wrong code ». Entrée pour valider. -->
+<a id="back" href="../">← Digital tools</a>
+
+<form id="gate">
+  <h1>Slides + live web</h1>
+  <div class="line">
+    <input id="code" type="password" placeholder="Access code" aria-label="Access code" autocomplete="current-password" autofocus />
+    <button type="submit" aria-label="Open">→</button>
+  </div>
+  <p id="msg"></p>
+</form>
+
+<script>
+const KEY = "slides.key";   // le dossier trouvé, gardé dans ce navigateur
+const msg = document.getElementById("msg");
+
+async function folderOf(code) {
+  const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(code));
+  return [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
+}
+async function open(dir) {
+  const r = await fetch(`${dir}/`, { method: "HEAD", cache: "no-store" }).catch(() => null);
+  if (!r || !r.ok) return false;
+  location.replace(`${dir}/`);
+  return true;
+}
+
+// déjà ouvert sur cet ordinateur : on y va directement
+const saved = localStorage.getItem(KEY);
+if (saved) open(saved).then((ok) => { if (!ok) localStorage.removeItem(KEY); });
+
+document.getElementById("gate").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const code = document.getElementById("code").value.trim();
+  if (!code) return;
+  msg.textContent = "";
+  const dir = await folderOf(code);
+  if (await open(dir)) { try { localStorage.setItem(KEY, dir); } catch {} }
+  else msg.textContent = "Wrong code";
+});
+// le message disparaît dès qu'on retape
+document.getElementById("code").addEventListener("input", () => { msg.textContent = ""; });
+</script>
+</body>
+</html>

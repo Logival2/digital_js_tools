@@ -1,0 +1,110 @@
+/* Slides + live web — mise en page propre à l'outil.
+   Couleurs, typo, panneau et contrôles : ../ui/ui_001.css */
+
+/* ── Panneau ── */
+#panel .section > button { width: 100%; }
+#panel .section > button + button,
+#panel .section > .row + button,
+#panel .section > .field + .row { margin-top: 6px; }
+.field { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; }
+#panelFooter { padding: 8px var(--pad) var(--pad); border-top: 1px dashed var(--dash); }
+
+/* ── Zone principale : le déroulé du deck ── */
+#main {
+  flex: 1;
+  min-width: 0;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 10px 10px 10px 0;
+}
+#empty {
+  height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  text-transform: uppercase;
+}
+#empty p { margin: 0; }
+body.dragging #main { outline: 2px dashed var(--line); outline-offset: -12px; }
+body.dragging #empty { background: var(--lime); }
+
+#strip {
+  list-style: none; margin: 0; padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px 10px;
+}
+.card { display: flex; flex-direction: column; gap: 4px; }
+.card .face {
+  position: relative;
+  display: block; width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 0; border: 1px solid var(--line); border-radius: var(--radius);
+  background: #fff; overflow: hidden; cursor: pointer;
+}
+.card .face img { display: block; width: 100%; height: 100%; object-fit: contain; }
+/* slide vivante : noire, l'adresse en mono, l'étiquette verte */
+.card.web .face {
+  display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 4px;
+  padding: 10px; text-align: left;
+  background: #000; color: #fff;
+}
+.webName { font-family: var(--title); font-size: 22px; line-height: 1; text-transform: uppercase; }
+.webUrl { font-family: var(--mono); font-size: var(--fs-mono); opacity: 0.6; word-break: break-all; text-transform: none; }
+.liveTag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 6px;
+  font-family: var(--mono); font-size: var(--fs-small); text-transform: uppercase;
+  background: var(--lime); color: #000;
+}
+.liveTag::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; animation: blink 1.2s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.card.web .liveTag { position: absolute; top: 10px; left: 10px; }
+
+.cap { display: grid; grid-template-columns: 2.2em minmax(0, 1fr) auto; align-items: center; gap: 6px; }
+.cap .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cap .tools { display: flex; gap: 2px; }
+.cap button {
+  width: 22px; height: 22px; padding: 0;
+  font-family: var(--mono); font-size: var(--fs-mono);
+  border: 0; border-radius: var(--radius); background: var(--pill); cursor: pointer;
+}
+
+/* ── Présentation ── */
+#show {
+  position: fixed; inset: 0; z-index: 100;
+  background: #000;
+  display: flex; align-items: center; justify-content: center;
+}
+/* la scène garde le 16:9 des slides, aussi grande que l'écran le permet */
+#stage {
+  width: min(100vw, 100vh * 16 / 9);
+  height: min(100vh, 100vw * 9 / 16);
+  background: #000;
+}
+#stage img { display: block; width: 100%; height: 100%; object-fit: contain; cursor: pointer; }
+#stage iframe { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
+/* slide vivante : le site prend tout l'écran, sans bandes noires */
+#show.live #stage { width: 100vw; height: calc(100vh - 34px); align-self: flex-start; }
+
+#liveBar {
+  position: fixed; left: 0; right: 0; bottom: 0; height: 34px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 130px 0 10px;
+  font-family: var(--mono); font-size: var(--fs-mono); text-transform: none;
+  color: #fff; background: #000;
+}
+#liveUrl { opacity: 0.6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#liveOpen { margin-left: auto; color: #fff; white-space: nowrap; }
+
+#navBtns {
+  position: fixed; right: 10px; bottom: 5px; z-index: 2;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: var(--fs-mono); color: #fff;
+  opacity: 0; transition: opacity 0.2s;
+}
+#show:hover #navBtns, #show.live #navBtns { opacity: 1; }
+#navBtns button {
+  width: 24px; height: 24px; padding: 0;
+  font-size: 16px; line-height: 1;
+  color: #000; background: var(--lime); border: 0; border-radius: var(--radius); cursor: pointer;
+}
+#pageNum { min-width: 4.5em; text-align: center; }

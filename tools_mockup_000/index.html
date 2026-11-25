@@ -36,9 +36,9 @@
         <option value="contain">Contain</option>
       </select>
     </div>
-    <div class="row"><label for="zoomSlider" title="Size of the file inside the screen (or the mouse wheel on the photo)">Zoom</label><input id="zoomSlider" type="range" min="0.5" max="4" step="0.01" value="1" /></div>
+    <div class="row"><label for="zoomSlider" title="Size of the file inside the screen">Zoom</label><input id="zoomSlider" type="range" min="0.5" max="4" step="0.01" value="1" /></div>
     <div class="row"><label for="posXSlider" title="-1 = left of the file, 1 = right (or drag on the photo)">Position X</label><input id="posXSlider" type="range" min="-1" max="1" step="0.001" value="0" /></div>
-    <div class="row" id="posYRow"><label for="posYSlider" title="-1 = top of the file, 1 = bottom (or drag on the photo)">Position Y</label><input id="posYSlider" type="range" min="-1" max="1" step="0.001" value="-1" /></div>
+    <div class="row" id="posYRow"><label for="posYSlider" title="-1 = top of the file, 1 = bottom (or drag, or the mouse wheel on the photo)">Position Y</label><input id="posYSlider" type="range" min="-1" max="1" step="0.001" value="-1" /></div>
     <div class="row">
       <label for="scrollSelect" title="For a file taller than the screen (a page exported from Figma): it goes from top to bottom during the loop">Scroll</label>
       <select id="scrollSelect" class="asPills">
@@ -199,8 +199,8 @@ let photo = null;
     .catch((err) => console.error("Could not load the mockup photo:", err));
 }
 
-// ── Ce qu'on met dans l'écran : une image ou une vidéo ; au départ, une page haute (1080 × 2799) ──
-const DEFAULT_CONTENT = `images sources/${encodeURIComponent("NORDWAY — A2 · Full bleed spec sheet — V2.png")}`;
+// ── Ce qu'on met dans l'écran : une image ou une vidéo ; au départ, une image haute (856 × 1838) ──
+const DEFAULT_CONTENT = `images sources/${encodeURIComponent("Randonneur thermique face aux montagnes enneigées.png")}`;
 let content = { el: null, w: 0, h: 0, video: false };
 let contentUrl = null;   // adresse du fichier importé, libérée quand on le remplace
 {
@@ -575,7 +575,7 @@ mainEl.addEventListener("drop", (e) => {
   useFile(e.dataTransfer.files[0]);
 });
 
-// ── Souris sur la photo : glisser déplace le contenu dans l'écran, la molette le grossit ──
+// ── Souris sur la photo : glisser déplace le contenu dans l'écran, la molette le fait défiler ──
 const setSlider = (id, v) => { $(id).value = v; };   // la valeur affichée suit (ui_001.js relit les sliders)
 let drag = null;
 scene.addEventListener("pointerdown", (e) => {
@@ -597,9 +597,26 @@ scene.addEventListener("pointermove", (e) => {
 const endDrag = () => { drag = null; scene.classList.remove("dragging"); };
 scene.addEventListener("pointerup", endDrag);
 scene.addEventListener("pointercancel", endDrag);
+// La molette fait défiler le fichier dans l'écran, comme une page sur le téléphone
+// (de haut en bas ; Maj + molette ou un pavé tactile, de gauche à droite). Elle reprend la main
+// sur un défilement automatique (Scroll repasse sur Off).
 scene.addEventListener("wheel", (e) => {
   e.preventDefault();
-  setSlider("zoomSlider", clamp(num("zoomSlider") * Math.exp(-e.deltaY * 0.001), 0.5, 4));
+  if (!photo || !content.el) return;
+  const k = scene.width / scene.clientWidth;
+  const R = screenRect(photoLayout(scene.width, scene.height));
+  const box = contentBox(R.w, R.h);
+  // lignes ou pages → px, à mi-vitesse : le téléphone est petit à l'écran, un cran déplace d'environ 50 px
+  const line = (e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? scene.clientHeight : 1) * 0.5;
+  let dx = e.deltaX * line, dy = e.deltaY * line;
+  if (e.shiftKey && !dx) [dx, dy] = [dy, 0];
+  const scroll = (id, d, play) => { if (Math.abs(play) > 0.5) setSlider(id, clamp(num(id) - (2 * d * k) / play, -1, 1)); };
+  if (scrolling() && dy) {   // la main reprend : on part de la position où en est le défilement
+    setSlider("posYSlider", scrollY(t / duration, box.ch - R.h, R.h));
+    $("scrollSelect").value = "off";
+  }
+  scroll("posXSlider", dx, R.w - box.cw);
+  scroll("posYSlider", dy, R.h - box.ch);
   update();
 }, { passive: false });
 

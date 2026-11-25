@@ -1,0 +1,178 @@
+/* Latent space 000 — mise en page propre à l'outil. Typo, verre et boutons viennent de ../ui/ui_001.css.
+   Très peu d'interface, à la manière des espaces de cathydolle.com : la scène plein écran, du petit texte aux coins,
+   un seul panneau en bas au centre pour se déplacer, et la fenêtre du concept, comme les tags de la page d'accueil. */
+
+#scene {
+  position: fixed;
+  inset: 0;
+  background: var(--page);
+}
+#gl, #overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+#gl { touch-action: none; cursor: grab; }
+#gl.dragging { cursor: grabbing; }
+#gl.hovering { cursor: pointer; }
+#overlay { pointer-events: none; }
+#noGl { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; font-family: var(--sans); }
+
+/* ── coins : retour et titre en haut à gauche, position et projection en haut à droite ── */
+.corner {
+  position: fixed;
+  top: 14px;
+  z-index: 2;
+  margin: 0;
+  font-family: var(--sans);
+  font-size: var(--fs-small);
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+.corner.left { left: 16px; display: flex; gap: 14px; align-items: baseline; padding: 4px 8px 4px 4px; margin: -4px; background: rgba(240, 240, 240, 0.7); }
+.corner.right { right: 16px; text-align: right; color: rgba(0, 0, 0, 0.6); font-variant-numeric: tabular-nums; padding: 4px 4px 4px 8px; margin: -4px; background: rgba(240, 240, 240, 0.7); }
+.corner .title { font-family: var(--sans); font-size: 14px; }
+
+/* ── légende des axes : chaque axe, son mot-clé, ses images de 0 à 0,9 (sous le coin haut droit) ── */
+#axesKey {
+  position: fixed;
+  top: 76px;
+  right: 16px;
+  z-index: 2;
+  width: 300px;
+  padding: 8px 10px 10px;
+  font-family: var(--sans);
+  font-size: 10.5px;
+  line-height: 1.3;
+  text-transform: uppercase;
+  background: rgba(240, 240, 240, 0.78);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+#axesKey p { margin: 0; }
+#axesKey .kt { margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed var(--dash); }
+#axesKey .axrow { margin-bottom: 8px; }
+#axesKey .axrow p { margin-bottom: 4px; font-size: 12px; }
+#axesKey .axrow b { display: inline-block; width: 1.4em; padding: 0 3px; font-weight: 400; color: #f0f0f0; background: #000; text-align: center; }
+#axesKey .strip { display: flex; gap: 3px; }
+#axesKey figure { flex: 1; min-width: 0; margin: 0; }
+#axesKey img { display: block; width: 100%; aspect-ratio: 832 / 1216; object-fit: cover; background: #fff; }
+#axesKey figcaption { margin-top: 2px; font-size: 9px; color: rgba(0, 0, 0, 0.6); visibility: hidden; }
+#axesKey figure:first-child figcaption, #axesKey figure:last-child figcaption { visibility: visible; }
+#axesKey figure:last-child figcaption { text-align: right; }
+#axesKey .kn { text-transform: none; color: rgba(0, 0, 0, 0.7); }
+@media (max-width: 760px) { #axesKey { display: none; } }
+
+/* ── le panneau de déplacement, en bas au centre ── */
+#move {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  z-index: 3;
+  translate: -50% 0;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 6px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(var(--blur));
+  backdrop-filter: blur(var(--blur));
+  font-family: var(--sans);
+  font-size: var(--fs-small);
+  text-transform: uppercase;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#move .axis { display: flex; align-items: center; gap: 4px; padding: 0 10px; }
+#move .axis + .axis, #move .tools { border-left: 1px dashed var(--dash); }
+#move .axis b { font-weight: 400; min-width: 1.2em; color: rgba(0, 0, 0, 0.6); }
+#move .tools { display: flex; align-items: center; gap: 4px; padding-left: 10px; }
+#move button {
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 0;
+  font: inherit;
+  text-transform: inherit;
+  color: var(--text);
+  background: var(--button);
+  cursor: pointer;
+  white-space: nowrap;
+  touch-action: none;
+}
+#move button.held, #move button[aria-pressed="true"] { background: var(--lime); }
+
+/* ── les mains : retour caméra au-dessus du panneau ── */
+#handBox {
+  position: fixed;
+  left: 50%;
+  bottom: 70px;
+  z-index: 3;
+  translate: -50% 0;
+  width: 240px;
+  padding: 6px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(var(--blur));
+  backdrop-filter: blur(var(--blur));
+}
+#handBox .camPreview { border-radius: 0; }
+#handInfo { margin: 6px 0 0; font-family: var(--sans); font-size: 10.5px; line-height: 1.3; text-transform: none; }
+
+/* ── la fenêtre du concept : deux blocs flottants, comme les tags de la page d'accueil ── */
+#concept {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 4;
+  width: min(440px, calc(100vw - 32px));
+  will-change: transform;
+}
+#concept .tag {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 10px;
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.4;
+  text-transform: uppercase;
+  color: #000;
+  background: rgba(240, 240, 240, 0.62);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+#concept .tag::before { content: ""; flex: none; width: 4px; height: 4px; margin-top: 0.55em; background: currentColor; }
+#concept .kind { display: inline-flex; color: var(--page); background: #000; margin-bottom: 6px; }
+#concept .kind button {
+  margin-left: 10px;
+  padding: 0 2px;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+#concept .body { flex-direction: column; gap: 0.7em; }
+#concept .body::before { display: none; }
+#concept .body p { margin: 0; }
+#concept .body p::before { content: "▪ "; }
+
+/* ── téléphone : panneau plus compact, texte du concept plus court à l'écran ── */
+@media (max-width: 760px) {
+  .corner.right { display: none; }
+  #move { bottom: 10px; padding: 4px; max-width: calc(100vw - 16px); }
+  #move .axis { padding: 0 5px; gap: 2px; }
+  #move .tools { padding-left: 5px; }
+  #move button { min-width: 28px; height: 32px; padding: 0 6px; }
+  #concept .tag { font-size: 11px; }
+}
+
+/* le relevé du coin haut droit : en Nord aussi (ui_001.css le met en mono par son id) */
+.corner#readout { font-family: var(--sans); }
+
+/* le coin haut droit (relevé de position, légende des axes) est retiré de l'écran : les axes et la boussole suffisent */
+#readout, #axesKey { display: none !important; }

@@ -1,0 +1,25 @@
+// écrit par make_list.py : la liste des images de la série, relancer le script après un ajout
+window.LATENT_IMAGES = [
+"pierre_X0.00_Y0.00_Z0.00.webp",
+"pierre_X0.00_Y0.00_Z0.15.webp",
+"pierre_X0.00_Y0.00_Z0.30.webp",
+"pierre_X0.00_Y0.00_Z0.45.webp",
+"pierre_X0.00_Y0.00_Z0.60.webp",
+"pierre_X0.00_Y0.00_Z0.75.webp",
+"pierre_X0.00_Y0.00_Z0.90.webp",
+"pierre_X0.00_Y0.15_Z0.00.webp",
+"pierre_X0.00_Y0.30_Z0.00.webp",
+"pierre_X0.00_Y0.45_Z0.00.webp",
+"pierre_X0.00_Y0.45_Z0.45.webp",
+"pierre_X0.00_Y0.60_Z0.00.webp",
+"pierre_X0.00_Y0.75_Z0.00.webp",
+"pierre_X0.00_Y0.90_Z0.00.webp",
+"pierre_X0.15_Y0.00_Z0.00.webp",
+"pierre_X0.30_Y0.00_Z0.00.webp",
+"pierre_X0.45_Y0.00_Z0.00.webp",
+"pierre_X0.45_Y0.00_Z0.45.webp",
+"pierre_X0.45_Y0.45_Z0.00.webp",
+"pierre_X0.60_Y0.00_Z0.00.webp",
+"pierre_X0.75_Y0.00_Z0.00.webp",
+"pierre_X0.90_Y0.00_Z0.00.webp"
+];
