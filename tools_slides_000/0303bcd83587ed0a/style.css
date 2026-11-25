@@ -32,7 +32,15 @@ body.dragging #empty { background: var(--lime); }
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 18px 10px;
 }
-.card { display: flex; flex-direction: column; gap: 4px; }
+.card { position: relative; display: flex; flex-direction: column; gap: 4px; }
+/* réordonner : la carte soulevée s'efface, un trait noir montre où elle tombe */
+.card[draggable="true"] .face { cursor: grab; }
+.card.lifted { opacity: 0.3; }
+.card.dropBefore::before, .card.dropAfter::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 2px; background: var(--line);
+}
+.card.dropBefore::before { left: -6px; }
+.card.dropAfter::after { right: -6px; }
 .card .face {
   position: relative;
   display: block; width: 100%;
@@ -40,7 +48,11 @@ body.dragging #empty { background: var(--lime); }
   padding: 0; border: 1px solid var(--line); border-radius: var(--radius);
   background: #fff; overflow: hidden; cursor: pointer;
 }
-.card .face img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.card .face img, .card .face video { display: block; width: 100%; height: 100%; object-fit: contain; }
+/* slide vidéo : fond noir, étiquette fixe en haut à gauche */
+.card.video .face { background: #000; }
+.card.video .liveTag { position: absolute; top: 10px; left: 10px; }
+.liveTag.still::before { display: none; }
 /* slide vivante : noire, l'adresse en mono, l'étiquette verte */
 .card.web .face {
   display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 4px;
@@ -80,6 +92,7 @@ body.dragging #empty { background: var(--lime); }
   height: min(100vh, 100vw * 9 / 16);
   background: #000;
 }
+#stage video { display: block; width: 100%; height: 100%; object-fit: contain; background: #000; }
 #stage img { display: block; width: 100%; height: 100%; object-fit: contain; cursor: pointer; }
 #stage iframe { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
 /* slide vivante : le site prend tout l'écran, sans bandes noires */
