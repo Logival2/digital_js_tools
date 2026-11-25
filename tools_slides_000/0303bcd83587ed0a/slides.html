@@ -482,7 +482,19 @@ function go(i) {
     f.allow = "camera; microphone; fullscreen; autoplay; clipboard-read; clipboard-write";
     f.title = s.label;
     // un outil du dossier (même origine) : Page Up / Page Down / Échap restent au diaporama
-    f.addEventListener("load", () => { try { f.contentWindow.addEventListener("keydown", (e) => keys(e, true)); } catch {} });
+    // et son lien « ← Digital tools » (en haut à gauche) devient « ← Slides » : il ramène au deck
+    f.addEventListener("load", () => {
+      try {
+        const w = f.contentWindow;
+        w.addEventListener("keydown", (e) => keys(e, true));
+        for (const a of w.document.querySelectorAll("a.backLink")) {
+          a.textContent = "← Slides";
+          a.title = "Back to the slides";
+          a.href = "#";
+          a.addEventListener("click", (e) => { e.preventDefault(); quit(); });
+        }
+      } catch {}   // un site d'ailleurs : on ne peut pas y toucher
+    });
     stage.replaceChildren(f);
     $("liveUrl").textContent = s.url;
     $("liveOpen").href = new URL(s.url, location.href).href;
