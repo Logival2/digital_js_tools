@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="../ui/ui_001.css" />
 <link rel="stylesheet" href="style.css" />
 <!-- la liste des images de la série (images/pierre/make_list.py la réécrit après chaque ajout) -->
-<script src="images/pierre/list.js"></script>
+<script src="images/pierre_forme/list.js"></script>
 </head>
 <body>
 
@@ -98,12 +98,11 @@ const cell = (i, n) => (i - (n - 1) / 2) * GAP;
 const PER = GRID.map((n) => n * GAP);
 const COPIES = [];
 for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) for (let z = -1; z <= 1; z++) COPIES.push([x, y, z]);
-const TOTAL = COUNT * COPIES.length;
 const wrapNear = (p, c) => p.map((x, a) => x + Math.round((c[a] - x) / PER[a]) * PER[a]);   // la copie la plus proche de c
 function setProjection(next, animate) {
   dims = next;
   const val = (c, a) => c.v[dims[a]];
-  const slabs = [...cards].sort((a, b) => val(a, 0) - val(b, 0));
+  const slabs = cards.slice(0, COUNT).sort((a, b) => val(a, 0) - val(b, 0));   // la grille seulement (pas les axes)
   const perSlab = GRID[1] * GRID[2];
   for (let x = 0; x < GRID[0]; x++) {
     const rows = slabs.slice(x * perSlab, (x + 1) * perSlab).sort((a, b) => val(a, 1) - val(b, 1));
@@ -129,14 +128,14 @@ function newProjection() {
 }
 
 // ═════════════════════════════════════════════════════════════════
-//  La série d'images (images/pierre/) : chaque nom donne la place de l'image dans l'espace.
+//  La série d'images (images/pierre_forme/) : chaque nom donne la place de l'image dans l'espace.
 //  Le centre (0, 0, 0) est la pierre noire de départ ; X tire vers le granite, Y vers le grès, Z vers le calcaire.
 //  Dans chaque bloc, le centre est la pierre noire, et plus une case s'éloigne du centre sur un axe, plus elle
 //  prend de matière (jusqu'à 0,9 au bord) : les bords de deux blocs voisins se rejoignent, l'espace reste continu.
 //  Chaque case montre l'image la plus proche de ses poids parmi celles déjà chargées : tant que la série est
 //  incomplète, les images se répètent pour remplir tout l'espace, et se précisent à chaque image ajoutée.
 // ═════════════════════════════════════════════════════════════════
-const SET_DIR = "images/pierre/";
+const SET_DIR = "images/pierre_forme/";
 const MATTER = ["granite", "grès", "calcaire"];
 const STONES = (window.LATENT_IMAGES || []).map((file) => {
   const m = file.match(/_x(-?\d+(?:\.\d+)?)_y(-?\d+(?:\.\d+)?)_z(-?\d+(?:\.\d+)?)\./i);
@@ -149,13 +148,33 @@ STONES.forEach((st, i) => { st.idx = i; });       // son rang, gardé (chercher 
 const IMAGE_MODE = STONES.length > 0;
 let ASPECT = 0.8;                                  // largeur / hauteur des cartes ; celui des images une fois lues
 const cellWeight = (i, n) => Math.abs(i - (n - 1) / 2) / ((n - 1) / 2) * 0.9;
-const cardImage = new Int32Array(COUNT).fill(-1);  // pour chaque carte : l'image (index dans STONES) qu'elle montre
+
+// ── les axes : une ligne de petites cartes qui traverse la pierre noire, sur X, Y et Z ──
+// chaque image d'un axe (poids 0,03 … 0,90 sur cet axe seulement) y a sa carte, des deux côtés du centre en miroir
+// (−X et +X montrent la même série), à la place exacte de son poids sur les graduations ; la grille autour
+// garde ses cartes, qui montrent l'image la plus proche. Ces cartes ne bougent pas quand la projection change.
+const SPINE_SIZE = 0.15;
+if (IMAGE_MODE) {
+  cards.push({ spine: true, w: [0, 0, 0], pos: [0, 0, 0], from: [0, 0, 0], to: [0, 0, 0], size: SPINE_SIZE * 1.6, words: "", v: [] });
+  for (const st of STONES) {
+    const on = [0, 1, 2].filter((a) => st.w[a] > 0);
+    if (on.length !== 1) continue;                    // seulement les images d'un seul axe
+    const a = on[0], reach = (GRID[a] - 1) / 2 * GAP;  // le bord des graduations (poids 0,9)
+    for (const sgn of [-1, 1]) {
+      const p = [0, 0, 0]; p[a] = sgn * (st.w[a] / 0.9) * reach;
+      cards.push({ spine: true, w: st.w.slice(), pos: p, from: p.slice(), to: p.slice(), size: SPINE_SIZE, words: "", v: [] });
+    }
+  }
+}
+const N = cards.length;                            // cartes par bloc : la grille (COUNT) puis celles des axes
+const TOTAL = N * COPIES.length;
+const cardImage = new Int32Array(N).fill(-1);      // pour chaque carte : l'image (index dans STONES) qu'elle montre
 function assignImages() {
   const ready = STONES.filter((st) => st.layer >= 0);
   if (!ready.length) return;
-  for (let i = 0; i < COUNT; i++) {
+  for (let i = 0; i < N; i++) {
     const c = cards[i];
-    const w = c.cell.map((v, a) => cellWeight(v, GRID[a]));
+    const w = c.spine ? c.w : c.cell.map((v, a) => cellWeight(v, GRID[a]));
     let best = -1, bd = Infinity;
     for (const st of ready) {
       const d = (st.w[0] - w[0]) ** 2 + (st.w[1] - w[1]) ** 2 + (st.w[2] - w[2]) ** 2;
@@ -405,11 +424,11 @@ const depth = new Float32Array(TOTAL);
 const px = new Float32Array(TOTAL), py = new Float32Array(TOTAL), pz = new Float32Array(TOTAL);
 let camTile = [0, 0, 0];
 // numéro d'une carte dans l'infini : sa place dans le bloc, et le bloc où elle se trouve
-const tileOf = (n) => COPIES[Math.floor(n / COUNT)].map((d, a) => d + camTile[a]);
+const tileOf = (n) => COPIES[Math.floor(n / N)].map((d, a) => d + camTile[a]);
 function cardId(n) {
   const [tx, ty, tz] = tileOf(n);
   const block = (((tx * 73856093) ^ (ty * 19349663) ^ (tz * 83492791)) >>> 0) % 1000000;
-  return String(block * COUNT + (n % COUNT) + 1).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return String(block * N + (n % N) + 1).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 }
 const readout = document.getElementById("readout");
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -453,8 +472,8 @@ function frame(now) {
   camTile = cam.pos.map((p, a) => Math.round(p / PER[a]));
   for (let k = 0; k < COPIES.length; k++) {
     const ox = (camTile[0] + COPIES[k][0]) * PER[0], oy = (camTile[1] + COPIES[k][1]) * PER[1], oz = (camTile[2] + COPIES[k][2]) * PER[2];
-    for (let i = 0; i < COUNT; i++) {
-      const n = k * COUNT + i, p = cards[i].pos;
+    for (let i = 0; i < N; i++) {
+      const n = k * N + i, p = cards[i].pos;
       px[n] = p[0] + ox; py[n] = p[1] + oy; pz[n] = p[2] + oz;
       depth[n] = (px[n] - cam.pos[0]) * B.f[0] + (py[n] - cam.pos[1]) * B.f[1] + (pz[n] - cam.pos[2]) * B.f[2];
     }
@@ -469,7 +488,7 @@ function frame(now) {
       if (z < 0.4) continue;
       if (z > 21) break;
       const s = screenOf([px[i], py[i], pz[i]], B, focal); if (!s) continue;
-      const h = cards[i % COUNT].size / z * focal, w = h * ASPECT;
+      const h = cards[i % N].size / z * focal, w = h * ASPECT;
       if (Math.abs(mouse[0] - s[0]) < w && Math.abs(mouse[1] - s[1]) < h) { hover = i; break; }
     }
   }
@@ -478,12 +497,12 @@ function frame(now) {
   if (gl) {
     for (let j = 0; j < TOTAL; j++) {
       const i = order[j], z = depth[i];
-      inst[j * 4] = px[i]; inst[j * 4 + 1] = py[i]; inst[j * 4 + 2] = pz[i]; inst[j * 4 + 3] = cards[i % COUNT].size;
+      inst[j * 4] = px[i]; inst[j * 4 + 1] = py[i]; inst[j * 4 + 2] = pz[i]; inst[j * 4 + 3] = cards[i % N].size;
       // brouillard : les cartes lointaines s'effacent (avant la limite des blocs dessinés), celles collées à l'œil aussi
       const far = 1 - smooth(9, 20, z), near = smooth(0.3, 1.4, z);
       looks[j * 2] = Math.max(0, far * near);
       looks[j * 2 + 1] = i === hover ? 1 : 0;
-      const im = cardImage[i % COUNT];
+      const im = cardImage[i % N];
       layers[j] = im >= 0 ? STONES[im].layer : -1;
     }
     gl.viewport(0, 0, canvas.width, canvas.height);
@@ -556,20 +575,21 @@ function drawOverlay(B, focal) {
     if (z < 0.6) continue;
     if (z > 5.5) break;
     const q = screenOf([px[i], py[i], pz[i]], B, focal); if (!q || q[0] < -50 || q[0] > W + 50 || q[1] < -50 || q[1] > H + 50) continue;
-    const c = cards[i % COUNT], h = c.size / z * focal;
+    const c = cards[i % N], h = c.size / z * focal;
+    if (c.spine) continue;
     const a = smooth(5.5, 3.2, z) * smooth(0.6, 1.2, z);
     octx.fillStyle = `rgba(0,0,0,${(0.7 * a).toFixed(3)})`;
-    const im = cardImage[i % COUNT];
+    const im = cardImage[i % N];
     octx.fillText(`#${cardId(i)}`, q[0] - h * ASPECT, q[1] + h + 4);
     octx.fillText((im >= 0 ? weightsLabel(STONES[im].w) : c.words).toUpperCase(), q[0] - h * ASPECT, q[1] + h + 16);
     shown++;
   }
   if (hover >= 0) {
-    const c = cards[hover % COUNT], q = screenOf([px[hover], py[hover], pz[hover]], B, focal);
+    const c = cards[hover % N], q = screenOf([px[hover], py[hover], pz[hover]], B, focal);
     if (q) {
       const h = c.size / q[2] * focal;
       octx.font = `11px "Nord SemiBold", serif`;
-      const im = cardImage[hover % COUNT];
+      const im = cardImage[hover % N];
       const lines = im >= 0
         ? [`#${cardId(hover)} · 1 of ∞`, weightsLabel(STONES[im].w).toUpperCase(), STONES[im].file]
         : [`#${cardId(hover)} · 1 of ∞`, c.words.toUpperCase(), `[${c.v.slice(0, 4).map((x) => x.toFixed(2)).join(", ")}, …]`];
