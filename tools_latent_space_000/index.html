@@ -145,6 +145,7 @@ const STONES = (window.LATENT_IMAGES || []).map((file) => {
   const steps = /_x\d+_y\d+_z\d+\./.test(file);                     // pierre_x3_y0_z0 : des paliers de 0,15
   return { file, w: steps ? nums.map((n) => n * 0.15) : nums, layer: -1 };
 }).filter(Boolean);
+STONES.forEach((st, i) => { st.idx = i; });       // son rang, gardé (chercher dans la liste à chaque fois figeait l'écran)
 const IMAGE_MODE = STONES.length > 0;
 let ASPECT = 0.8;                                  // largeur / hauteur des cartes ; celui des images une fois lues
 const cellWeight = (i, n) => Math.abs(i - (n - 1) / 2) / ((n - 1) / 2) * 0.9;
@@ -158,7 +159,7 @@ function assignImages() {
     let best = -1, bd = Infinity;
     for (const st of ready) {
       const d = (st.w[0] - w[0]) ** 2 + (st.w[1] - w[1]) ** 2 + (st.w[2] - w[2]) ** 2;
-      if (d < bd) { bd = d; best = STONES.indexOf(st); }
+      if (d < bd) { bd = d; best = st.idx; }
     }
     cardImage[i] = best;
   }
@@ -168,13 +169,13 @@ const weightsLabel = (w) => MATTER.map((m, a) => `${m} ${w[a].toFixed(2)}`).join
 // ═════════════════════════════════════════════════════════════════
 //  Caméra : position + regard (lacet, tangage) ; déplacements sur ses trois axes
 // ═════════════════════════════════════════════════════════════════
-// arrivée : un travelling automatique de 4,5 s, qui traverse l'espace en avançant et finit devant le point d'origine
+// arrivée : un travelling automatique de 9 s (départ et arrivée en douceur), qui traverse l'espace en avançant et finit devant le point d'origine
 // des axes ; n'importe quel geste (touche, bouton, souris, mains) le coupe et rend la main
 // on arrive au point d'origine des axes (la pierre noire au centre du bloc), un peu de biais pour voir les trois axes
 const START_AT = [3.2, 2.4, 6.4];
 const START = { pos: START_AT, yaw: Math.atan2(-START_AT[0], START_AT[2]), pitch: -Math.asin(START_AT[1] / Math.hypot(...START_AT)) };
 const cam = { pos: START.pos.slice(), yaw: START.yaw, pitch: START.pitch, vel: [0, 0, 0], fly: null };
-const INTRO_S = 4.5;
+const INTRO_S = 9;
 let intro = null;
 function startIntro() {
   const cp = Math.cos(START.pitch);
@@ -271,11 +272,23 @@ if (gl) {
 
 // les images vont dans une texture à couches (une couche par image), réduites pour tenir dans ≈ 160 Mo
 // quel que soit leur nombre ; chaque image apparaît sur ses cartes dès qu'elle est chargée
-let assignTimer = 0;
+// beaucoup d'images : au-delà du nombre de couches de la carte graphique (souvent 2048, au moins 256),
+// les suivantes sont ignorées plutôt que de tout casser ; les cartes se mettent à jour au plus deux fois par seconde
+let assignTimer = 0, lastAssign = 0, nextLayer = 0;
+function refreshCards(final = false) {
+  clearTimeout(assignTimer);
+  const go = () => { lastAssign = performance.now(); gl.bindTexture(gl.TEXTURE_2D_ARRAY, tex); gl.generateMipmap(gl.TEXTURE_2D_ARRAY); assignImages(); };
+  if (final || performance.now() - lastAssign > 500) go();
+  else assignTimer = setTimeout(go, 500);
+}
 function loadStones() {
   if (!gl || !IMAGE_MODE) return;
   let made = false, w = 0, h = 0;
-  const queue = STONES.slice();
+  const LAYERS = Math.min(STONES.length, gl.getParameter(gl.MAX_ARRAY_TEXTURE_LAYERS) || 256);
+  if (LAYERS < STONES.length) console.warn(`Latent space: ${STONES.length} images, this graphics card holds ${LAYERS}: the others are skipped.`);
+  const queue = STONES.slice(0, LAYERS);
+  let pending = queue.length;
+  const done = () => { if (--pending === 0 && made) refreshCards(true); };
   const next = () => {
     const st = queue.shift(); if (!st) return;
     const img = new Image();
@@ -283,11 +296,11 @@ function loadStones() {
     img.onload = async () => {
       if (!made) {
         ASPECT = img.naturalWidth / img.naturalHeight;
-        const area = Math.min(512 * 512 / ASPECT, 160e6 / 4 / STONES.length);
+        const area = Math.min(512 * 512 / ASPECT, 160e6 / 4 / LAYERS);
         h = Math.max(64, Math.floor(Math.sqrt(area / ASPECT))); w = Math.max(32, Math.floor(h * ASPECT));
         tex = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D_ARRAY, tex);
-        gl.texStorage3D(gl.TEXTURE_2D_ARRAY, Math.floor(Math.log2(Math.max(w, h))) + 1, gl.RGBA8, w, h, STONES.length);
+        gl.texStorage3D(gl.TEXTURE_2D_ARRAY, Math.floor(Math.log2(Math.max(w, h))) + 1, gl.RGBA8, w, h, LAYERS);
         gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
         gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -296,18 +309,17 @@ function loadStones() {
       }
       try {
         const bmp = await createImageBitmap(img, { resizeWidth: w, resizeHeight: h, resizeQuality: "high" });
-        const layer = STONES.indexOf(st);
+        const layer = nextLayer++;
         gl.bindTexture(gl.TEXTURE_2D_ARRAY, tex);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
         gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, layer, w, h, 1, gl.RGBA, gl.UNSIGNED_BYTE, bmp);
         bmp.close();
         st.layer = layer;
-        clearTimeout(assignTimer);
-        assignTimer = setTimeout(() => { gl.bindTexture(gl.TEXTURE_2D_ARRAY, tex); gl.generateMipmap(gl.TEXTURE_2D_ARRAY); assignImages(); }, 120);
+        refreshCards();
       } catch (err) { console.warn("Image not usable:", st.file, err); }
-      next();
+      done(); next();
     };
-    img.onerror = () => { console.warn("Image not found:", st.file); next(); };
+    img.onerror = () => { console.warn("Image not found:", st.file); done(); next(); };
     img.src = SET_DIR + st.file;
   };
   for (let k = 0; k < 4; k++) next();   // quatre chargements en parallèle
@@ -410,7 +422,7 @@ function frame(now) {
   cam.yaw += hands.turn * dt;
   if (intro) {
     intro.t = Math.min(1, intro.t + dt / INTRO_S);
-    const k = 1 - Math.pow(1 - intro.t, 3);   // ralentit en arrivant
+    const k = 0.5 - 0.5 * Math.cos(Math.PI * intro.t);   // démarre doucement, ralentit en arrivant
     cam.pos = intro.from.map((x, i) => x + (START.pos[i] - x) * k);
     cam.yaw = intro.yaw0 + (START.yaw - intro.yaw0) * k;
     cam.pitch = intro.pitch0 + (START.pitch - intro.pitch0) * k;
