@@ -161,3 +161,9 @@ body.dragging #empty { background: var(--lime); }
   color: #000; background: var(--lime); border: 0; border-radius: var(--radius); cursor: pointer;
 }
 #pageNum { min-width: 4.5em; text-align: center; }
+
+/* présentation sortie du plein écran (Échap, ou demande de webcam d'un site) : on continue en fenêtre */
+#fsBtn { display: none; }
+#show.windowed #fsBtn { display: inline-block; }
+#show.windowed #navBtns { opacity: 1; }
+#navBtns button.wide { width: auto; padding: 0 8px; font-family: var(--mono); font-size: var(--fs-mono); }

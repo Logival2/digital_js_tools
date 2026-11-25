@@ -56,7 +56,7 @@
     <h2>Present</h2>
     <button id="presentBtn" type="button" class="cta" disabled>Present</button>
     <button id="notesBtn" type="button" class="pill">Notes window</button>
-    <p class="hint">→ / Space / Page Down: next · ← / Page Up: previous · Esc: quit.<br>On a live slide the site keeps the arrows: use Page Up / Page Down (or a clicker), or the ‹ › buttons.<br>Notes window: open it, put it on your laptop screen, then present on the projector. Write the notes in it, it follows the slides.</p>
+    <p class="hint">→ / Space / Page Down: next · ← / Page Up: previous · Esc: leave full screen, Esc again or ✕: quit.<br>When a live site asks for the webcam, the browser leaves full screen to ask you: the slides go on, click “Full screen” to go back.<br>On a live slide the site keeps the arrows: use Page Up / Page Down (or a clicker), or the ‹ › buttons.<br>Notes window: open it, put it on your laptop screen, then present on the projector. Write the notes in it, it follows the slides.</p>
   </div>
 
   <!-- Le deck, pour le retrouver au prochain cours -->
@@ -98,6 +98,8 @@
     <button id="prevBtn" type="button" aria-label="Previous slide">‹</button>
     <span id="pageNum"></span>
     <button id="nextBtn" type="button" aria-label="Next slide">›</button>
+    <button id="fsBtn" type="button" class="wide" title="Back to full screen">Full screen</button>
+    <button id="quitBtn" type="button" aria-label="Quit the presentation" title="Quit (Esc)">✕</button>
   </div>
 </div>
 
@@ -500,7 +502,12 @@ addEventListener("keydown", (e) => keys(e));
 $("prevBtn").addEventListener("click", () => go(cur - 1));
 $("nextBtn").addEventListener("click", () => go(cur + 1));
 // sortie du plein écran par le navigateur (Échap) : on quitte aussi la présentation
-document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && !show.hidden) quit(); });
+// on ne quitte PAS la présentation quand le plein écran s'arrête : le navigateur le coupe aussi tout seul,
+// par exemple pour demander la webcam à un site vivant. La présentation continue en fenêtre,
+// avec un bouton « Full screen » pour y revenir ; Échap (une 2e fois) ou ✕ la quittent.
+document.addEventListener("fullscreenchange", () => { show.classList.toggle("windowed", !document.fullscreenElement); });
+$("fsBtn").addEventListener("click", () => show.requestFullscreen?.().catch(() => {}));
+$("quitBtn").addEventListener("click", quit);
 // sur une slide image, un clic avance
 stage.addEventListener("click", (e) => { if (e.target.tagName === "IMG") go(cur + 1); });
 $("presentBtn").addEventListener("click", () => present(cur));
