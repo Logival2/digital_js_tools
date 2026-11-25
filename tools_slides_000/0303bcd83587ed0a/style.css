@@ -146,7 +146,7 @@ body.dragging #empty { background: var(--lime); }
   color: #fff; background: #000;
 }
 #liveUrl { opacity: 0.6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#liveOpen { margin-left: auto; color: #fff; white-space: nowrap; }
+#liveOpen { margin-left: auto; padding: 6px 0; color: #fff; white-space: nowrap; }
 
 #navBtns {
   position: fixed; right: 10px; bottom: 5px; z-index: 2;

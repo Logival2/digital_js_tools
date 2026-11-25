@@ -95,6 +95,7 @@
     <a id="liveOpen" target="_blank" rel="noopener">Open in a new tab ↗</a>
   </div>
   <div id="navBtns">
+    <button id="notesNow" type="button" class="wide" title="Open the notes window">Notes</button>
     <button id="prevBtn" type="button" aria-label="Previous slide">‹</button>
     <span id="pageNum"></span>
     <button id="nextBtn" type="button" aria-label="Next slide">›</button>
@@ -545,7 +546,14 @@ if (bc) bc.onmessage = ({ data: m }) => {
     if (had !== !!m.text) drawStrip();   // le ✎ de la carte apparaît / disparaît
   }
 };
-$("notesBtn").addEventListener("click", () => window.open("notes.html", "slidesNotes", "width=760,height=860"));
+const openNotes = () => window.open("notes.html", "slidesNotes", "width=760,height=860");
+$("notesBtn").addEventListener("click", openNotes);
+// aussi pendant la présentation (le navigateur peut alors quitter le plein écran : « Full screen » y ramène)
+$("notesNow").addEventListener("click", openNotes);
+
+// la barre du site vivant laisse toujours la place aux boutons (leur largeur change : Full screen, etc.),
+// sinon ils recouvrent « Open in a new tab »
+new ResizeObserver(() => { $("liveBar").style.paddingRight = $("navBtns").offsetWidth + 24 + "px"; }).observe($("navBtns"));
 </script>
 </body>
 </html>
