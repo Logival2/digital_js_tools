@@ -27,7 +27,7 @@
     <button id="importBtn" type="button" class="cta">Import slides / videos</button>
     <input id="fileInput" type="file" accept="image/*,video/*" multiple hidden />
     <button id="clearBtn" type="button" class="pill">Clear</button>
-    <p class="hint">Export your Figma slides as PNG, then drop them on the page, with videos (MP4, WebM) if you like. Sorted by file name: 01.png, 02.mp4… Then drag the cards to reorder them.</p>
+    <p class="hint">Export your Figma slides as PNG, then drop them on the page, with videos (MP4, WebM) if you like. Sorted by file name: 01.png, 02.mp4… Then drag the cards to reorder them, or to the “Set aside” column to keep them out of the deck.</p>
   </div>
 
   <!-- 2. Les sites vivants glissés entre les slides -->
@@ -70,6 +70,13 @@
   </footer>
 </aside>
 
+<!-- Colonne de côté : les frames mises de côté, hors du deck (non présentées) -->
+<section id="bench">
+  <header class="benchHead mono"><span>Set aside</span><span id="benchCount"></span></header>
+  <ol id="benchList"></ol>
+  <p id="benchEmpty" class="mono">Drag frames here to keep them out of the deck for now.</p>
+</section>
+
 <!-- Zone principale : le déroulé du deck, une carte par slide -->
 <main id="main">
   <div id="empty"><p>Drop your slides here</p></div>
@@ -110,8 +117,12 @@ const TOOLS = [
 
 // ── Le deck : une liste ordonnée de slides ──
 // { type: "img", src, name } | { type: "video", src, name } | { type: "web", url, label }
-let deck = [];
-let cur = 0;                         // la slide en cours (présentation et fenêtre de notes)
+// deux listes : le deck présenté, et la colonne « Set aside » (frames mises de côté)
+let deck = [], bench = [];
+let uid = 0;
+const mk = (s) => ({ ...s, id: ++uid });   // un identifiant stable pour animer les cartes
+const listOf = (name) => name === "bench" ? bench : deck;
+let cur = 0;                        // la slide en cours (présentation et fenêtre de notes)
 const WEB_KEY = "slides.web.v1";     // les sites ajoutés, gardés dans ce navigateur
 const NOTES_KEY = "slides.notes.v1"; // les notes, par nom de fichier ou adresse
 
@@ -142,128 +153,207 @@ function refresh() {
   sel.value = keep && Number(keep) <= deck.length ? keep : String(deck.length);
   const n = (t) => deck.filter((s) => s.type === t).length;
   const imgs = n("img"), vids = n("video"), live = n("web");
-  $("countLabel").textContent = deck.length ? `${imgs} slide${imgs > 1 ? "s" : ""} · ${vids} video${vids > 1 ? "s" : ""} · ${live} live` : "No slide";
-  $("presentBtn").disabled = $("saveBtn").disabled = !deck.length;
+  $("countLabel").textContent = deck.length || bench.length ? `${imgs} slide${imgs > 1 ? "s" : ""} · ${vids} video${vids > 1 ? "s" : ""} · ${live} live` + (bench.length ? ` · ${bench.length} aside` : "") : "No slide";
+  $("presentBtn").disabled = !deck.length;
+  $("saveBtn").disabled = !deck.length && !bench.length;
   $("empty").hidden = deck.length > 0;
   $("strip").hidden = !deck.length;
+  $("benchEmpty").hidden = bench.length > 0;
+  $("benchCount").textContent = bench.length ? String(bench.length) : "";
   cur = Math.max(0, Math.min(cur, deck.length - 1));
   drawStrip();
   broadcast();
-  try { localStorage.setItem(WEB_KEY, JSON.stringify(deck.map((s, i) => isWeb(s) ? { ...s, at: i } : null).filter(Boolean))); } catch {}
+  const webs = (list, aside) => list.map((s, i) => isWeb(s) ? { url: s.url, label: s.label, at: i, aside } : null).filter(Boolean);
+  try { localStorage.setItem(WEB_KEY, JSON.stringify([...webs(deck, false), ...webs(bench, true)])); } catch {}
 }
 
-// ── Le déroulé : une carte 16:9 par slide, à glisser pour réordonner ──
-let dragFrom = null;   // la carte qu'on déplace
-const clearMarks = () => document.querySelectorAll(".dropBefore, .dropAfter").forEach((c) => c.classList.remove("dropBefore", "dropAfter"));
-const isAfter = (li, e) => { const r = li.getBoundingClientRect(); return e.clientX > r.left + r.width / 2; };
+// ── Les cartes : le deck (grille) et la colonne « Set aside », à glisser de l'un à l'autre ──
+let drag = null;   // { from: "deck" | "bench", i } : la carte qu'on déplace
+const calm = matchMedia("(prefers-reduced-motion: reduce)");
+const clearMarks = (keep) => document.querySelectorAll(".dropBefore, .dropAfter, .over").forEach((c) => { if (c !== keep) c.classList.remove("dropBefore", "dropAfter", "over"); });
+// dans la grille on compare à gauche / droite, dans la colonne en haut / en bas
+const isAfter = (li, e, name) => {
+  const r = li.getBoundingClientRect();
+  return name === "bench" ? e.clientY > r.top + r.height / 2 : e.clientX > r.left + r.width / 2;
+};
 
 function drawStrip() {
-  $("strip").replaceChildren(...deck.map((s, i) => {
-    const li = document.createElement("li");
-    li.className = `card ${s.type}`;
-    li.draggable = true;
-    // une div et pas un bouton : Firefox ne laisse pas glisser un bouton
-    const face = document.createElement("div");
-    face.className = "face";
+  $("strip").replaceChildren(...deck.map((s, i) => card(s, i, "deck")));
+  $("benchList").replaceChildren(...bench.map((s, i) => card(s, i, "bench")));
+}
+
+function card(s, i, name) {
+  const inDeck = name === "deck", list = listOf(name);
+  const li = document.createElement("li");
+  li.className = `card ${s.type}`;
+  li.dataset.id = s.id;
+  li.draggable = true;
+  // une div et pas un bouton : Firefox ne laisse pas glisser un bouton
+  const face = document.createElement("div");
+  face.className = "face";
+  if (s.type === "img") {
+    const img = new Image();
+    img.src = s.src; img.alt = s.name; img.draggable = false;
+    face.append(img);
+  } else if (s.type === "video") {
+    const v = document.createElement("video");
+    v.src = s.src; v.muted = true; v.preload = "metadata"; v.draggable = false;
+    face.innerHTML = `<span class="liveTag still">Video</span>`;
+    face.prepend(v);
+  } else {
+    face.innerHTML = `<span class="liveTag">Live</span><span class="webName"></span><span class="webUrl"></span>`;
+    face.querySelector(".webName").textContent = s.label;
+    face.querySelector(".webUrl").textContent = s.url;
+  }
+  if (inDeck) {
     face.tabIndex = 0;
     face.setAttribute("role", "button");
     face.title = "Present from this slide · drag to reorder";
-    if (s.type === "img") {
-      const img = new Image();
-      img.src = s.src; img.alt = s.name; img.draggable = false;
-      face.append(img);
-    } else if (s.type === "video") {
-      const v = document.createElement("video");
-      v.src = s.src; v.muted = true; v.preload = "metadata"; v.draggable = false;
-      face.innerHTML = `<span class="liveTag still">Video</span>`;
-      face.prepend(v);
-    } else {
-      face.innerHTML = `<span class="liveTag">Live</span><span class="webName"></span><span class="webUrl"></span>`;
-      face.querySelector(".webName").textContent = s.label;
-      face.querySelector(".webUrl").textContent = s.url;
-    }
     face.addEventListener("click", () => present(i));
     face.addEventListener("keydown", (e) => { if (e.key === "Enter") present(i); });
-    const cap = document.createElement("div");
-    cap.className = "cap mono";
-    cap.innerHTML = `<span class="n"></span><span class="nm"></span><span class="tools"><button type="button" title="Move up">↑</button><button type="button" title="Move down">↓</button><button type="button" title="Remove">✕</button></span>`;
-    cap.querySelector(".n").textContent = String(i + 1).padStart(2, "0");
-    cap.querySelector(".nm").textContent = (isWeb(s) ? "live" : s.name) + (noteOf(s) ? " · ✎" : "");
-    const [up, down, del] = cap.querySelectorAll("button");
-    up.disabled = i === 0; down.disabled = i === deck.length - 1;
-    up.onclick = () => move(i, i - 1);
-    down.onclick = () => move(i, i + 2);
-    del.onclick = () => { freeSrc(deck.splice(i, 1)[0]); refresh(); };
+  } else face.title = "Drag back into the deck";
 
-    // glisser-déposer : un trait noir montre où la carte va tomber
-    li.addEventListener("dragstart", (e) => {
-      dragFrom = i;
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/plain", String(i));
-      li.classList.add("lifted");
-    });
-    li.addEventListener("dragend", () => { dragFrom = null; li.classList.remove("lifted"); clearMarks(); });
-    li.addEventListener("dragover", (e) => {
-      if (dragFrom === null) return;
-      e.preventDefault(); e.stopPropagation();
-      clearMarks();
-      li.classList.add(isAfter(li, e) ? "dropAfter" : "dropBefore");
-    });
-    li.addEventListener("drop", (e) => {
-      if (dragFrom === null) return;
-      e.preventDefault(); e.stopPropagation();
-      move(dragFrom, i + (isAfter(li, e) ? 1 : 0));
-      dragFrom = null;
-    });
+  const cap = document.createElement("div");
+  cap.className = "cap mono";
+  cap.innerHTML = `<span class="n"></span><span class="nm"></span><span class="tools"></span>`;
+  cap.querySelector(".n").textContent = inDeck ? String(i + 1).padStart(2, "0") : "··";
+  cap.querySelector(".nm").textContent = (isWeb(s) ? s.label : s.name) + (noteOf(s) ? " · ✎" : "");
+  const btn = (txt, title, fn, off = false) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = txt; b.title = title; b.disabled = off; b.onclick = fn;
+    cap.querySelector(".tools").append(b);
+  };
+  if (inDeck) {
+    btn("↑", "Move up", () => transfer("deck", i, "deck", i - 1), i === 0);
+    btn("↓", "Move down", () => transfer("deck", i, "deck", i + 2), i === list.length - 1);
+    btn("⇤", "Set aside", () => transfer("deck", i, "bench", bench.length));
+  } else btn("→", "Back to the end of the deck", () => transfer("bench", i, "deck", deck.length));
+  btn("✕", "Remove", () => flip(() => { freeSrc(list.splice(i, 1)[0]); refresh(); }));
 
-    li.append(face, cap);
-    return li;
-  }));
+  // glisser-déposer : la carte survolée s'écarte, un trait noir montre où l'autre va tomber
+  li.addEventListener("dragstart", (e) => {
+    drag = { from: name, i };
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(s.id));
+    requestAnimationFrame(() => li.classList.add("lifted"));   // l'image glissée garde la carte pleine
+  });
+  li.addEventListener("dragend", () => { drag = null; li.classList.remove("lifted"); clearMarks(); });
+  li.addEventListener("dragover", (e) => {
+    if (!drag) return;
+    e.preventDefault(); e.stopPropagation();
+    if (drag.from === name && drag.i === i) return clearMarks();
+    const want = isAfter(li, e, name) ? "dropAfter" : "dropBefore";
+    if (li.classList.contains(want)) return;   // pas de nouvelle animation tant qu'on reste du même côté
+    clearMarks(li);
+    li.classList.remove("dropBefore", "dropAfter");
+    li.classList.add(want);
+  });
+  li.addEventListener("drop", (e) => {
+    if (!drag) return;
+    e.preventDefault(); e.stopPropagation();
+    const { from, i: at } = drag;
+    drag = null;
+    transfer(from, at, name, i + (isAfter(li, e, name) ? 1 : 0));
+  });
+
+  li.append(face, cap);
+  return li;
 }
-// déplace la slide `from` devant la position `to` (0 … deck.length)
-function move(from, to) {
-  if (to > from) to--;
-  if (to === from || to < 0 || to >= deck.length) return;
-  const [s] = deck.splice(from, 1);
-  deck.splice(to, 0, s);
-  refresh();
+
+// déplace la carte `i` de la liste `from` devant la position `j` de la liste `to`
+function transfer(from, i, to, j) {
+  const src = listOf(from), dst = listOf(to);
+  if (from === to) {
+    if (j > i) j--;
+    if (j === i || j < 0 || j >= src.length) return;
+  }
+  flip(() => {
+    const [s] = src.splice(i, 1);
+    dst.splice(Math.max(0, Math.min(j, dst.length)), 0, s);
+    refresh();
+  });
 }
+
+// animation « FLIP » : chaque carte part de son ancienne place et glisse jusqu'à la nouvelle
+function flip(change) {
+  const before = new Map([...document.querySelectorAll(".card[data-id]")].map((el) => [el.dataset.id, el.getBoundingClientRect()]));
+  change();
+  clearMarks();
+  if (calm.matches) return;
+  for (const el of document.querySelectorAll(".card[data-id]")) {
+    const a = before.get(el.dataset.id), b = el.getBoundingClientRect();
+    if (!b.width) continue;
+    if (!a) { el.animate([{ opacity: 0, transform: "scale(0.94)" }, { opacity: 1, transform: "none" }], { duration: 220, easing: "ease-out" }); continue; }
+    const dx = a.left - b.left, dy = a.top - b.top, k = a.width / b.width;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(k - 1) < 0.01) continue;
+    el.animate([
+      { transformOrigin: "0 0", transform: `translate(${dx}px, ${dy}px) scale(${k})` },
+      { transformOrigin: "0 0", transform: "none" },
+    ], { duration: 300, easing: "cubic-bezier(0.2, 0.7, 0.2, 1)" });
+  }
+}
+
+// lâcher dans le vide d'une zone : la carte va à la fin de cette zone
+function dropZone(zone, name) {
+  zone.addEventListener("dragover", (e) => {
+    if (!drag) return;
+    e.preventDefault();
+    clearMarks(zone);
+    zone.classList.add("over");
+  });
+  zone.addEventListener("drop", (e) => {
+    if (!drag) return;
+    e.preventDefault(); e.stopPropagation();
+    const { from, i } = drag;
+    drag = null;
+    transfer(from, i, name, listOf(name).length);
+  });
+}
+dropZone($("main"), "deck");
+dropZone($("bench"), "bench");
 
 // ── 1. Importer images et vidéos : triées par nom de fichier, ajoutées à la suite ──
-function addFiles(files) {
+function addFiles(files, name = "deck") {
   const media = [...files].filter((f) => /^(image|video)\//.test(f.type))
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
   if (!media.length) return;
-  deck.push(...media.map((f) => ({ type: f.type.startsWith("video/") ? "video" : "img", src: URL.createObjectURL(f), name: f.name })));
-  refresh();
+  flip(() => {
+    listOf(name).push(...media.map((f) => mk({ type: f.type.startsWith("video/") ? "video" : "img", src: URL.createObjectURL(f), name: f.name })));
+    refresh();
+  });
 }
 $("importBtn").addEventListener("click", () => $("fileInput").click());
 $("fileInput").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
-$("clearBtn").addEventListener("click", () => { deck.forEach(freeSrc); deck = []; refresh(); });
-// dépôt de fichiers n'importe où sur la page (pas pendant qu'on réordonne les cartes)
-const hasFiles = (e) => dragFrom === null && [...e.dataTransfer.types].includes("Files");
+$("clearBtn").addEventListener("click", () => { [...deck, ...bench].forEach(freeSrc); deck = []; bench = []; refresh(); });
+// dépôt de fichiers n'importe où sur la page (dans la colonne : ils y restent de côté)
+const hasFiles = (e) => !drag && [...e.dataTransfer.types].includes("Files");
 addEventListener("dragover", (e) => { if (!hasFiles(e)) return; e.preventDefault(); document.body.classList.add("dragging"); });
 addEventListener("dragleave", (e) => { if (!e.relatedTarget) document.body.classList.remove("dragging"); });
-addEventListener("drop", (e) => { if (!hasFiles(e)) return; e.preventDefault(); document.body.classList.remove("dragging"); addFiles(e.dataTransfer.files); });
+addEventListener("drop", (e) => {
+  if (!hasFiles(e)) return;
+  e.preventDefault(); document.body.classList.remove("dragging");
+  addFiles(e.dataTransfer.files, $("bench").contains(e.target) ? "bench" : "deck");
+});
 
 // ── 2. Ajouter un site vivant ──
 $("addWebBtn").addEventListener("click", () => {
   let url = $("toolSelect").value || $("urlInput").value.trim();
   if (!url) { $("urlInput").focus(); return; }
   if (!/^(https?:)?\/\/|^\.\.?\//.test(url)) url = "https://" + url;   // « exemple.com » → https://exemple.com
-  deck.splice(Number($("afterSelect").value), 0, { type: "web", url, label: nameOf(url) });
-  $("afterSelect").value = String(Number($("afterSelect").value) + 1);
+  const at = Number($("afterSelect").value);
+  flip(() => { deck.splice(at, 0, mk({ type: "web", url, label: nameOf(url) })); refresh(); });
+  $("afterSelect").value = String(at + 1);
   $("urlInput").value = ""; $("toolSelect").value = "";
-  refresh();
 });
 
-// ── Enregistrer le deck : images et vidéos attendues dans deck/, notes comprises ──
+// ── Enregistrer le deck : images et vidéos attendues dans deck/, notes et frames de côté comprises ──
+const out1 = (s) => {
+  const o = isWeb(s) ? { web: s.url, label: s.label } : { [s.type]: "deck/" + s.name };
+  if (noteOf(s)) o.notes = noteOf(s);
+  return o;
+};
 $("saveBtn").addEventListener("click", () => {
-  const out = { slides: deck.map((s) => {
-    const o = isWeb(s) ? { web: s.url, label: s.label } : { [s.type]: "deck/" + s.name };
-    if (noteOf(s)) o.notes = noteOf(s);
-    return o;
-  }) };
+  const out = { slides: deck.map(out1), aside: bench.map(out1) };
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: "application/json" }));
   a.download = "deck.json";
@@ -272,24 +362,31 @@ $("saveBtn").addEventListener("click", () => {
 });
 
 // ── Au chargement : deck/deck.json s'il existe, sinon les sites gardés dans ce navigateur ──
+const in1 = (s) => {
+  const file = s.img || s.video;
+  const slide = mk(file
+    ? { type: s.video ? "video" : "img", src: file, name: file.split("/").pop() }
+    : { type: "web", url: s.web, label: s.label || nameOf(s.web) });
+  // les notes de ce navigateur gagnent sur celles du fichier (plus récentes)
+  if (s.notes && !noteOf(slide)) setNote(slide, s.notes);
+  return slide;
+};
 (async () => {
   try {
     const r = await fetch("deck/deck.json", { cache: "no-store" });
     if (r.ok) {
-      const { slides } = await r.json();
-      deck = slides.map((s) => {
-        const file = s.img || s.video;
-        const slide = file
-          ? { type: s.video ? "video" : "img", src: file, name: file.split("/").pop() }
-          : { type: "web", url: s.web, label: s.label || nameOf(s.web) };
-        // les notes de ce navigateur gagnent sur celles du fichier (plus récentes)
-        if (s.notes && !noteOf(slide)) setNote(slide, s.notes);
-        return slide;
-      });
+      const { slides = [], aside = [] } = await r.json();
+      deck = slides.map(in1);
+      bench = aside.map(in1);
       return refresh();
     }
   } catch {}
-  try { for (const s of JSON.parse(localStorage.getItem(WEB_KEY) || "[]")) deck.splice(Math.min(s.at, deck.length), 0, { type: "web", url: s.url, label: s.label }); } catch {}
+  try {
+    for (const s of JSON.parse(localStorage.getItem(WEB_KEY) || "[]")) {
+      const list = s.aside ? bench : deck;
+      list.splice(Math.min(s.at, list.length), 0, mk({ type: "web", url: s.url, label: s.label }));
+    }
+  } catch {}
   refresh();
 })();
 

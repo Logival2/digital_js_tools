@@ -33,14 +33,49 @@ body.dragging #empty { background: var(--lime); }
   gap: 18px 10px;
 }
 .card { position: relative; display: flex; flex-direction: column; gap: 4px; }
-/* réordonner : la carte soulevée s'efface, un trait noir montre où elle tombe */
+/* réordonner : la carte soulevée s'efface, la carte survolée s'écarte,
+   un trait noir pousse à l'endroit où l'autre va tomber */
 .card[draggable="true"] .face { cursor: grab; }
-.card.lifted { opacity: 0.3; }
+.card { transition: opacity 0.2s; }
+.card.lifted { opacity: 0.25; }
+.card .face { transition: transform 0.22s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.22s; }
+#strip .card.dropBefore .face { transform: translateX(10px) scale(0.95); }
+#strip .card.dropAfter .face { transform: translateX(-10px) scale(0.95); }
+#benchList .card.dropBefore .face { transform: translateY(10px) scale(0.95); }
+#benchList .card.dropAfter .face { transform: translateY(-10px) scale(0.95); }
+.card.dropBefore .face, .card.dropAfter .face { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18); }
 .card.dropBefore::before, .card.dropAfter::after {
-  content: ""; position: absolute; top: 0; bottom: 0; width: 2px; background: var(--line);
+  content: ""; position: absolute; z-index: 2; background: var(--line);
+  animation: barIn 0.22s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.card.dropBefore::before { left: -6px; }
-.card.dropAfter::after { right: -6px; }
+#strip .card.dropBefore::before, #strip .card.dropAfter::after { top: 0; bottom: 0; width: 2px; }
+#strip .card.dropBefore::before { left: -6px; }
+#strip .card.dropAfter::after { right: -6px; }
+#benchList .card.dropBefore::before, #benchList .card.dropAfter::after { left: 0; right: 0; height: 2px; }
+#benchList .card.dropBefore::before { top: -8px; }
+#benchList .card.dropAfter::after { bottom: -8px; }
+@keyframes barIn { from { transform: scale(0); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .card .face, .card { transition: none; }
+  .card.dropBefore::before, .card.dropAfter::after { animation: none; }
+}
+
+/* ── Colonne « Set aside » : environ 1/5 de la page, frames hors du deck ── */
+#bench {
+  flex: 0 0 20vw; width: 20vw; min-width: 180px;
+  height: calc(100vh - 20px); box-sizing: border-box;
+  margin: 10px 10px 10px 0; padding: 10px;
+  display: flex; flex-direction: column; gap: 10px;
+  border: 1px dashed var(--dash); border-radius: var(--radius);
+  overflow-y: auto; scrollbar-width: thin;
+  transition: background 0.2s;
+}
+#bench.over { background: rgba(228, 251, 2, 0.25); }
+.benchHead { display: flex; justify-content: space-between; text-transform: uppercase; }
+#benchList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+#benchList .card .face { opacity: 0.85; }
+#benchEmpty { margin: auto 0; text-align: center; opacity: 0.6; }
+#main.over { outline: 2px dashed var(--line); outline-offset: -12px; }
 .card .face {
   position: relative;
   display: block; width: 100%;
