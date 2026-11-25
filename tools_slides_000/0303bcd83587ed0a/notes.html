@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
 <title>Notes · Slides + live web</title>
-<!-- Fenêtre de notes : suit le diaporama de index.html (même navigateur) par un BroadcastChannel -->
+<!-- Fenêtre de notes : suit le diaporama de slides.html (même navigateur) par un BroadcastChannel -->
 <link rel="stylesheet" href="../../ui/ui_001.css" />
 <style>
   html, body { height: 100%; }
@@ -13,9 +13,9 @@
     margin: 0; background: var(--page); color: var(--text);
     display: grid; grid-template-rows: auto 1fr; overflow: hidden;
   }
-  /* ── Barre du haut : numéro, chronomètre, heure, navigation ── */
+  /* ── Barre du haut : numéro, temps de présentation, heure, chronomètre, navigation ── */
   header {
-    display: flex; align-items: center; gap: 16px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
     padding: 10px var(--pad);
     border-bottom: 1px dashed var(--dash);
     font-family: var(--mono); font-size: var(--fs-mono);
@@ -25,6 +25,10 @@
   #state.on { background: var(--lime); padding: 2px 6px; }
   #timer { font-size: 20px; cursor: pointer; }
   #clock { opacity: 0.6; }
+  /* le petit chronomètre : départ / pause / remise à zéro, à la main */
+  .watch { display: flex; align-items: center; gap: 4px; padding-left: 12px; border-left: 1px dashed var(--dash); }
+  #watch { min-width: 3.6em; font-size: 14px; }
+  #watch.run { background: var(--lime); padding: 0 4px; }
   .spacer { flex: 1; }
   header button {
     height: 26px; min-width: 26px; padding: 0 8px;
@@ -33,9 +37,9 @@
   }
   header button.go { background: var(--lime); border-color: var(--lime); font-size: 16px; }
 
-  /* ── Corps : les notes à gauche, la slide en cours et la suivante à droite ── */
+  /* ── Corps : les notes à gauche, la slide en cours et toutes les suivantes à droite ── */
   main {
-    display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: var(--pad);
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 40%); gap: var(--pad);
     padding: var(--pad); min-height: 0;
   }
   textarea {
@@ -49,15 +53,25 @@
   .thumb {
     aspect-ratio: 16 / 9; border: 1px solid var(--line); border-radius: var(--radius);
     background: #000; color: #fff; overflow: hidden; position: relative;
-    display: flex; flex-direction: column; justify-content: flex-end; padding: 0;
+    display: flex; flex-direction: column; justify-content: flex-end;
   }
   .thumb img, .thumb video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
   .thumb.img { background: #fff; }
-  .thumb .lbl { position: relative; padding: 8px; font-family: var(--mono); font-size: var(--fs-mono); }
-  .thumb .tag { position: absolute; top: 8px; left: 8px; padding: 2px 6px; background: var(--lime); color: #000; font-family: var(--mono); font-size: var(--fs-small); text-transform: uppercase; }
-  #next { opacity: 0.75; }
+  .thumb .lbl { position: relative; padding: 6px; font-family: var(--mono); font-size: var(--fs-small); }
+  .thumb .tag { position: absolute; top: 6px; left: 6px; padding: 1px 5px; background: var(--lime); color: #000; font-family: var(--mono); font-size: var(--fs-small); text-transform: uppercase; }
   .title { font-family: var(--mono); font-size: var(--fs-mono); margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .size { display: flex; gap: 4px; margin-top: auto; font-family: var(--mono); font-size: var(--fs-small); align-items: center; }
+  /* toutes les slides à venir, deux par ligne, à faire défiler ; un clic y va */
+  .upcoming { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  #coming {
+    list-style: none; margin: 0; padding: 0 4px 0 0;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px 8px; align-content: start;
+    overflow-y: auto; scrollbar-width: thin;
+  }
+  #coming li { cursor: pointer; }
+  #coming li:hover .thumb { outline: 2px solid var(--lime); }
+  #coming .title b { font-weight: normal; opacity: 0.6; margin-right: 6px; }
+  #coming .end { grid-column: 1 / -1; padding: 8px 0; font-family: var(--mono); font-size: var(--fs-mono); opacity: 0.6; text-transform: uppercase; }
+  .size { display: flex; gap: 4px; font-family: var(--mono); font-size: var(--fs-small); align-items: center; }
   .size button { width: 26px; height: 22px; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--button); cursor: pointer; font-family: var(--mono); }
   #wait { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
 </style>
@@ -67,11 +81,16 @@
 <header>
   <span id="num">–</span>
   <span id="state">Not presenting</span>
-  <span id="timer" title="Click to reset">00:00</span>
+  <span id="timer" title="Time since the talk started · click to reset">00:00</span>
   <span id="clock"></span>
+  <span class="watch">
+    <span id="watch" title="Stopwatch">00:00</span>
+    <button id="watchGo" type="button" title="Start / pause">▶</button>
+    <button id="watchReset" type="button" title="Reset">↺</button>
+  </span>
   <span class="spacer"></span>
   <button id="prev" type="button" class="go" aria-label="Previous slide">‹</button>
-  <button id="next_" type="button" class="go" aria-label="Next slide">›</button>
+  <button id="nextBtn" type="button" class="go" aria-label="Next slide">›</button>
 </header>
 
 <main id="body">
@@ -81,9 +100,11 @@
 <script>
 const $ = (id) => document.getElementById(id);
 const bc = new BroadcastChannel("slides.notes");
+const AHEAD = 40;       // nombre de slides à venir affichées
 let st = null;          // le dernier état reçu du diaporama
 let shownIdx = -1;      // la slide dont les notes sont dans la zone de texte
-let t0 = null;          // départ du chronomètre (première présentation)
+let t0 = null;          // départ du temps de présentation (première présentation)
+const pad = (n) => String(n).padStart(2, "0");
 
 // ── Le corps, construit à la première réception ──
 function build() {
@@ -91,7 +112,7 @@ function build() {
     <textarea id="notes" spellcheck="true" placeholder="Notes for this slide…"></textarea>
     <aside>
       <div><h2>Now</h2><div id="now" class="thumb"></div><div id="nowTitle" class="title"></div></div>
-      <div><h2>Next</h2><div id="next" class="thumb"></div><div id="nextTitle" class="title"></div></div>
+      <div class="upcoming"><h2>Coming up</h2><ol id="coming"></ol></div>
       <div class="size">Text <button id="smaller" type="button">A−</button><button id="bigger" type="button">A+</button></div>
     </aside>`;
   $("notes").addEventListener("input", () => bc.postMessage({ t: "notes", i: shownIdx, text: $("notes").value }));
@@ -105,18 +126,39 @@ function build() {
   size(0);
 }
 
-function thumb(el, s) {
+function thumb(s, el = document.createElement("div")) {
   el.className = "thumb" + (s && s.type === "img" ? " img" : "");
   el.replaceChildren();
-  if (!s) return;
-  if (s.type === "img") { const i = new Image(); i.src = s.src; el.append(i); }
+  if (!s) return el;
+  const span = (cls, txt) => Object.assign(document.createElement("span"), { className: cls, textContent: txt });
+  if (s.type === "img") { const i = new Image(); i.src = s.src; i.loading = "lazy"; el.append(i); }
   else if (s.type === "video") {
     const v = document.createElement("video"); v.src = s.src; v.muted = true; v.preload = "metadata";
-    el.append(v, Object.assign(document.createElement("span"), { className: "tag", textContent: "Video" }));
-  } else {
-    el.append(Object.assign(document.createElement("span"), { className: "tag", textContent: "Live" }),
-              Object.assign(document.createElement("span"), { className: "lbl", textContent: s.title }));
-  }
+    el.append(v, span("tag", "Video"));
+  } else el.append(span("tag", "Live"), span("lbl", s.title));
+  return el;
+}
+
+// les slides à venir : redessinées seulement si la liste ou la position change
+let comingSig = "";
+function drawComing() {
+  const rest = st.slides.slice(st.cur + 1, st.cur + 1 + AHEAD);
+  const sig = st.cur + "|" + rest.map((s) => s.type + s.src + s.title).join("|");
+  if (sig === comingSig) return;
+  comingSig = sig;
+  $("coming").replaceChildren(...rest.map((s, k) => {
+    const li = document.createElement("li");
+    const t = document.createElement("div");
+    t.className = "title";
+    t.innerHTML = "<b></b>";
+    t.firstChild.textContent = pad(st.cur + 2 + k);
+    t.append(s.title);
+    li.append(thumb(s), t);
+    li.title = "Go to this slide";
+    li.onclick = () => bc.postMessage({ t: "go", i: st.cur + 1 + k });
+    return li;
+  }), Object.assign(document.createElement("li"), { className: "end", textContent: rest.length ? "End" : "Last slide" }));
+  $("coming").scrollTop = 0;
 }
 
 bc.onmessage = ({ data: m }) => {
@@ -124,16 +166,14 @@ bc.onmessage = ({ data: m }) => {
   const prev = st;
   st = m;
   if (!$("notes")) build();
-  const n = st.slides.length;
-  const s = st.slides[st.cur], nx = st.slides[st.cur + 1];
-  $("num").textContent = n ? `${String(st.cur + 1).padStart(2, "0")} / ${String(n).padStart(2, "0")}` : "–";
+  const n = st.slides.length, s = st.slides[st.cur];
+  $("num").textContent = n ? `${pad(st.cur + 1)} / ${pad(n)}` : "–";
   $("state").textContent = st.presenting ? "Presenting" : "Not presenting";
   $("state").classList.toggle("on", st.presenting);
   if (st.presenting && t0 === null) t0 = Date.now();
-  // on ne redessine les vignettes que si elles changent (pas de clignotement des vidéos)
   const sig = (x) => x ? x.type + x.src + x.title : "";
-  if (!prev || sig(prev.slides[prev.cur]) !== sig(s)) { thumb($("now"), s); $("nowTitle").textContent = s ? s.title : ""; }
-  if (!prev || sig(prev.slides[prev.cur + 1]) !== sig(nx)) { thumb($("next"), nx); $("nextTitle").textContent = nx ? nx.title : "End"; }
+  if (!prev || sig(prev.slides[prev.cur]) !== sig(s)) { thumb(s, $("now")); $("nowTitle").textContent = s ? s.title : ""; }
+  drawComing();
   // les notes : remplacées en changeant de slide, jamais pendant qu'on écrit
   const ta = $("notes");
   if (st.cur !== shownIdx || document.activeElement !== ta) { ta.value = s ? s.notes : ""; shownIdx = st.cur; }
@@ -144,20 +184,30 @@ bc.postMessage({ t: "hello" });
 // ── Navigation : boutons et clavier (hors zone de texte) ──
 const go = (d) => { if (st) bc.postMessage({ t: "go", i: st.cur + d }); };
 $("prev").onclick = () => go(-1);
-$("next_").onclick = () => go(1);
+$("nextBtn").onclick = () => go(1);
 addEventListener("keydown", (e) => {
   if (e.target.tagName === "TEXTAREA") return;
   if (["ArrowRight", "ArrowDown", " ", "PageDown"].includes(e.key)) { e.preventDefault(); go(1); }
   else if (["ArrowLeft", "ArrowUp", "PageUp"].includes(e.key)) { e.preventDefault(); go(-1); }
 });
 
-// ── Chronomètre (depuis le début de la présentation, clic = remise à zéro) et heure ──
-const mmss = (ms) => { const s = Math.floor(ms / 1000); return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
+// ── Temps : présentation (auto, clic = zéro), heure, et petit chronomètre à la main ──
+const mmss = (ms) => { const s = Math.floor(ms / 1000); return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`; };
 $("timer").onclick = () => { t0 = st && st.presenting ? Date.now() : null; };
+let watchMs = 0, watchFrom = null;   // temps gardé, et départ de la course en cours
+const watchNow = () => watchMs + (watchFrom === null ? 0 : Date.now() - watchFrom);
+$("watchGo").onclick = () => {
+  if (watchFrom === null) watchFrom = Date.now();
+  else { watchMs = watchNow(); watchFrom = null; }
+  $("watchGo").textContent = watchFrom === null ? "▶" : "❚❚";
+  $("watch").classList.toggle("run", watchFrom !== null);
+};
+$("watchReset").onclick = () => { watchMs = 0; if (watchFrom !== null) watchFrom = Date.now(); };
 setInterval(() => {
   $("timer").textContent = t0 === null ? "00:00" : mmss(Date.now() - t0);
+  $("watch").textContent = mmss(watchNow());
   $("clock").textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}, 500);
+}, 250);
 </script>
 </body>
 </html>

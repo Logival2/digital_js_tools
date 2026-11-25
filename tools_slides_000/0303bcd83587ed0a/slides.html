@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Slides + live web</title>
+<!-- Page cachée : on y arrive par le code de ../index.html (nom du dossier = empreinte du code) -->
+<!-- interface commune des outils (verre, typo, pilules), puis la mise en page propre à l'outil -->
+<link rel="stylesheet" href="../../ui/ui_001.css" />
+<link rel="stylesheet" href="style.css" />
+<script defer src="../../ui/ui_001.js"></script>
+<script src="db.js"></script>
+</head>
+<body data-layout="panels">
+
+<!-- Panneau latéral : les étapes, de haut en bas -->
+<aside id="panel">
+
+  <header id="panelHead">
+    <p class="eyebrow"><a class="badge backLink" href="./" title="Back to the projects">← Projects</a></p>
+    <h1 class="toolTitle">Slides<br>+ live web</h1>
+    <p id="projName" class="mono"></p>
+  </header>
+
+  <!-- 1. Les slides exportées de Figma, en images, et les vidéos -->
+  <div class="section">
+    <h2>Slides</h2>
+    <button id="importBtn" type="button" class="cta">Import slides / videos</button>
+    <input id="fileInput" type="file" accept="image/*,video/*" multiple hidden />
+    <button id="clearBtn" type="button" class="pill">Clear</button>
+    <p class="hint">Export your Figma slides as PNG, then drop them on the page, with videos (MP4, WebM) if you like. Sorted by file name: 01.png, 02.mp4… Then drag the cards to reorder them, or to the “Set aside” column to keep them out of the deck.</p>
+  </div>
+
+  <!-- 2. Les sites vivants glissés entre les slides -->
+  <div class="section">
+    <h2>Live web</h2>
+    <div class="row">
+      <label for="toolSelect">Digital tool</label>
+      <select id="toolSelect"></select>
+    </div>
+    <div class="field">
+      <label for="urlInput">Or any address</label>
+      <input id="urlInput" type="text" spellcheck="false" placeholder="https://…" />
+    </div>
+    <div class="row">
+      <label for="afterSelect">Insert after</label>
+      <select id="afterSelect"></select>
+    </div>
+    <button id="addWebBtn" type="button" class="pill">Add live slide</button>
+    <p class="hint">The site runs for real in the slide: click, type, use the webcam. Some sites refuse to be framed: their slide keeps an “Open in a new tab” button.</p>
+  </div>
+
+  <!-- 3. Présenter -->
+  <div class="section">
+    <h2>Present</h2>
+    <button id="presentBtn" type="button" class="cta" disabled>Present</button>
+    <button id="notesBtn" type="button" class="pill">Notes window</button>
+    <p class="hint">→ / Space / Page Down: next · ← / Page Up: previous · Esc: quit.<br>On a live slide the site keeps the arrows: use Page Up / Page Down (or a clicker), or the ‹ › buttons.<br>Notes window: open it, put it on your laptop screen, then present on the projector. Write the notes in it, it follows the slides.</p>
+  </div>
+
+  <!-- Le deck, pour le retrouver au prochain cours -->
+  <div class="section collapsed">
+    <h2>Save the deck</h2>
+    <button id="saveBtn" type="button" class="pill" disabled>Download deck.json</button>
+    <p class="hint">Each project is kept by itself in this browser, images and videos included. To find a deck on another computer: put deck.json, its images and videos in this page's deck/ folder and push: it appears as “Published deck” in the projects.</p>
+    <button id="copyBtn" type="button" class="pill" hidden>Copy to a new project</button>
+    <button id="lockBtn" type="button" class="pill">Lock (forget the code here)</button>
+  </div>
+
+  <footer id="panelFooter">
+    <span id="countLabel" class="mono">No slide</span>
+  </footer>
+</aside>
+
+<!-- Colonne de côté : les frames mises de côté, hors du deck (non présentées) -->
+<section id="bench">
+  <header class="benchHead mono"><span>Set aside</span><span id="benchCount"></span></header>
+  <ol id="benchList"></ol>
+  <p id="benchEmpty" class="mono">Drag frames here to keep them out of the deck for now.</p>
+</section>
+
+<!-- Zone principale : le déroulé du deck, une carte par slide -->
+<main id="main">
+  <div id="empty"><p>Drop your slides here</p></div>
+  <ol id="strip" hidden></ol>
+</main>
+
+<!-- Mode présentation : plein écran, une slide à la fois -->
+<div id="show" hidden>
+  <div id="stage"></div>
+  <div id="liveBar" hidden>
+    <span class="liveTag">Live</span>
+    <span id="liveUrl"></span>
+    <a id="liveOpen" target="_blank" rel="noopener">Open in a new tab ↗</a>
+  </div>
+  <div id="navBtns">
+    <button id="prevBtn" type="button" aria-label="Previous slide">‹</button>
+    <span id="pageNum"></span>
+    <button id="nextBtn" type="button" aria-label="Next slide">›</button>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+// Les outils du dossier : mêmes noms que l'accueil (../../index.html)
+const TOOLS = [
+  ["tools_Matrice_images_002", "Image matrice"],
+  ["tools_flyer_001", "Type flyer"],
+  ["tools_mirror_effect_001", "Mirror effect"],
+  ["tools_DA_cercle_002", "Card ring"],
+  ["tools_vibe_002", "Organic type"],
+  ["tools_3D_kinetic_typo_002", "3D kinetic type"],
+  ["tools_kinetic_v2_000", "Cairn generator"],
+  ["tools_gradient_body_001", "Gradient body"],
+  ["tools_latent_space_000", "Latent space"],
+  ["tools_mockup_000", "Mockup"],
+];
+
+// ── Le deck : une liste ordonnée de slides ──
+// { type: "img", src, name } | { type: "video", src, name } | { type: "web", url, label }
+// deux listes : le deck présenté, et la colonne « Set aside » (frames mises de côté)
+let deck = [], bench = [];
+let uid = 0;
+const mk = (s) => ({ ...s, id: ++uid });   // un identifiant stable pour animer les cartes
+const listOf = (name) => name === "bench" ? bench : deck;
+let cur = 0;                        // la slide en cours (présentation et fenêtre de notes)
+
+// ── Le projet ouvert : slides.html?p=<id> (choisi sur la page des projets, ./) ──
+// « published » = le deck poussé dans deck/deck.json (lecture seule, à copier en projet pour le modifier)
+const pid = new URLSearchParams(location.search).get("p");
+if (!pid) location.replace("./");
+let project = null;     // l'enregistrement de la base, gardé à chaque changement
+let loaded = false;     // rien n'est enregistré avant la fin du chargement
+const PUB_NOTES = "slides.notes.published";
+
+const isWeb = (s) => s.type === "web";
+const nameOf = (url) => (TOOLS.find(([d]) => url.includes(d)) || [, url.replace(/^https?:\/\//, "").replace(/\/$/, "")])[1];
+const titleOf = (s) => isWeb(s) ? s.label : s.name;
+const freeSrc = (s) => { if (!isWeb(s) && s.src.startsWith("blob:")) URL.revokeObjectURL(s.src); };
+
+// ── Notes : rangées par slide (nom du fichier, ou adresse du site), dans le projet ──
+let notes = {};
+const keyOf = (s) => isWeb(s) ? s.url : s.name;
+const noteOf = (s) => notes[keyOf(s)] || "";
+function setNote(s, text) {
+  if (text) notes[keyOf(s)] = text; else delete notes[keyOf(s)];
+  if (project) save();
+  else try { localStorage.setItem(PUB_NOTES, JSON.stringify(notes)); } catch {}
+}
+
+// ── Enregistrement automatique du projet (un instant après le dernier changement) ──
+let saveTimer;
+const toItem = (s) => isWeb(s) ? { type: "web", url: s.url, label: s.label } : { type: s.type, name: s.name, blob: s.blob };
+const fromItem = (it) => mk(it.type === "web"
+  ? { type: "web", url: it.url, label: it.label }
+  : { type: it.type, name: it.name, blob: it.blob, src: URL.createObjectURL(it.blob) });
+function save() {
+  if (!project || !loaded) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    Object.assign(project, { slides: deck.map(toItem), aside: bench.map(toItem), notes, updated: Date.now() });
+    DB.put(project).catch((e) => console.warn("Save failed", e));
+  }, 300);
+}
+
+// ── Menus du panneau ──
+$("toolSelect").append(new Option("—", ""), ...TOOLS.map(([d, n]) => new Option(n, `../../${d}/`)));
+$("toolSelect").addEventListener("change", () => { if ($("toolSelect").value) $("urlInput").value = ""; });
+$("urlInput").addEventListener("input", () => { if ($("urlInput").value) $("toolSelect").value = ""; });
+
+function refresh() {
+  // « Insérer après » : le début, puis chaque slide
+  const sel = $("afterSelect"), keep = sel.value;
+  sel.replaceChildren(new Option("Start", "0"), ...deck.map((s, i) => new Option(`${String(i + 1).padStart(2, "0")} · ${titleOf(s)}`, String(i + 1))));
+  sel.value = keep && Number(keep) <= deck.length ? keep : String(deck.length);
+  const n = (t) => deck.filter((s) => s.type === t).length;
+  const imgs = n("img"), vids = n("video"), live = n("web");
+  $("countLabel").textContent = deck.length || bench.length ? `${imgs} slide${imgs > 1 ? "s" : ""} · ${vids} video${vids > 1 ? "s" : ""} · ${live} live` + (bench.length ? ` · ${bench.length} aside` : "") : "No slide";
+  $("presentBtn").disabled = !deck.length;
+  $("saveBtn").disabled = !deck.length && !bench.length;
+  $("empty").hidden = deck.length > 0;
+  $("strip").hidden = !deck.length;
+  $("benchEmpty").hidden = bench.length > 0;
+  $("benchCount").textContent = bench.length ? String(bench.length) : "";
+  cur = Math.max(0, Math.min(cur, deck.length - 1));
+  drawStrip();
+  broadcast();
+  save();
+}
+
+// ── Les cartes : le deck (grille) et la colonne « Set aside », à glisser de l'un à l'autre ──
+let drag = null;   // { from: "deck" | "bench", i } : la carte qu'on déplace
+const calm = matchMedia("(prefers-reduced-motion: reduce)");
+const clearMarks = (keep) => document.querySelectorAll(".dropBefore, .dropAfter, .over").forEach((c) => { if (c !== keep) c.classList.remove("dropBefore", "dropAfter", "over"); });
+// dans la grille on compare à gauche / droite, dans la colonne en haut / en bas
+const isAfter = (li, e, name) => {
+  const r = li.getBoundingClientRect();
+  return name === "bench" ? e.clientY > r.top + r.height / 2 : e.clientX > r.left + r.width / 2;
+};
+
+function drawStrip() {
+  $("strip").replaceChildren(...deck.map((s, i) => card(s, i, "deck")));
+  $("benchList").replaceChildren(...bench.map((s, i) => card(s, i, "bench")));
+}
+
+function card(s, i, name) {
+  const inDeck = name === "deck", list = listOf(name);
+  const li = document.createElement("li");
+  li.className = `card ${s.type}`;
+  li.dataset.id = s.id;
+  li.draggable = true;
+  // une div et pas un bouton : Firefox ne laisse pas glisser un bouton
+  const face = document.createElement("div");
+  face.className = "face";
+  if (s.type === "img") {
+    const img = new Image();
+    img.src = s.src; img.alt = s.name; img.draggable = false;
+    face.append(img);
+  } else if (s.type === "video") {
+    const v = document.createElement("video");
+    v.src = s.src; v.muted = true; v.preload = "metadata"; v.draggable = false;
+    face.innerHTML = `<span class="liveTag still">Video</span>`;
+    face.prepend(v);
+  } else {
+    face.innerHTML = `<span class="liveTag">Live</span><span class="webName"></span><span class="webUrl"></span>`;
+    face.querySelector(".webName").textContent = s.label;
+    face.querySelector(".webUrl").textContent = s.url;
+  }
+  if (inDeck) {
+    face.tabIndex = 0;
+    face.setAttribute("role", "button");
+    face.title = "Present from this slide · drag to reorder";
+    face.addEventListener("click", () => present(i));
+    face.addEventListener("keydown", (e) => { if (e.key === "Enter") present(i); });
+  } else face.title = "Drag back into the deck";
+
+  const cap = document.createElement("div");
+  cap.className = "cap mono";
+  cap.innerHTML = `<span class="n"></span><span class="nm"></span><span class="tools"></span>`;
+  cap.querySelector(".n").textContent = inDeck ? String(i + 1).padStart(2, "0") : "··";
+  cap.querySelector(".nm").textContent = (isWeb(s) ? s.label : s.name) + (noteOf(s) ? " · ✎" : "");
+  const btn = (txt, title, fn, off = false) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = txt; b.title = title; b.disabled = off; b.onclick = fn;
+    cap.querySelector(".tools").append(b);
+  };
+  if (inDeck) {
+    btn("↑", "Move up", () => transfer("deck", i, "deck", i - 1), i === 0);
+    btn("↓", "Move down", () => transfer("deck", i, "deck", i + 2), i === list.length - 1);
+    btn("⇤", "Set aside", () => transfer("deck", i, "bench", bench.length));
+  } else btn("→", "Back to the end of the deck", () => transfer("bench", i, "deck", deck.length));
+  btn("✕", "Remove", () => flip(() => { freeSrc(list.splice(i, 1)[0]); refresh(); }));
+
+  // glisser-déposer : la carte survolée s'écarte, un trait noir montre où l'autre va tomber
+  li.addEventListener("dragstart", (e) => {
+    drag = { from: name, i };
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(s.id));
+    requestAnimationFrame(() => li.classList.add("lifted"));   // l'image glissée garde la carte pleine
+  });
+  li.addEventListener("dragend", () => { drag = null; li.classList.remove("lifted"); clearMarks(); });
+  li.addEventListener("dragover", (e) => {
+    if (!drag) return;
+    e.preventDefault(); e.stopPropagation();
+    if (drag.from === name && drag.i === i) return clearMarks();
+    const want = isAfter(li, e, name) ? "dropAfter" : "dropBefore";
+    if (li.classList.contains(want)) return;   // pas de nouvelle animation tant qu'on reste du même côté
+    clearMarks(li);
+    li.classList.remove("dropBefore", "dropAfter");
+    li.classList.add(want);
+  });
+  li.addEventListener("drop", (e) => {
+    if (!drag) return;
+    e.preventDefault(); e.stopPropagation();
+    const { from, i: at } = drag;
+    drag = null;
+    transfer(from, at, name, i + (isAfter(li, e, name) ? 1 : 0));
+  });
+
+  li.append(face, cap);
+  return li;
+}
+
+// déplace la carte `i` de la liste `from` devant la position `j` de la liste `to`
+function transfer(from, i, to, j) {
+  const src = listOf(from), dst = listOf(to);
+  if (from === to) {
+    if (j > i) j--;
+    if (j === i || j < 0 || j >= src.length) return;
+  }
+  flip(() => {
+    const [s] = src.splice(i, 1);
+    dst.splice(Math.max(0, Math.min(j, dst.length)), 0, s);
+    refresh();
+  });
+}
+
+// animation « FLIP » : chaque carte part de son ancienne place et glisse jusqu'à la nouvelle
+function flip(change) {
+  const before = new Map([...document.querySelectorAll(".card[data-id]")].map((el) => [el.dataset.id, el.getBoundingClientRect()]));
+  change();
+  clearMarks();
+  if (calm.matches) return;
+  for (const el of document.querySelectorAll(".card[data-id]")) {
+    const a = before.get(el.dataset.id), b = el.getBoundingClientRect();
+    if (!b.width) continue;
+    if (!a) { el.animate([{ opacity: 0, transform: "scale(0.94)" }, { opacity: 1, transform: "none" }], { duration: 220, easing: "ease-out" }); continue; }
+    const dx = a.left - b.left, dy = a.top - b.top, k = a.width / b.width;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(k - 1) < 0.01) continue;
+    el.animate([
+      { transformOrigin: "0 0", transform: `translate(${dx}px, ${dy}px) scale(${k})` },
+      { transformOrigin: "0 0", transform: "none" },
+    ], { duration: 300, easing: "cubic-bezier(0.2, 0.7, 0.2, 1)" });
+  }
+}
+
+// lâcher dans le vide d'une zone : la carte va à la fin de cette zone
+function dropZone(zone, name) {
+  zone.addEventListener("dragover", (e) => {
+    if (!drag) return;
+    e.preventDefault();
+    clearMarks(zone);
+    zone.classList.add("over");
+  });
+  zone.addEventListener("drop", (e) => {
+    if (!drag) return;
+    e.preventDefault(); e.stopPropagation();
+    const { from, i } = drag;
+    drag = null;
+    transfer(from, i, name, listOf(name).length);
+  });
+}
+dropZone($("main"), "deck");
+dropZone($("bench"), "bench");
+
+// ── 1. Importer images et vidéos : triées par nom de fichier, ajoutées à la suite ──
+function addFiles(files, name = "deck") {
+  const media = [...files].filter((f) => /^(image|video)\//.test(f.type))
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  if (!media.length) return;
+  flip(() => {
+    listOf(name).push(...media.map((f) => mk({ type: f.type.startsWith("video/") ? "video" : "img", src: URL.createObjectURL(f), name: f.name, blob: f })));
+    refresh();
+  });
+}
+$("importBtn").addEventListener("click", () => $("fileInput").click());
+$("fileInput").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
+$("clearBtn").addEventListener("click", () => {
+  if ((deck.length || bench.length) && !confirm("Remove every slide of this project?")) return;
+  [...deck, ...bench].forEach(freeSrc); deck = []; bench = []; refresh(); });
+// dépôt de fichiers n'importe où sur la page (dans la colonne : ils y restent de côté)
+const hasFiles = (e) => !drag && [...e.dataTransfer.types].includes("Files");
+addEventListener("dragover", (e) => { if (!hasFiles(e)) return; e.preventDefault(); document.body.classList.add("dragging"); });
+addEventListener("dragleave", (e) => { if (!e.relatedTarget) document.body.classList.remove("dragging"); });
+addEventListener("drop", (e) => {
+  if (!hasFiles(e)) return;
+  e.preventDefault(); document.body.classList.remove("dragging");
+  addFiles(e.dataTransfer.files, $("bench").contains(e.target) ? "bench" : "deck");
+});
+
+// ── 2. Ajouter un site vivant ──
+$("addWebBtn").addEventListener("click", () => {
+  let url = $("toolSelect").value || $("urlInput").value.trim();
+  if (!url) { $("urlInput").focus(); return; }
+  if (!/^(https?:)?\/\/|^\.\.?\//.test(url)) url = "https://" + url;   // « exemple.com » → https://exemple.com
+  const at = Number($("afterSelect").value);
+  flip(() => { deck.splice(at, 0, mk({ type: "web", url, label: nameOf(url) })); refresh(); });
+  $("afterSelect").value = String(at + 1);
+  $("urlInput").value = ""; $("toolSelect").value = "";
+});
+
+// ── Enregistrer le deck : images et vidéos attendues dans deck/, notes et frames de côté comprises ──
+const out1 = (s) => {
+  const o = isWeb(s) ? { web: s.url, label: s.label } : { [s.type]: "deck/" + s.name };
+  if (noteOf(s)) o.notes = noteOf(s);
+  return o;
+};
+$("saveBtn").addEventListener("click", () => {
+  const out = { slides: deck.map(out1), aside: bench.map(out1) };
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: "application/json" }));
+  a.download = "deck.json";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+
+// ── Au chargement : le projet de la base, ou le deck publié (deck/deck.json) ──
+const in1 = (s) => {
+  const file = s.img || s.video;
+  const slide = mk(file
+    ? { type: s.video ? "video" : "img", src: file, name: file.split("/").pop() }
+    : { type: "web", url: s.web, label: s.label || nameOf(s.web) });
+  // les notes de ce navigateur gagnent sur celles du fichier (plus récentes)
+  if (s.notes && !noteOf(slide)) notes[keyOf(slide)] = s.notes;
+  return slide;
+};
+(async () => {
+  if (pid === "published") {
+    try { notes = JSON.parse(localStorage.getItem(PUB_NOTES) || "{}"); } catch {}
+    try {
+      const r = await fetch("deck/deck.json", { cache: "no-store" });
+      if (!r.ok) return location.replace("./");
+      const { slides = [], aside = [] } = await r.json();
+      deck = slides.map(in1);
+      bench = aside.map(in1);
+    } catch { return location.replace("./"); }
+    $("projName").textContent = "Published deck · changes are not kept: copy it to a project to edit it";
+    $("copyBtn").hidden = false;
+  } else {
+    project = await DB.get(pid).catch(() => null);
+    if (!project) return location.replace("./");
+    notes = project.notes || {};
+    deck = (project.slides || []).map(fromItem);
+    bench = (project.aside || []).map(fromItem);
+    $("projName").textContent = project.name;
+  }
+  document.title = `${pid === "published" ? "Published deck" : project.name} · Slides + live web`;
+  loaded = true;
+  refresh();
+})();
+
+// le deck publié → un nouveau projet de la base (les fichiers sont téléchargés une fois)
+$("copyBtn").addEventListener("click", async () => {
+  $("copyBtn").disabled = true;
+  $("copyBtn").textContent = "Copying…";
+  const take = async (s) => isWeb(s) ? toItem(s) : { type: s.type, name: s.name, blob: await (await fetch(s.src)).blob() };
+  try {
+    const p = { id: "p" + Date.now().toString(36), name: "Published deck (copy)", created: Date.now(), updated: Date.now(),
+      slides: await Promise.all(deck.map(take)), aside: await Promise.all(bench.map(take)), notes };
+    await DB.put(p);
+    location.replace(`slides.html?p=${p.id}`);
+  } catch (e) {
+    $("copyBtn").disabled = false;
+    $("copyBtn").textContent = "Copy failed: try again";
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// 3. Présentation : plein écran, slide image, vidéo ou site vivant dans une iframe
+// ═══════════════════════════════════════════════════════════════════
+const show = $("show"), stage = $("stage");
+
+function present(i = 0) {
+  if (!deck.length) return;
+  show.hidden = false;
+  show.requestFullscreen?.().catch(() => {});
+  go(i);
+}
+function quit() {
+  stage.replaceChildren();   // la page vivante et la vidéo s'arrêtent (webcam comprise)
+  show.hidden = true;
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  broadcast();
+}
+function go(i) {
+  cur = Math.max(0, Math.min(deck.length - 1, i));
+  broadcast();
+  if (show.hidden) return;   // hors présentation : seule la fenêtre de notes suit
+  const s = deck[cur];
+  $("pageNum").textContent = `${cur + 1} / ${deck.length}`;
+  $("liveBar").hidden = !isWeb(s);
+  show.classList.toggle("live", isWeb(s));
+  if (s.type === "img") {
+    const img = new Image();
+    img.src = s.src; img.alt = s.name;
+    stage.replaceChildren(img);
+    const n = deck[cur + 1];
+    if (n && n.type === "img") new Image().src = n.src;   // la suivante, préchargée
+  } else if (s.type === "video") {
+    // la vidéo part toute seule, avec le son, et tourne en boucle ; ses contrôles au survol
+    const v = document.createElement("video");
+    v.src = s.src; v.autoplay = true; v.loop = true; v.controls = true; v.playsInline = true;
+    stage.replaceChildren(v);
+    v.play().catch(() => { v.muted = true; v.play().catch(() => {}); });   // navigateur strict : sans le son
+  } else {
+    const f = document.createElement("iframe");
+    f.src = s.url;
+    f.allow = "camera; microphone; fullscreen; autoplay; clipboard-read; clipboard-write";
+    f.title = s.label;
+    // un outil du dossier (même origine) : Page Up / Page Down / Échap restent au diaporama
+    f.addEventListener("load", () => { try { f.contentWindow.addEventListener("keydown", (e) => keys(e, true)); } catch {} });
+    stage.replaceChildren(f);
+    $("liveUrl").textContent = s.url;
+    $("liveOpen").href = new URL(s.url, location.href).href;
+  }
+}
+function keys(e, fromFrame = false) {
+  if (show.hidden) return;
+  const k = e.key;
+  // dans un site vivant, les flèches et l'espace lui appartiennent
+  const next = fromFrame ? ["PageDown"] : ["ArrowRight", "ArrowDown", " ", "PageDown"];
+  const prev = fromFrame ? ["PageUp"] : ["ArrowLeft", "ArrowUp", "PageUp"];
+  if (next.includes(k)) { e.preventDefault(); go(cur + 1); }
+  else if (prev.includes(k)) { e.preventDefault(); go(cur - 1); }
+  else if (k === "Escape" || (!fromFrame && k === "Home")) { if (k === "Escape") quit(); else go(0); }
+}
+addEventListener("keydown", (e) => keys(e));
+$("prevBtn").addEventListener("click", () => go(cur - 1));
+$("nextBtn").addEventListener("click", () => go(cur + 1));
+// sortie du plein écran par le navigateur (Échap) : on quitte aussi la présentation
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && !show.hidden) quit(); });
+// sur une slide image, un clic avance
+stage.addEventListener("click", (e) => { if (e.target.tagName === "IMG") go(cur + 1); });
+$("presentBtn").addEventListener("click", () => present(cur));
+// oublier le code sur cet ordinateur : retour à la page de code
+$("lockBtn").addEventListener("click", () => { try { localStorage.removeItem("slides.key"); } catch {} location.href = "../"; });
+
+// ═══════════════════════════════════════════════════════════════════
+// Fenêtre de notes (notes.html) : une fenêtre à part, reliée par un canal du navigateur
+// ═══════════════════════════════════════════════════════════════════
+const bc = "BroadcastChannel" in window ? new BroadcastChannel("slides.notes") : null;
+function broadcast() {
+  bc?.postMessage({
+    t: "state", cur, presenting: !show.hidden,
+    slides: deck.map((s) => ({ type: s.type, title: titleOf(s), src: isWeb(s) ? null : new URL(s.src, location.href).href, url: isWeb(s) ? s.url : null, notes: noteOf(s) })),
+  });
+}
+if (bc) bc.onmessage = ({ data: m }) => {
+  if (m.t === "hello") broadcast();
+  else if (m.t === "go") go(m.i);
+  else if (m.t === "notes" && deck[m.i]) {
+    const had = !!noteOf(deck[m.i]);
+    setNote(deck[m.i], m.text);
+    if (had !== !!m.text) drawStrip();   // le ✎ de la carte apparaît / disparaît
+  }
+};
+$("notesBtn").addEventListener("click", () => window.open("notes.html", "slidesNotes", "width=760,height=860"));
+</script>
+</body>
+</html>
