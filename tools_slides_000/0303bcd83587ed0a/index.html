@@ -6,63 +6,78 @@
 <meta name="robots" content="noindex, nofollow" />
 <title>Projects · Slides + live web</title>
 <!-- Page cachée : on y arrive par le code de ../index.html. Choisir un projet, ou en créer un. -->
+<!-- interface commune des outils (verre, typo, pilules) : panneau à gauche, projets à droite -->
 <link rel="stylesheet" href="../../ui/ui_001.css" />
+<script defer src="../../ui/ui_001.js"></script>
 <script src="db.js"></script>
 <style>
-  body { margin: 0; min-height: 100vh; background: var(--page); color: var(--text); }
-  .wrap { max-width: 1180px; margin: 0 auto; padding: 56px 24px 80px; }
-  .top { display: flex; justify-content: space-between; font-family: var(--mono); font-size: var(--fs-small); }
-  .top a, .top button { color: var(--text); text-decoration: none; background: none; border: 0; padding: 0; cursor: pointer; font: inherit; }
-  .top a:hover, .top button:hover { text-decoration: underline; }
-  h1 { margin: 40px 0 28px; font: var(--fs-text) var(--sans); text-transform: uppercase; }
+  #panel .section > button { width: 100%; }
+  #panel .section > .field + button { margin-top: 6px; }
+  .field { display: flex; flex-direction: column; gap: 3px; }
+  #panelFooter { padding: 8px var(--pad) var(--pad); border-top: 1px dashed var(--dash); }
 
+  /* ── Zone principale : les projets, en grille ── */
+  #main { flex: 1; min-width: 0; height: 100vh; overflow-y: auto; padding: 10px 10px 10px 0; box-sizing: border-box; }
   #list {
     list-style: none; margin: 0; padding: 0;
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 28px 16px;
+    display: grid; grid-template-columns: repeat(auto-fill, 312px); gap: 22px 10px;
   }
   .proj a { display: block; color: inherit; text-decoration: none; }
   .thumb {
     aspect-ratio: 16 / 9; border: 1px solid var(--line); border-radius: var(--radius);
     background: #fff; overflow: hidden; position: relative;
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--mono); font-size: var(--fs-small); text-transform: uppercase;
+    font-family: var(--mono); font-size: var(--fs-mono); text-transform: uppercase;
     transition: transform 0.2s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
   .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .thumb.dark { background: #000; color: #fff; }
   .proj a:hover .thumb { transform: translateY(-3px); }
-  .meta { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
+  .meta { display: flex; align-items: baseline; gap: 8px; margin-top: 6px; }
   .name { font-family: var(--sans); font-size: var(--fs-text); }
-  .info { font-family: var(--mono); font-size: var(--fs-small); opacity: 0.6; }
-  .acts { margin-left: auto; display: flex; gap: 10px; font-family: var(--mono); font-size: var(--fs-small); }
+  .info { font-family: var(--mono); font-size: var(--fs-mono); opacity: 0.6; }
+  .acts { margin-left: auto; display: flex; gap: 10px; font-family: var(--mono); font-size: var(--fs-mono); }
   .acts button { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; color: var(--text); opacity: 0.6; }
   .acts button:hover { opacity: 1; text-decoration: underline; }
-
-  /* la carte « nouveau projet » : un cadre pointillé avec le champ du nom */
-  .new form {
-    aspect-ratio: 16 / 9; box-sizing: border-box; margin: 0;
-    border: 1px dashed var(--dash); border-radius: var(--radius);
-    display: flex; align-items: center; justify-content: center; gap: 0;
-  }
-  .new form:focus-within { border-style: solid; background: #fff; }
-  .new input {
-    width: 60%; padding: 6px 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0;
-    background: none; outline: none; font: var(--fs-text) var(--mono); text-align: center; color: var(--text);
-  }
-  .new button { width: 26px; padding: 6px 0; border: 0; border-bottom: 1px solid var(--line); background: none; cursor: pointer; font: var(--fs-text) var(--mono); }
-  .new button:hover { background: var(--lime); }
-  .new .meta { opacity: 0.6; }
+  #empty { height: 100%; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
+  #empty p { margin: 0; }
 </style>
 </head>
-<body>
-<div class="wrap">
-  <div class="top">
-    <a href="../../">← Digital tools</a>
-    <button id="lock" type="button" title="Forget the access code on this computer">Lock</button>
+<body data-layout="panels">
+
+<!-- Panneau latéral, comme dans les outils -->
+<aside id="panel">
+  <header id="panelHead">
+    <p class="eyebrow"><a class="badge backLink" href="../../" title="Back to all tools">← Digital tools</a></p>
+    <h1 class="toolTitle">Slides<br>+ live web</h1>
+  </header>
+
+  <!-- Nouveau projet : un nom, puis Entrée -->
+  <form class="section" id="newForm">
+    <h2>New project</h2>
+    <div class="field">
+      <label for="newName">Name</label>
+      <input id="newName" type="text" spellcheck="false" placeholder="Course, talk…" />
+    </div>
+    <button type="submit" class="cta">Create project</button>
+    <p class="hint">Each project is kept in this browser, images and videos included. Open one on the right.</p>
+  </form>
+
+  <div class="section collapsed">
+    <h2>Access</h2>
+    <button id="lock" type="button" class="pill">Lock (forget the code here)</button>
   </div>
-  <h1>Slides + live web · Projects</h1>
+
+  <footer id="panelFooter">
+    <span id="countLabel" class="mono">No project</span>
+  </footer>
+</aside>
+
+<!-- Zone principale : les projets -->
+<main id="main">
+  <div id="empty" hidden><p>Create your first project</p></div>
   <ol id="list"></ol>
-</div>
+</main>
 
 <script>
 const $ = (id) => document.getElementById(id);
@@ -129,22 +144,22 @@ async function draw() {
       items.push(projCard({ href: "slides.html?p=published", name: "Published deck", info: `${pad(slides.length)} slides · online`, thumb: thumbOf(first, f && f.img) }));
     }
   } catch {}
-  // la carte pour créer un projet
-  const li = document.createElement("li");
-  li.className = "new";
-  li.innerHTML = `<form><input placeholder="New project" aria-label="New project name" /><button type="submit" aria-label="Create">→</button></form><div class="meta info">Type a name, then Enter</div>`;
-  li.querySelector("form").onsubmit = async (e) => {
-    e.preventDefault();
-    const name = li.querySelector("input").value.trim();
-    if (!name) return li.querySelector("input").focus();
-    const id = newId();
-    await DB.put({ id, name, created: Date.now(), updated: Date.now(), slides: [], aside: [], notes: {} });
-    location.href = `slides.html?p=${id}`;
-  };
-  items.push(li);
   $("list").replaceChildren(...items);
-  if (!projects.length) li.querySelector("input").focus();
+  $("list").hidden = !items.length;
+  $("empty").hidden = items.length > 0;
+  $("countLabel").textContent = projects.length ? `${projects.length} project${projects.length > 1 ? "s" : ""}` : "No project";
+  if (!projects.length) $("newName").focus();
 }
+
+// ── Créer un projet : il s'ouvre aussitôt ──
+$("newForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const name = $("newName").value.trim();
+  if (!name) return $("newName").focus();
+  const id = newId();
+  await DB.put({ id, name, created: Date.now(), updated: Date.now(), slides: [], aside: [], notes: {} });
+  location.href = `slides.html?p=${id}`;
+});
 
 // ── Une seule fois : les sites et notes gardés par l'ancienne version deviennent le projet « My deck » ──
 async function migrate() {
