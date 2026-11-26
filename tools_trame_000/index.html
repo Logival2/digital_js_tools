@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sign screen</title>
+<!-- interface commune des outils (verre, typo, sliders), puis la mise en page propre à l'outil -->
+<link rel="stylesheet" href="../ui/ui_001.css" />
+<link rel="stylesheet" href="style.css" />
+<script defer src="../ui/ui_001.js"></script>
+</head>
+<body data-mobile="ok" data-layout="panels">
+
+<!-- Panneau latéral (paramètres)
+     Principe : des signes de ponctuation (| / \ — .) posés en trame, comme une similigravure.
+     Leur accumulation, leur orientation et leur densité dessinent le motif :
+     rangées de paille, tourbillon, galaxie d'arcs pointillés, onde. -->
+<aside id="panel">
+
+  <header id="panelHead">
+    <p class="eyebrow"><a class="badge backLink" href="../" title="Back to all tools">← Digital tools</a></p>
+    <h1 class="toolTitle">Sign<br>screen</h1>
+  </header>
+
+  <!-- Motif : chaque motif charge ses propres réglages de départ -->
+  <div class="section">
+    <h2>Motif</h2>
+    <div class="row">
+      <label for="motifSelect">Motif</label>
+      <select id="motifSelect" class="asPills">
+        <option value="paille">Straw</option>
+        <option value="tourbillon">Vortex</option>
+        <option value="galaxie">Galaxy</option>
+        <option value="onde">Wave</option>
+      </select>
+    </div>
+    <div class="btnRow">
+      <button id="seedBtn" type="button" title="Another draw of the same settings · N">New seed · N</button>
+    </div>
+    <p class="hint" id="seedInfo"></p>
+  </div>
+
+  <!-- Signes : la trame -->
+  <div class="section">
+    <h2>Signs</h2>
+    <div class="row" data-motifs="paille onde">
+      <label for="signsInput" title="| vertical · / and \ slanted · — horizontal · . dot · : two dots">Signs</label>
+      <input id="signsInput" type="text" maxlength="40" value="|/\" spellcheck="false" />
+    </div>
+    <div class="row" data-motifs="paille onde"><label for="slant" title="Slope of / and \">Slant</label><input id="slant" data-unit="°" type="range" min="0" max="60" step="1" value="20" /></div>
+    <div class="row"><label for="cols" title="Number of signs across the field">Cells</label><input id="cols" type="range" min="8" max="220" step="1" value="150" /></div>
+    <div class="row"><label for="length" title="Length of a sign, in cells">Length</label><input id="length" type="range" min="0.2" max="8" step="0.05" value="3.4" /></div>
+    <div class="row"><label for="lengthVar" title="Random length variation">Length var.</label><input id="lengthVar" type="range" min="0" max="1" step="0.01" value="0.06" /></div>
+    <div class="row"><label for="weight" title="Stroke width, in cells">Weight</label><input id="weight" type="range" min="0.01" max="0.9" step="0.01" value="0.3" /></div>
+    <div class="row"><label for="jitter" title="Random shift away from the grid">Jitter</label><input id="jitter" type="range" min="0" max="1" step="0.01" value="0" /></div>
+    <div class="row"><label for="lean" title="Random rotation of each sign">Lean</label><input id="lean" type="range" min="0" max="1" step="0.01" value="0.04" /></div>
+    <div class="row"><label for="tone" title="Some signs fade, like gold catching the light">Tone var.</label><input id="tone" type="range" min="0" max="1" step="0.01" value="0.35" /></div>
+    <label class="check"><input id="roundCaps" type="checkbox" /><span>Round ends</span></label>
+  </div>
+
+  <!-- Réglages propres à chaque motif -->
+  <div class="section">
+    <h2>Structure</h2>
+    <div class="row" data-motifs="paille onde"><label for="rowSpacing" title="Space between rows, in sign lengths">Row spacing</label><input id="rowSpacing" type="range" min="0.8" max="4" step="0.01" value="1.35" /></div>
+    <div class="row" data-motifs="galaxie"><label for="ringSpacing" title="Space between arcs, in cells">Arc spacing</label><input id="ringSpacing" type="range" min="0.5" max="6" step="0.05" value="1.6" /></div>
+    <div class="row" data-motifs="paille"><label for="cluster" title="Longest run of signs side by side">Cluster</label><input id="cluster" type="range" min="1" max="16" step="1" value="7" /></div>
+    <div class="row" data-motifs="paille"><label for="mix" title="Chance that the sign changes inside a run">Mix</label><input id="mix" type="range" min="0" max="1" step="0.01" value="0.25" /></div>
+    <div class="row" data-motifs="paille"><label for="repeat" title="The rows repeat every N cells (0 = never)">Repeat</label><input id="repeat" type="range" min="0" max="60" step="1" value="0" /></div>
+    <div class="row" data-motifs="galaxie"><label for="gap" title="Gap between dashes, in dash lengths">Gap</label><input id="gap" type="range" min="0.2" max="10" step="0.05" value="3" /></div>
+    <div class="row" data-motifs="tourbillon galaxie"><label for="twist" title="Vortex: 0 = burst, 1 = circle · Galaxy: spiral">Twist</label><input id="twist" type="range" min="-1" max="1" step="0.01" value="0.9" /></div>
+    <div class="row" data-motifs="tourbillon"><label for="reach" title="How far the twist reaches from the centre">Reach</label><input id="reach" type="range" min="0.05" max="2" step="0.01" value="0.5" /></div>
+    <div class="row" data-motifs="tourbillon"><label for="centres" title="Number of vortices">Centres</label><input id="centres" type="range" min="1" max="4" step="1" value="1" /></div>
+    <div class="row" data-motifs="onde"><label for="waves" title="Number of waves across">Waves</label><input id="waves" type="range" min="0" max="8" step="0.05" value="1.5" /></div>
+    <div class="row" data-motifs="onde"><label for="amp" title="Height of the waves">Amplitude</label><input id="amp" type="range" min="0" max="1" step="0.01" value="0.35" /></div>
+  </div>
+
+  <!-- Densité : dégradé, bruit, vide -->
+  <div class="section">
+    <h2>Density</h2>
+    <div class="row"><label for="fill" title="Overall share of cells that get a sign">Fill</label><input id="fill" type="range" min="0" max="1" step="0.01" value="0.5" /></div>
+    <div class="row"><label for="gradient" title="From full to empty across the field">Gradient</label><input id="gradient" type="range" min="0" max="1.5" step="0.01" value="1" /></div>
+    <div class="row"><label for="direction" title="The gradient empties towards this side (90° = bottom)">Fade to</label><input id="direction" data-unit="°" type="range" min="0" max="360" step="1" value="90" /></div>
+    <div class="row"><label for="contrast" title="Sharper or softer gradient">Contrast</label><input id="contrast" type="range" min="0.3" max="3" step="0.01" value="1" /></div>
+    <div class="row"><label for="noise" title="Patches of more or fewer signs">Noise</label><input id="noise" type="range" min="0" max="1.5" step="0.01" value="0.35" /></div>
+    <div class="row"><label for="noiseScale" title="Size of the patches">Noise scale</label><input id="noiseScale" type="range" min="0.5" max="20" step="0.1" value="5" /></div>
+  </div>
+
+  <div class="section">
+    <h2>Centre · void</h2>
+    <div class="row"><label for="cx" title="Centre of the void, the vortex or the arcs">Centre x</label><input id="cx" type="range" min="0" max="1" step="0.005" value="0.5" /></div>
+    <div class="row"><label for="cy" title="Centre of the void, the vortex or the arcs">Centre y</label><input id="cy" type="range" min="0" max="1" step="0.005" value="0.4" /></div>
+    <div class="row"><label for="voidSize" title="Empty disc around the centre">Void</label><input id="voidSize" type="range" min="0" max="0.7" step="0.005" value="0" /></div>
+    <div class="row"><label for="voidSoft" title="Soft or sharp edge of the void">Softness</label><input id="voidSoft" type="range" min="0" max="0.6" step="0.005" value="0.1" /></div>
+  </div>
+
+  <!-- Couleurs : papier, aplat, signes -->
+  <div class="section">
+    <h2>Colours</h2>
+    <div id="colorRow">
+      <label>Paper<input id="paperColor" type="color" value="#ffffff" /></label>
+      <label>Field<input id="fieldColor" type="color" value="#000000" /></label>
+      <label>Signs<input id="inkColor" type="color" value="#ffffff" /></label>
+    </div>
+    <div class="btnRow">
+      <button class="palette" type="button" data-colors="#ffffff,#000000,#ffffff">Black</button>
+      <button class="palette" type="button" data-colors="#ffffff,#12227a,#c8a050">Sèvres blue</button>
+      <button class="palette" type="button" data-colors="#ffffff,#ffffff,#b8964a">Gold</button>
+      <button class="palette" type="button" data-colors="#ffffff,#8c1f1f,#f6ddd2">Red</button>
+      <button class="palette" type="button" data-colors="#ffffff,#97cdbd,#ffffff">Celadon</button>
+      <button class="palette" type="button" data-colors="#ffffff,#ffffff,#33b4e0">Blue</button>
+      <button class="palette" type="button" data-colors="#ffffff,#ffffff,#f4c300">Yellow</button>
+      <button class="palette" type="button" data-colors="#ffffff,#ffffff,#000000">Ink</button>
+    </div>
+    <div class="row"><label for="margin" title="White paper around the field">Margin</label><input id="margin" type="range" min="0" max="0.2" step="0.005" value="0.065" /></div>
+  </div>
+
+  <div class="section collapsed">
+    <h2>Motion</h2>
+    <div class="row"><label for="motion" title="The noise drifts, the vortex turns, the waves roll (0 = still)">Speed</label><input id="motion" type="range" min="0" max="1" step="0.01" value="0" /></div>
+  </div>
+
+  <footer id="panelFooter">
+    <button id="resetBtn" type="button">Reset</button>
+    <button id="privacyBtn" type="button">Privacy · GDPR</button>
+  </footer>
+</aside>
+
+<!-- Notice de confidentialité (RGPD) -->
+<dialog id="privacyDialog" aria-labelledby="privacyTitle">
+  <h2 id="privacyTitle">Privacy · GDPR</h2>
+  <h3>Data controller</h3>
+  <p>Valentin Maynadié — contact: <a href="mailto:valentinmaynadie@gmail.com">valentinmaynadie@gmail.com</a></p>
+  <h3>Images and exports</h3>
+  <p>The patterns are drawn in your browser. PNG and SVG files are made locally and nothing is sent to a server.</p>
+  <h3>Cookies and tracking</h3>
+  <p>This site uses no cookies, no analytics and no user accounts. Fonts are served with the page.</p>
+  <h3>Your rights</h3>
+  <p>This site keeps no personal data. For any question about your rights (access, rectification, erasure, objection), write to the address above. You can also contact the CNIL, the French data protection authority (cnil.fr).</p>
+  <form method="dialog">
+    <button type="submit">Close</button>
+  </form>
+</dialog>
+
+<!-- Zone principale : l'affiche -->
+<div id="main">
+  <canvas id="scene" data-crop></canvas>
+</div>
+
+<!-- Panneau de droite, calé en bas : format, export -->
+<aside id="rightPanel">
+  <div id="formatButtons">
+    <button type="button" data-format="din">A4</button>
+    <button type="button" data-format="square">1:1</button>
+    <button type="button" data-format="portrait">4:5</button>
+    <button type="button" data-format="story">9:16</button>
+  </div>
+  <p id="formatInfo"></p>
+  <div id="exportRow">
+    <button id="exportBtn" type="button">Export PNG</button>
+    <button id="exportSvgBtn" type="button">Export SVG</button>
+  </div>
+</aside>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// Sign screen — trame de signes typographiques.
+// Tout est calculé dans un repère « page » de 1000 unités de large ; le même jeu de traits
+// sert à l'écran, à l'export PNG (agrandi) et à l'export SVG (vectoriel).
+// ═══════════════════════════════════════════════════════════════════
+const $ = (id) => document.getElementById(id);
+const scene = $("scene");
+const ctx = scene.getContext("2d");
+const mainEl = $("main");
+
+const FORMATS = {
+  din:      { ratio: Math.SQRT2, label: "A4 portrait", png: [2480, 3508] },
+  square:   { ratio: 1,          label: "1:1",         png: [3000, 3000] },
+  portrait: { ratio: 5 / 4,      label: "4:5",         png: [2400, 3000] },
+  story:    { ratio: 16 / 9,     label: "9:16",        png: [2160, 3840] },
+};
+let format = "din";
+let seed = 1 + Math.floor(Math.random() * 9999);
+
+// Réglages lus dans le panneau (sliders, cases, couleurs)
+const SLIDERS = ["slant", "cols", "length", "lengthVar", "weight", "jitter", "lean", "tone",
+  "rowSpacing", "ringSpacing", "cluster", "mix", "repeat", "gap", "twist", "reach", "centres", "waves", "amp",
+  "fill", "gradient", "direction", "contrast", "noise", "noiseScale",
+  "cx", "cy", "voidSize", "voidSoft", "margin", "motion"];
+
+// Réglages de départ de chaque motif (le reste garde sa valeur)
+const PRESETS = {
+  // Paille : rangées serrées de petits groupes | / \, de plus en plus rares vers le bas
+  paille: { signs: "|/\\", slant: 20, cols: 150, length: 3.4, lengthVar: 0.06, weight: 0.3, jitter: 0, lean: 0.04, tone: 0.35,
+    rowSpacing: 1.35, cluster: 7, mix: 0.25, repeat: 0, fill: 0.5, gradient: 1, direction: 90, contrast: 1, noise: 0.35, noiseScale: 5,
+    cx: 0.5, cy: 0.4, voidSize: 0, voidSoft: 0.1 },
+  // Tourbillon : traits courts qui tournent autour d'un œil vide, puis s'ouvrent en rayons
+  tourbillon: { cols: 30, length: 0.85, lengthVar: 0.3, weight: 0.06, jitter: 0.45, lean: 0.08, tone: 0.3,
+    twist: 0.9, reach: 0.45, centres: 1, fill: 0.95, gradient: 0, direction: 90, contrast: 1, noise: 0.15, noiseScale: 4,
+    cx: 0.55, cy: 0.42, voidSize: 0.1, voidSoft: 0.12 },
+  // Galaxie : arcs pointillés concentriques, un peu décentrés, éparpillés
+  galaxie: { cols: 42, length: 0.7, lengthVar: 0.15, weight: 0.05, jitter: 0.5, lean: 0.06, tone: 0,
+    ringSpacing: 1.6, gap: 3, twist: 0.15, fill: 0.55, gradient: 0, direction: 90, contrast: 1, noise: 0.9, noiseScale: 3.5,
+    cx: 0.55, cy: 0.5, voidSize: 0.08, voidSoft: 0.05 },
+  // Onde : traits verticaux qui ondulent, denses en bas, rares en haut
+  onde: { signs: "|||/\\", slant: 12, cols: 90, length: 2.4, lengthVar: 0.15, weight: 0.16, jitter: 0.15, lean: 0.04, tone: 0.2,
+    rowSpacing: 1.25, waves: 1.2, amp: 0.7, fill: 0.5, gradient: 1.1, direction: 270, contrast: 1, noise: 0.4, noiseScale: 4,
+    cx: 0.5, cy: 0.4, voidSize: 0, voidSoft: 0.1 },
+};
+
+const state = {};
+function readState() {
+  for (const id of SLIDERS) state[id] = parseFloat($(id).value);
+  state.motif = $("motifSelect").value;
+  state.signs = $("signsInput").value;
+  state.roundCaps = $("roundCaps").checked;
+  state.paper = $("paperColor").value;
+  state.field = $("fieldColor").value;
+  state.ink = $("inkColor").value;
+}
+
+// ── Hasard reproductible : même graine = même dessin ──
+function hash(i, j, k) {
+  let h = Math.imul(i | 0, 0x27d4eb2d) ^ Math.imul(j | 0, 0x165667b1) ^ Math.imul((k | 0) + seed * 7919, 0x9e3779b1);
+  h = Math.imul(h ^ (h >>> 15), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
+}
+// bruit de valeur lissé, entre 0 et 1
+function vnoise(x, y) {
+  const xi = Math.floor(x), yi = Math.floor(y);
+  const xf = x - xi, yf = y - yi;
+  const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+  const a = hash(xi, yi, 991), b = hash(xi + 1, yi, 991), c = hash(xi, yi + 1, 991), d = hash(xi + 1, yi + 1, 991);
+  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+}
+function fbm(x, y) { return 0.65 * vnoise(x, y) + 0.35 * vnoise(x * 2.1 + 17, y * 2.1 + 5); }
+const smooth = (e0, e1, x) => { if (e1 <= e0) return x < e0 ? 0 : 1; const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
+
+// ── Signes : caractère → angle (y vers le bas), ou point ──
+function parseSigns(str, slant) {
+  const s = slant * Math.PI / 180, out = [];
+  for (const ch of str) {
+    if ("|!lI¦".includes(ch)) out.push({ a: Math.PI / 2 });
+    else if (ch === "/") out.push({ a: Math.PI / 2 + s });
+    else if (ch === "\\") out.push({ a: Math.PI / 2 - s });
+    else if ("-–—_~=".includes(ch)) out.push({ a: 0 });
+    else if (".·•".includes(ch)) out.push({ dot: 1 });
+    else if (ch === ":") out.push({ dot: 2 });
+  }
+  return out.length ? out : [{ a: Math.PI / 2 }];
+}
+
+// ── Génération : renvoie la page, le champ et la liste des traits ──
+// Un trait = [x1, y1, x2, y2, effacement 0…1]; l'épaisseur est commune à tout le dessin.
+function generate(time) {
+  const S = state;
+  const W = 1000, H = W * FORMATS[format].ratio;
+  const m = S.margin * W;
+  const F = { x: m, y: m, w: W - 2 * m, h: H - 2 * m };
+  const c = F.w / S.cols;              // taille d'une cellule
+  const width = Math.max(0.15, c * S.weight);
+  const segs = [];
+  const drift = time * S.motion;       // dérive dans le temps
+
+  // centre (en unités de largeur du champ, pour garder des cercles ronds)
+  const ccx = S.cx, ccy = S.cy * F.h / F.w;
+  const dirA = S.direction * Math.PI / 180, dcos = Math.cos(dirA), dsin = Math.sin(dirA);
+  const span = 0.5 * (Math.abs(dcos) + Math.abs(dsin) * F.h / F.w);
+
+  // densité en un point de la page (0 = vide, 1 = plein)
+  function density(x, y) {
+    const u = (x - F.x) / F.w, v = (y - F.y) / F.w;
+    const t = ((u - 0.5) * dcos + (v - 0.5 * F.h / F.w) * dsin) / (2 * span) + 0.5;   // 0 → 1 dans le sens du dégradé
+    let d = S.fill + S.gradient * (0.5 - t) * 2 * Math.max(S.fill, 1 - S.fill);
+    if (S.noise > 0) d += S.noise * (fbm(u * S.noiseScale + drift * 0.15, v * S.noiseScale - drift * 0.1) - 0.5) * 1.6;
+    d = Math.min(1, Math.max(0, d));
+    d = Math.pow(d, S.contrast);
+    if (S.voidSize > 0) d *= smooth(S.voidSize, S.voidSize + S.voidSoft, Math.hypot(u - ccx, v - ccy));
+    return d;
+  }
+  const inField = (x, y, pad) => x > F.x - pad && x < F.x + F.w + pad && y > F.y - pad && y < F.y + F.h + pad;
+
+  function push(x, y, a, len, alpha) {
+    const dx = Math.cos(a) * len / 2, dy = Math.sin(a) * len / 2;
+    segs.push([x - dx, y - dy, x + dx, y + dy, alpha]);
+  }
+  function pushSign(sign, x, y, len, extra, alpha) {
+    if (sign.dot) {
+      if (sign.dot === 2) { push(x, y - len * 0.3, Math.PI / 2, width, alpha); push(x, y + len * 0.3, Math.PI / 2, width, alpha); }
+      else push(x, y, Math.PI / 2, width, alpha);
+    } else push(x, y, sign.a + extra, len, alpha);
+  }
+  const lenOf = (h) => Math.max(0.1, c * S.length * (1 + (h - 0.5) * 2 * S.lengthVar));
+  const alphaOf = (h) => h;   // niveau d'effacement, 0 = plein ; « Tone var. » le règle au dessin
+  const leanOf = (h) => (h - 0.5) * S.lean * Math.PI / 2;
+
+  if (S.motif === "paille" || S.motif === "onde") {
+    const signs = parseSigns(S.signs, S.slant);
+    const L = c * S.length;
+    const rowH = Math.max(c, L * S.rowSpacing);
+    const rows = Math.ceil(F.h / rowH) + 1;
+    const cols = Math.ceil(F.w / c) + 1;
+    const period = S.motif === "paille" && S.repeat > 0 ? S.repeat : 0;
+
+    for (let j = 0; j < rows; j++) {
+      const yRow = F.y + (j + 0.5) * rowH;
+
+      if (S.motif === "paille") {
+        // Une rangée = une suite de groupes (1 à « Cluster » signes) séparés de blancs ;
+        // avec « Repeat », le découpage d'une rangée se répète toutes les N cellules.
+        const runs = [];   // [début, longueur, clé]
+        const total = period || cols;
+        let i = 0, r = 0;
+        while (i < total) {
+          const n = 1 + Math.floor(Math.pow(hash(j, r, 11), 1.4) * S.cluster);
+          runs.push([i, Math.min(n, total - i), r]);
+          i += n + 1 + Math.floor(hash(j, r, 12) * 2);
+          r++;
+        }
+        for (let rep = 0; rep * total < cols; rep++) {
+          for (const [start, n, key] of runs) {
+            const ci = rep * total + start;
+            if (ci >= cols) break;
+            const xMid = F.x + (ci + n / 2) * c;
+            const d = density(xMid, yRow);
+            if (hash(j, key, 13) >= d) continue;
+            let si = Math.floor(hash(j, key, 14) * signs.length);
+            for (let k = 0; k < n; k++) {
+              const col = ci + k;
+              if (col >= cols) break;
+              const kk = key * 31 + k;
+              if (k > 0 && hash(j, kk, 15) < S.mix) si = Math.floor(hash(j, kk, 16) * signs.length);
+              if (hash(j, kk, 17) > 0.35 + 0.65 * d + 0.3) continue;   // quelques trous dans les groupes clairsemés
+              const x = F.x + (col + 0.5) * c + (hash(j, kk, 18) - 0.5) * S.jitter * c;
+              const y = yRow + (hash(j, kk, 19) - 0.5) * S.jitter * rowH * 0.5;
+              pushSign(signs[si], x, y, lenOf(hash(j, kk, 20)), leanOf(hash(j, kk, 21)), alphaOf(hash(j, kk, 22)));
+            }
+          }
+        }
+      } else {
+        // Onde : une cellule = un signe, la rangée ondule et les signes suivent la pente
+        const k2 = 2 * Math.PI * S.waves / F.w;
+        const A = S.amp * rowH * 1.5;
+        for (let i = 0; i < cols; i++) {
+          let x = F.x + (i + 0.5) * c + (hash(i, j, 31) - 0.5) * S.jitter * c;
+          const ph = j * 0.35 + drift * 1.5;
+          let y = yRow + A * Math.sin(k2 * (x - F.x) + ph) + (hash(i, j, 32) - 0.5) * S.jitter * rowH * 0.5;
+          if (hash(i, j, 33) >= density(x, y)) continue;
+          const tilt = Math.atan(A * k2 * Math.cos(k2 * (x - F.x) + ph));
+          const sign = signs[Math.floor(hash(i, j, 34) * signs.length)];
+          pushSign(sign, x, y, lenOf(hash(i, j, 35)), leanOf(hash(i, j, 36)) - tilt * 0.6, alphaOf(hash(i, j, 37)));
+        }
+      }
+    }
+  }
+
+  else if (S.motif === "tourbillon") {
+    // Centres : le premier est réglé, les suivants tirés au hasard, en sens alterné
+    const centres = [{ x: ccx, y: ccy, s: 1 }];
+    for (let k = 1; k < S.centres; k++)
+      centres.push({ x: 0.15 + 0.7 * hash(k, 0, 41), y: (0.15 + 0.7 * hash(k, 1, 41)) * F.h / F.w, s: k % 2 ? -1 : 1 });
+    const rows = Math.ceil(F.h / c) + 1, cols = Math.ceil(F.w / c) + 1;
+    const rot = drift * 0.6;
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+      const x = F.x + (i + 0.5 + (hash(i, j, 42) - 0.5) * S.jitter) * c;
+      const y = F.y + (j + 0.5 + (hash(i, j, 43) - 0.5) * S.jitter) * c;
+      const u = (x - F.x) / F.w, v = (y - F.y) / F.w;
+      // somme des directions de chaque centre, pondérée par la proximité
+      let vx = 0, vy = 0, dmin = 9;
+      for (const ce of centres) {
+        const dx = u - ce.x, dy = v - ce.y, r = Math.hypot(dx, dy) + 1e-6;
+        dmin = Math.min(dmin, r);
+        const a = Math.atan2(dy, dx) + ce.s * (Math.PI / 2) * S.twist * Math.exp(-r / S.reach) + ce.s * rot;
+        const w = 1 / (r * r + 0.002);
+        vx += Math.cos(a) * w; vy += Math.sin(a) * w;
+      }
+      let d = density(x, y);
+      if (S.voidSize > 0 && centres.length > 1) {
+        // les autres centres ont aussi leur œil
+        for (const ce of centres.slice(1)) d *= smooth(S.voidSize * 0.7, S.voidSize * 0.7 + S.voidSoft, Math.hypot(u - ce.x, v - ce.y));
+      }
+      if (hash(i, j, 44) >= d) continue;
+      // traits un peu plus longs loin du centre, comme les rayons qui s'ouvrent
+      const grow = 0.75 + 0.5 * Math.min(1, dmin / 0.6);
+      push(x, y, Math.atan2(vy, vx) + leanOf(hash(i, j, 45)), lenOf(hash(i, j, 46)) * grow, alphaOf(hash(i, j, 47)));
+    }
+  }
+
+  else if (S.motif === "galaxie") {
+    // Arcs pointillés autour du centre, chacun légèrement décentré ; le bruit les découpe en fragments
+    const s = c * S.ringSpacing;
+    const cx = F.x + S.cx * F.w, cy = F.y + S.cy * F.h;
+    const corners = [[F.x, F.y], [F.x + F.w, F.y], [F.x, F.y + F.h], [F.x + F.w, F.y + F.h]];
+    const maxR = Math.max(...corners.map(([x, y]) => Math.hypot(x - cx, y - cy))) + s;
+    const dash = c * S.length;
+    const step = dash * (1 + S.gap);
+    let ring = 0;
+    for (let r = Math.max(s * 0.5, S.voidSize * F.w * 0.6); r < maxR; r += s, ring++) {
+      const ox = (hash(ring, 0, 51) - 0.5) * S.jitter * s * 3;
+      const oy = (hash(ring, 1, 51) - 0.5) * S.jitter * s * 3;
+      const n = Math.max(3, Math.floor(2 * Math.PI * r / step));
+      const t0 = hash(ring, 2, 51) * 2 * Math.PI + drift * 0.25 * (ring % 2 ? 1 : -1) / (1 + r / 300);
+      for (let k = 0; k < n; k++) {
+        const th = t0 + (k + (hash(ring, k, 52) - 0.5) * S.jitter * 0.6) * 2 * Math.PI / n;
+        const rr = r + S.twist * s * (k / n) * 2 + (hash(ring, k, 53) - 0.5) * S.jitter * s * 0.4;
+        const x = cx + ox + Math.cos(th) * rr, y = cy + oy + Math.sin(th) * rr;
+        if (!inField(x, y, dash)) continue;
+        if (hash(ring, k, 54) >= density(x, y)) continue;
+        push(x, y, th + Math.PI / 2 + Math.atan(S.twist * s * 2 / (2 * Math.PI * rr)) + leanOf(hash(ring, k, 55)),
+          lenOf(hash(ring, k, 56)), alphaOf(hash(ring, k, 57)));
+      }
+    }
+  }
+
+  return { W, H, F, segs, width };
+}
+
+// ── Dessin sur un canvas (écran ou export) ──
+const BUCKETS = 8;   // alphas regroupés : un seul tracé par niveau de gris
+function bucketize(segs) {
+  const groups = Array.from({ length: BUCKETS }, () => []);
+  for (const sg of segs) groups[Math.min(BUCKETS - 1, Math.round(sg[4] * (BUCKETS - 1)))].push(sg);
+  return groups;
+}
+function draw(target, scale, g) {
+  const { W, H, F, segs, width } = g;
+  target.setTransform(scale, 0, 0, scale, 0, 0);
+  target.globalAlpha = 1;
+  target.fillStyle = state.paper; target.fillRect(0, 0, W, H);
+  target.fillStyle = state.field; target.fillRect(F.x, F.y, F.w, F.h);
+  target.save();
+  target.beginPath(); target.rect(F.x, F.y, F.w, F.h); target.clip();
+  target.strokeStyle = state.ink;
+  target.lineWidth = width;
+  target.lineCap = state.roundCaps ? "round" : "butt";
+  bucketize(segs).forEach((group, b) => {
+    if (!group.length) return;
+    target.globalAlpha = 1 - b / (BUCKETS - 1) * (state.tone || 0);
+    target.beginPath();
+    for (const s of group) { target.moveTo(s[0], s[1]); target.lineTo(s[2], s[3]); }
+    target.stroke();
+  });
+  target.restore();
+  target.globalAlpha = 1;
+}
+
+// ── Écran : l'affiche tient dans la zone principale ──
+let current = null, viewScale = 1;
+function fit() {
+  const ratio = FORMATS[format].ratio;
+  const r = mainEl.getBoundingClientRect();
+  const pad = 40;
+  let w = r.width - 2 * pad, h = w * ratio;
+  if (h > r.height - 2 * pad) { h = r.height - 2 * pad; w = h / ratio; }
+  w = Math.max(50, Math.floor(w)); h = Math.max(50, Math.floor(w * ratio));
+  const dpr = window.devicePixelRatio || 1;
+  scene.style.width = w + "px"; scene.style.height = h + "px";
+  scene.width = Math.round(w * dpr); scene.height = Math.round(h * dpr);
+  viewScale = scene.width / 1000;
+  const [pw, ph] = FORMATS[format].png;
+  $("formatInfo").textContent = `${FORMATS[format].label} · PNG ${pw} × ${ph} px`;
+  render();
+}
+let time = 0;
+function render() {
+  readState();
+  current = generate(time);
+  draw(ctx, viewScale, current);
+  $("seedInfo").textContent = `Seed ${seed} · ${current.segs.length.toLocaleString("en")} signs`;
+}
+
+// Mouvement : on ne redessine en boucle que si la vitesse n'est pas nulle
+let last = performance.now();
+function tick(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  if (parseFloat($("motion").value) > 0) { time += dt; render(); }
+  requestAnimationFrame(tick);
+}
+
+// ── Motif : affiche les réglages qui le concernent, charge ses valeurs de départ ──
+function showMotifRows() {
+  const m = $("motifSelect").value;
+  document.querySelectorAll("[data-motifs]").forEach((el) => { el.hidden = !el.dataset.motifs.split(" ").includes(m); });
+}
+function applyPreset(m) {
+  const p = PRESETS[m];
+  for (const [k, v] of Object.entries(p)) {
+    if (k === "signs") $("signsInput").value = v;
+    else if ($(k)) $(k).value = v;
+  }
+}
+
+// ── Exports ──
+function baseName() { return `trame-${state.motif}-${format}-${seed}`; }
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url; link.download = filename;
+  document.body.appendChild(link); link.click(); link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function exportPng() {
+  const [pw, ph] = FORMATS[format].png;
+  const cv = document.createElement("canvas");
+  cv.width = pw; cv.height = ph;
+  draw(cv.getContext("2d"), pw / 1000, current);
+  cv.toBlob((blob) => downloadBlob(blob, `${baseName()}-${pw}x${ph}.png`), "image/png");
+}
+function exportSvg() {
+  const { W, H, F, segs, width } = current;
+  const f = (n) => +n.toFixed(2);
+  let paths = "";
+  bucketize(segs).forEach((group, b) => {
+    if (!group.length) return;
+    const op = 1 - b / (BUCKETS - 1) * state.tone;
+    const d = group.map((s) => `M${f(s[0])} ${f(s[1])}L${f(s[2])} ${f(s[3])}`).join("");
+    paths += `<path d="${d}"${op < 1 ? ` stroke-opacity="${op.toFixed(3)}"` : ""}/>\n`;
+  });
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${f(H)}" width="${W}" height="${f(H)}">
+<defs><clipPath id="field"><rect x="${f(F.x)}" y="${f(F.y)}" width="${f(F.w)}" height="${f(F.h)}"/></clipPath></defs>
+<rect width="${W}" height="${f(H)}" fill="${state.paper}"/>
+<rect x="${f(F.x)}" y="${f(F.y)}" width="${f(F.w)}" height="${f(F.h)}" fill="${state.field}"/>
+<g clip-path="url(#field)" fill="none" stroke="${state.ink}" stroke-width="${f(width)}" stroke-linecap="${state.roundCaps ? "round" : "butt"}">
+${paths}</g>
+</svg>`;
+  downloadBlob(new Blob([svg], { type: "image/svg+xml" }), `${baseName()}.svg`);
+}
+
+// ── Événements ──
+$("panel").addEventListener("input", (e) => {
+  if (e.target.id === "motifSelect") return;
+  render();
+});
+$("motifSelect").addEventListener("change", () => { applyPreset($("motifSelect").value); showMotifRows(); render(); });
+function newSeed() { seed = 1 + Math.floor(Math.random() * 9999); render(); }
+$("seedBtn").addEventListener("click", newSeed);
+document.addEventListener("keydown", (e) => {
+  if (e.target.matches("input[type=text], textarea")) return;
+  if (e.key === "n" || e.key === "N") newSeed();
+});
+document.querySelectorAll(".palette").forEach((btn) => btn.addEventListener("click", () => {
+  const [p, f, i] = btn.dataset.colors.split(",");
+  $("paperColor").value = p; $("fieldColor").value = f; $("inkColor").value = i;
+  render();
+}));
+document.querySelectorAll("#formatButtons button").forEach((btn) => btn.addEventListener("click", () => {
+  format = btn.dataset.format;
+  document.querySelectorAll("#formatButtons button").forEach((b) => b.classList.toggle("active", b === btn));
+  fit();
+}));
+$("exportBtn").addEventListener("click", exportPng);
+$("exportSvgBtn").addEventListener("click", exportSvg);
+
+// Réinitialiser : toutes les valeurs de la page au chargement
+const initial = Array.from(document.querySelectorAll("#panel input, #panel select")).map((el) => [el, el.type === "checkbox" ? el.checked : el.value]);
+$("resetBtn").addEventListener("click", () => {
+  for (const [el, v] of initial) { if (el.type === "checkbox") el.checked = v; else el.value = v; }
+  time = 0; showMotifRows(); render();
+});
+$("privacyBtn").addEventListener("click", () => $("privacyDialog").showModal());
+
+new ResizeObserver(fit).observe(mainEl);
+document.querySelector('#formatButtons [data-format="din"]').classList.add("active");
+// ?motif=tourbillon ouvre directement un motif
+const askedMotif = new URLSearchParams(location.search).get("motif");
+if (askedMotif && PRESETS[askedMotif]) { $("motifSelect").value = askedMotif; applyPreset(askedMotif); }
+showMotifRows();
+fit();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

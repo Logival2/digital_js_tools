@@ -1,0 +1,39 @@
+/* Trame — mise en page propre à l'outil.
+   Couleurs, typo, panneaux et contrôles : ../ui/ui_001.css */
+
+/* Zone principale : l'affiche, centrée */
+#main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#scene {
+  display: block;
+  flex: none;
+  background: #fff;
+}
+
+/* Couleurs : papier, aplat, signes */
+#colorRow {
+  display: flex;
+  gap: 6px;
+}
+#colorRow label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-small);
+}
+#colorRow input[type="color"] {
+  width: 100%;
+  height: 28px;
+}
+
+/* Signes : un champ court en mono */
+#signsInput {
+  font-family: var(--mono);
+  text-transform: none;
+}
